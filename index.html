@@ -23,6 +23,11 @@
             color: #4f46e5;
             background-color: #eef2ff;
         }
+        .tab-active-red {
+            border-color: #ef4444; /* red-500 */
+            color: #ef4444; /* red-500 */
+            background-color: #fee2e2; /* red-100 */
+        }
         /* Agenda View Styles */
         .agenda-day-header {
             position: sticky;
@@ -54,9 +59,39 @@
             font-weight: 500;
             margin-left: 8px;
         }
+        /* Custom DC801 Event Styles */
+        .dc801-event {
+            background-color: #ff5722 !important; /* A vibrant, neon-like orange */
+            color: black !important;
+        }
+        .dc801-event h3, 
+        .dc801-event p, 
+        .dc801-event span,
+        .dc801-event .text-gray-600 {
+            color: black !important;
+        }
+        .dc801-event svg {
+            stroke: black !important;
+        }
+        .dc801-agenda-title {
+            color: #ff5722 !important;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
+
+    <!-- Swag Banner -->
+    <div id="swagBanner" class="bg-indigo-600 text-white text-center p-2 relative">
+        <p class="text-sm font-medium">
+            Find this calendar helpful? Support our work and 
+            <a href="https://swag.defconparties.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-200">grab some swag!</a>
+            Your purchase helps sponsor the free stuff we give away at DEFCON.
+        </p>
+        <button id="closeSwagBanner" class="absolute top-1/2 right-4 -translate-y-1/2 text-indigo-200 hover:text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-6">
@@ -64,6 +99,28 @@
             <p class="text-md text-gray-600 mt-2">A searchable interface for your events.</p>
             <p class="text-sm text-gray-500 mt-1">All event times are displayed in Pacific Time (PST/PDT).</p>
         </header>
+
+        <!-- Party-O-Meter -->
+        <div class="max-w-5xl mx-auto mb-6">
+            <label for="party-o-meter" class="block text-sm font-medium text-gray-700 mb-1">Party-O-Meter™</label>
+            <div class="w-full bg-gray-200 rounded-full h-4">
+                <div id="partyOMeterFill" class="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <p id="partyOMeterText" class="text-sm text-center mt-1 text-gray-600 font-medium"></p>
+            <div class="text-center mt-2 flex justify-center items-center gap-2">
+                <span class="text-sm font-medium text-gray-700">Flex on 'em:</span>
+                <a id="tweetBtn" href="#" target="_blank" rel="noopener noreferrer" class="p-2 bg-black text-white rounded-full hover:bg-gray-800" title="Share on X">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.602.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/>
+                    </svg>
+                </a>
+                <a id="emailBtn" href="#" class="p-2 bg-gray-500 text-white rounded-full hover:bg-gray-600" title="Share via Email">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M2.003 5.884L10 9.884l7.997-3.999A2 2 0 0016 4H4a2 2 0 00-1.997 1.884zM18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" clip-rule="evenodd"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
 
         <!-- Refresh Status -->
         <div id="refreshContainer" class="text-center text-sm text-gray-600 mb-4 flex items-center justify-center gap-4">
@@ -117,6 +174,7 @@
             <div class="flex justify-center sm:justify-start">
                 <button id="cardViewTab" class="px-4 py-2 font-medium text-sm border-b-2 tab-active">Card View</button>
                 <button id="agendaViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Agenda View</button>
+                <button id="submitViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-red-600 hover:text-red-700 hover:border-red-300">Submit a Party</button>
             </div>
             <div id="eventCountContainer" class="text-sm font-medium text-gray-600 text-center py-2 sm:text-right sm:py-0 sm:pr-2">
                 Showing <span id="visibleEventCount">0</span> of <span id="totalEventCount">0</span> events
@@ -124,7 +182,7 @@
         </div>
 
         <!-- Search and Filters -->
-        <div class="mb-8 max-w-5xl mx-auto">
+        <div id="filtersAndSearch" class="mb-8 max-w-5xl mx-auto">
              <div class="relative mb-4">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
@@ -170,6 +228,20 @@
 
         <!-- Agenda View Container -->
         <div id="agendaViewContainer" class="hidden bg-white rounded-lg shadow-md overflow-hidden"></div>
+
+        <!-- Submit Party View Container -->
+        <div id="submitViewContainer" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Submit a Party or Event</h2>
+            <p class="text-gray-600 mb-4">Know of a party that's not on the list? Paste the URL below. We'll review it and add it to the calendar. Thanks for contributing!</p>
+            <div>
+                <label for="partyUrlInput" class="block text-sm font-medium text-gray-700">Event URL</label>
+                <div class="mt-1 flex gap-2">
+                    <input type="url" id="partyUrlInput" placeholder="https://example.com/party-info" class="flex-grow border border-gray-300 rounded-md p-2 text-sm">
+                    <button id="submitPartyBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 flex-shrink-0">Submit</button>
+                </div>
+                <p id="submitStatus" class="text-sm mt-2 font-medium h-4"></p>
+            </div>
+        </div>
         
         <!-- No Results Message -->
         <div id="noResults" class="hidden text-center py-16">
@@ -209,15 +281,32 @@
         </div>
     </div>
 
+    <!-- Scroll To Top/Bottom -->
+    <div id="scrollNav" class="hidden fixed bottom-4 right-4 z-50 flex-col gap-2">
+        <button id="scrollTopBtn" class="bg-indigo-600 text-white rounded-full p-3 shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+        </button>
+        <button id="scrollBottomBtn" class="bg-indigo-600 text-white rounded-full p-3 shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+    </div>
+
+    <footer class="text-center py-4">
+        <p class="text-sm text-gray-500">Version 0.9.6-beta</p>
+    </footer>
+
     <script>
         // --- DOM Elements ---
         const cardViewContainer = document.getElementById('cardViewContainer');
         const agendaViewContainer = document.getElementById('agendaViewContainer');
+        const submitViewContainer = document.getElementById('submitViewContainer');
         const noResults = document.getElementById('noResults');
         const searchInput = document.getElementById('searchInput');
         const cardViewTab = document.getElementById('cardViewTab');
         const agendaViewTab = document.getElementById('agendaViewTab');
+        const submitViewTab = document.getElementById('submitViewTab');
         const dayFilters = document.getElementById('dayFilters');
+        const filtersAndSearch = document.getElementById('filtersAndSearch');
         const showApprovedOnlyCheckbox = document.getElementById('showApprovedOnly');
         const showNewOnlyCheckbox = document.getElementById('showNewOnly');
         const showFriendSchedulesCheckbox = document.getElementById('showFriendSchedules');
@@ -249,6 +338,18 @@
         const saveHiddenKeywordsBtn = document.getElementById('saveHiddenKeywordsBtn');
         const visibleEventCount = document.getElementById('visibleEventCount');
         const totalEventCount = document.getElementById('totalEventCount');
+        const swagBanner = document.getElementById('swagBanner');
+        const closeSwagBannerBtn = document.getElementById('closeSwagBanner');
+        const partyOMeterFill = document.getElementById('partyOMeterFill');
+        const partyOMeterText = document.getElementById('partyOMeterText');
+        const scrollNav = document.getElementById('scrollNav');
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
+        const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+        const tweetBtn = document.getElementById('tweetBtn');
+        const emailBtn = document.getElementById('emailBtn');
+        const partyUrlInput = document.getElementById('partyUrlInput');
+        const submitPartyBtn = document.getElementById('submitPartyBtn');
+        const submitStatus = document.getElementById('submitStatus');
 
         let allEvents = [];
         let currentView = 'card';
@@ -284,6 +385,7 @@
             if (mySchedule.has(eventId)) { mySchedule.delete(eventId); } else { mySchedule.add(eventId); }
             schedules[MY_SCHEDULE_KEY] = Array.from(mySchedule);
             saveSchedules(schedules);
+            updatePartyOMeter(); // Update meter on change
         }
         function getNewEventIds() {
             const newIds = localStorage.getItem(NEW_EVENTS_KEY);
@@ -348,6 +450,9 @@
         }
 
         function loadInitialData() {
+            if (sessionStorage.getItem('swagBannerClosed') === 'true') {
+                swagBanner.style.display = 'none';
+            }
             const cachedData = localStorage.getItem(CACHE_KEY);
             const lastRefresh = parseInt(localStorage.getItem(LAST_REFRESH_KEY) || '0');
             const needsAutoRefresh = Date.now() - lastRefresh > AUTO_REFRESH_INTERVAL;
@@ -364,15 +469,33 @@
         // --- VIEW & FILTER LOGIC ---
         function switchView(view) {
             currentView = view;
+            cardViewTab.classList.remove('tab-active');
+            agendaViewTab.classList.remove('tab-active');
+            submitViewTab.classList.remove('tab-active-red');
+            cardViewContainer.classList.add('hidden');
+            agendaViewContainer.classList.add('hidden');
+            submitViewContainer.classList.add('hidden');
+            filtersAndSearch.classList.add('hidden');
+
             if (view === 'card') {
-                cardViewTab.classList.add('tab-active'); agendaViewTab.classList.remove('tab-active');
-                cardViewContainer.classList.remove('hidden'); agendaViewContainer.classList.add('hidden');
-                dayFilters.classList.add('hidden');
-            } else {
-                agendaViewTab.classList.add('tab-active'); cardViewTab.classList.remove('tab-active');
-                agendaViewContainer.classList.remove('hidden'); cardViewContainer.classList.add('hidden');
-                dayFilters.classList.remove('hidden'); dayFilters.classList.add('flex');
+                cardViewTab.classList.add('tab-active');
+                cardViewContainer.classList.remove('hidden');
+                filtersAndSearch.classList.remove('hidden');
+            } else if (view === 'agenda') {
+                agendaViewTab.classList.add('tab-active');
+                agendaViewContainer.classList.remove('hidden');
+                filtersAndSearch.classList.remove('hidden');
+                dayFilters.classList.remove('hidden'); 
+                dayFilters.classList.add('flex');
+            } else if (view === 'submit') {
+                submitViewTab.classList.add('tab-active-red');
+                submitViewContainer.classList.remove('hidden');
             }
+            
+            if (view !== 'agenda') {
+                 dayFilters.classList.add('hidden');
+            }
+
             renderCurrentView();
         }
 
@@ -438,11 +561,12 @@
             totalEventCount.textContent = countableTotalEvents.length;
             
             cardViewContainer.innerHTML = ''; agendaViewContainer.innerHTML = '';
-            if (filteredEvents.length === 0) { noResults.classList.remove('hidden'); return; }
+            if (filteredEvents.length === 0 && currentView !== 'submit') { noResults.classList.remove('hidden'); return; }
             noResults.classList.add('hidden');
             const sortedEvents = filteredEvents.sort((a, b) => new Date(getStartDateString(a)) - new Date(getStartDateString(b)));
             if (currentView === 'card') { renderCardView(sortedEvents); } 
-            else { renderAgendaView(sortedEvents); }
+            else if (currentView === 'agenda') { renderAgendaView(sortedEvents); }
+            updatePartyOMeter();
         }
 
         // --- MODAL LOGIC & RENDER FUNCTIONS ---
@@ -532,6 +656,8 @@
                 dayEvents.forEach(event => {
                     const eventRow = document.createElement('div');
                     eventRow.className = 'flex items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors';
+                    const isDC801 = (event.summary || '').toLowerCase().includes('dc801');
+
                     applyApprovalStyles(eventRow, event.id);
                     eventRow.addEventListener('click', () => showModal(event));
                     const startDateString = getStartDateString(event);
@@ -547,7 +673,8 @@
                         }
                     }
                     const newBadge = newEventIds.has(event.id) ? '<span class="new-event-badge">New</span>' : '';
-                    eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${timeRange}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center">${event.summary || 'No Title'} ${newBadge}</p><p class="text-gray-500">${event.location || ''}</p></div>`;
+                    const titleClass = isDC801 ? 'dc801-agenda-title' : '';
+                    eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${timeRange}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center ${titleClass}">${event.summary || 'No Title'} ${newBadge}</p><p class="text-gray-500">${event.location || ''}</p></div>`;
                     agendaViewContainer.appendChild(eventRow);
                 });
             });
@@ -559,8 +686,15 @@
             events.forEach(event => {
                 const eventCard = document.createElement('div');
                 eventCard.className = 'event-card bg-white rounded-lg shadow-md overflow-hidden p-6 flex flex-col cursor-pointer';
-                applyApprovalStyles(eventCard, event.id);
+                const isDC801 = (event.summary || '').toLowerCase().includes('dc801');
+
+                if (isDC801) {
+                    eventCard.classList.add('dc801-event');
+                } else {
+                    applyApprovalStyles(eventCard, event.id);
+                }
                 eventCard.addEventListener('click', () => showModal(event));
+                
                 let formattedDate, formattedTime;
                 const startDateString = getStartDateString(event);
                 const isAllDay = startDateString && !startDateString.includes('T');
@@ -590,7 +724,22 @@
                     }
                 }
                 const newBadge = newEventIds.has(event.id) ? '<span class="new-event-badge">New</span>' : '';
-                eventCard.innerHTML = `<div class="flex-grow"><h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${event.summary || 'No Title'} ${newBadge}</h3><div class="flex items-center text-gray-600 text-sm mb-4"><svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span>${formattedDate} ${formattedTime !== 'All-day' ? 'at ' + formattedTime : `(${formattedTime || ''})`}</span></div><div class="flex items-center text-gray-600 text-sm mb-4"><svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>${event.location || 'Not specified'}</span></div><p class="text-gray-700 text-sm">${event.description || ''}</p></div>`;
+                const imageHTML = isDC801 ? `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium" alt="DC801 Event Image" class="max-h-full w-auto object-contain" onerror="this.style.display='none'"></div>` : '';
+                
+                eventCard.innerHTML = `
+                    ${imageHTML}
+                    <div class="flex-grow">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${event.summary || 'No Title'} ${newBadge}</h3>
+                        <div class="flex items-center text-gray-600 text-sm mb-4">
+                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span>${formattedDate} ${formattedTime !== 'All-day' ? 'at ' + formattedTime : `(${formattedTime || ''})`}</span>
+                        </div>
+                        <div class="flex items-center text-gray-600 text-sm mb-4">
+                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span>${event.location || 'Not specified'}</span>
+                        </div>
+                        <p class="text-gray-700 text-sm">${event.description || ''}</p>
+                    </div>`;
                 cardViewContainer.appendChild(eventCard);
             });
         }
@@ -674,10 +823,97 @@
                 lastRefreshedText.textContent = 'No cached data available.';
             }
         }
+        function updatePartyOMeter() {
+            const adIdentifier = 'DEFCON PARTIES 🥃 - SWAG';
+            const countableTotalEvents = allEvents.filter(event => !(event.summary || '').includes(adIdentifier)).length;
+            
+            if (countableTotalEvents === 0) {
+                partyOMeterFill.style.width = '0%';
+                partyOMeterText.textContent = 'No events to measure!';
+                return;
+            }
+
+            const myApprovedIds = getSchedules()[MY_SCHEDULE_KEY] || [];
+            const approvedCount = myApprovedIds.length;
+            
+            const percentage = Math.min(100, (approvedCount / countableTotalEvents) * 100);
+
+            partyOMeterFill.style.width = `${percentage}%`;
+
+            let text = '';
+            if (percentage === 0) {
+                text = "Your schedule is empty. I remember my first time at DEF CON!";
+            } else if (percentage <= 25) {
+                text = "Getting started. The night is young.";
+            } else if (percentage <= 50) {
+                text = "Solid schedule. You're making good choices.";
+            } else if (percentage <= 75) {
+                text = "Now we're talking! This is a pro-level schedule.";
+            } else if (percentage < 100) {
+                text = "Maximum party efficiency achieved!";
+            } else {
+                text = "PERFECT SCORE! Are you even human?!";
+            }
+            partyOMeterText.textContent = text;
+            updateShareLinks();
+        }
+        
+        function updateShareLinks() {
+            const schedules = getSchedules();
+            const myApprovedIds = schedules[MY_SCHEDULE_KEY] || [];
+            const approvedCount = myApprovedIds.length;
+
+            const message = `I'm going to ${approvedCount} parties! Find your fun and share your schedule @ https://info.defconparties.com`;
+            const encodedMessage = encodeURIComponent(message);
+
+            tweetBtn.href = `https://x.com/intent/tweet?text=${encodedMessage}`;
+
+            const emailSubject = encodeURIComponent("My DEFCON Party Schedule!");
+            emailBtn.href = `mailto:?subject=${emailSubject}&body=${encodedMessage}`;
+        }
+
+        async function submitToGoogleForm() {
+            const urlToSubmit = partyUrlInput.value.trim();
+            if (!urlToSubmit) {
+                submitStatus.textContent = 'Please enter a URL.';
+                submitStatus.className = 'text-sm text-red-600 mt-2 font-medium';
+                return;
+            }
+
+            const googleFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSda_V6QkvzhddOVCH67ur2w4wnrFXvATP7nFvzxA_ryTGtRXg/formResponse';
+            const urlEntryId = 'entry.1363926836';
+
+            const formData = new FormData();
+            formData.append(urlEntryId, urlToSubmit);
+
+            try {
+                submitPartyBtn.disabled = true;
+                submitStatus.textContent = 'Submitting...';
+                submitStatus.className = 'text-sm text-gray-600 mt-2 font-medium';
+
+                await fetch(googleFormUrl, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors' 
+                });
+
+                submitStatus.textContent = 'Thank you! Your submission has been received.';
+                submitStatus.className = 'text-sm text-green-600 mt-2 font-medium';
+                partyUrlInput.value = '';
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                submitStatus.textContent = 'An error occurred. Please try again.';
+                submitStatus.className = 'text-sm text-red-600 mt-2 font-medium';
+            } finally {
+                submitPartyBtn.disabled = false;
+                setTimeout(() => { submitStatus.textContent = ''; }, 5000);
+            }
+        }
 
         // --- EVENT LISTENERS ---
         cardViewTab.addEventListener('click', () => switchView('card'));
         agendaViewTab.addEventListener('click', () => switchView('agenda'));
+        submitViewTab.addEventListener('click', () => switchView('submit'));
         document.querySelectorAll('.day-filter').forEach(cb => cb.addEventListener('change', renderCurrentView));
         showApprovedOnlyCheckbox.addEventListener('change', renderCurrentView);
         showNewOnlyCheckbox.addEventListener('change', renderCurrentView);
@@ -726,6 +962,26 @@
                 hiddenKeywordsTextarea.value = getHiddenKeywords().join(', ');
             }
         });
+        closeSwagBannerBtn.addEventListener('click', () => {
+            swagBanner.style.display = 'none';
+            sessionStorage.setItem('swagBannerClosed', 'true');
+        });
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        scrollBottomBtn.addEventListener('click', () => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        });
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 200) {
+                scrollNav.classList.remove('hidden');
+                scrollNav.classList.add('flex');
+            } else {
+                scrollNav.classList.add('hidden');
+                scrollNav.classList.remove('flex');
+            }
+        });
+        submitPartyBtn.addEventListener('click', submitToGoogleForm);
 
         // --- INITIAL LOAD ---
         loadInitialData();
