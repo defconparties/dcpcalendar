@@ -189,6 +189,8 @@
                 <button id="cardViewTab" class="px-4 py-2 font-medium text-sm border-b-2 tab-active">Card View</button>
                 <button id="agendaViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Agenda View</button>
                 <button id="submitViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-red-600 hover:text-red-700 hover:border-red-300">Submit a Party</button>
+                <button id="cutPasteViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Cut & Paste</button>
+                <button id="helpViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Help / About</button>
             </div>
             <div id="eventCountContainer" class="text-sm font-medium text-gray-600 text-center py-2 sm:text-right sm:py-0 sm:pr-2">
                 Showing <span id="visibleEventCount">0</span> of <span id="totalEventCount">0</span> events
@@ -268,6 +270,121 @@
             </div>
         </div>
         
+        <!-- Help View Container -->
+        <div id="helpViewContainer" class="hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md prose prose-indigo">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Help & Features</h2>
+            
+            <h3>Viewing Events</h3>
+            <ul>
+                <li><strong>Card View:</strong> A visual grid of all events.</li>
+                <li><strong>Agenda View:</strong> A list of events grouped by day.</li>
+            </ul>
+
+            <h3>Personalizing Your Schedule</h3>
+            <ul>
+                <li><strong>Approved (Green):</strong> Mark events you plan to attend. These are counted in your "Party-O-Meter".</li>
+                <li><strong>Pending (Blue):</strong> Mark events you've applied to but haven't heard back from yet.</li>
+                <li><strong>Rejected (Red):</strong> Mark events you were rejected from to keep track.</li>
+                <li>Your choices are saved automatically in your browser!</li>
+            </ul>
+            
+            <h3>Filtering</h3>
+            <ul>
+                <li><strong>Search Bar:</strong> Instantly search by title, location, date, or description.</li>
+                <li><strong>Agenda Filters:</strong> When in Agenda View, you can filter by day of the week and hide events based on their status (Past, Rejected, Pending, etc.).</li>
+                <li><strong>Keyword Filters:</strong> Permanently hide events containing specific words (like "breakfast") using the "Keyword Filters" section.</li>
+            </ul>
+
+            <h3>Sharing & Collaboration</h3>
+            <ul>
+                <li><strong>Export My Schedule:</strong> Generates a code that saves all your event statuses (Approved, Rejected, Pending).</li>
+                <li><strong>Import a Schedule:</strong>
+                    <ul>
+                        <li>Paste a code without a nickname to sync your own schedule across devices.</li>
+                        <li>Paste a code with a nickname to import a friend's approved schedule, which will appear in orange.</li>
+                    </ul>
+                </li>
+                <li><strong>Manage Friends:</strong> Easily remove imported friend schedules.</li>
+            </ul>
+
+            <h3>Other Features</h3>
+            <ul>
+                <li><strong>Party-O-Meter™:</strong> A fun progress bar that shows how full your approved schedule is.</li>
+                <li><strong>Flex on 'em:</strong> Share your party count on X or via email with one click.</li>
+                <li><strong>Submit a Party:</strong> Use the "Submit a Party" tab or search for a URL to suggest new events for the calendar.</li>
+                <li><strong>Cut & Paste:</strong> Save your registration info for yourself and friends to easily copy/paste into forms.</li>
+                <li><strong>Smart Refresh:</strong> Calendar data is cached for 48 hours to reduce load times. You can force a refresh every 5 minutes with the "Refresh Now" button.</li>
+            </ul>
+        </div>
+        
+        <!-- Cut & Paste View Container -->
+        <div id="cutPasteViewContainer" class="hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Cut & Paste Registration Info</h2>
+            <p class="text-gray-600 mb-4">Save your info here to quickly copy and paste it into registration forms. You can add profiles for friends too!</p>
+            
+            <div class="flex items-center gap-4 mb-4">
+                <select id="profileSelector" class="flex-grow border border-gray-300 rounded-md p-2 text-sm"></select>
+                <button id="addNewProfileBtn" class="px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">New Profile</button>
+                <button id="deleteProfileBtn" class="px-3 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">Delete</button>
+            </div>
+
+            <div id="profileForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="relative">
+                    <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="fullName" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                    <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="fullName">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                     <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="email">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="title" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                     <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="title">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="tel" id="phone" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                     <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="phone">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="sm:col-span-2 relative">
+                    <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+                    <input type="text" id="address" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                     <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="address">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <label for="zip" class="block text-sm font-medium text-gray-700">Zip Code</label>
+                    <input type="text" id="zip" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                     <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="zip">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <label for="state" class="block text-sm font-medium text-gray-700">State</label>
+                    <input type="text" id="state" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                     <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="state">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button id="saveProfileBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Save Profile</button>
+            </div>
+            <p id="profileStatus" class="text-sm mt-2 font-medium h-4 text-center"></p>
+        </div>
+
         <!-- No Results Message -->
         <div id="noResults" class="hidden text-center py-16">
             <div id="noResultsStandard">
@@ -313,16 +430,16 @@
                 </div>
                  <div class="flex items-center gap-4">
                     <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="modalApprovedCheckbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                        <span class="font-medium text-gray-700">Approved</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
                         <input type="checkbox" id="modalPendingCheckbox" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                         <span class="font-medium text-gray-700">Pending</span>
                     </label>
                     <label class="flex items-center space-x-2 cursor-pointer">
                         <input type="checkbox" id="modalRejectedCheckbox" class="h-5 w-5 text-red-600 border-gray-300 rounded focus:ring-red-500">
                         <span class="font-medium text-gray-700">Rejected</span>
-                    </label>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" id="modalApprovedCheckbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
-                        <span class="font-medium text-gray-700">Approved</span>
                     </label>
                 </div>
             </div>
@@ -340,7 +457,7 @@
     </div>
 
     <footer class="text-center py-4">
-        <p class="text-sm text-gray-500">Version 1.0.4-beta</p>
+        <p class="text-sm text-gray-500">Version 1.0.9-beta</p>
     </footer>
 
     <script>
@@ -348,6 +465,8 @@
         const cardViewContainer = document.getElementById('cardViewContainer');
         const agendaViewContainer = document.getElementById('agendaViewContainer');
         const submitViewContainer = document.getElementById('submitViewContainer');
+        const helpViewContainer = document.getElementById('helpViewContainer');
+        const cutPasteViewContainer = document.getElementById('cutPasteViewContainer');
         const noResults = document.getElementById('noResults');
         const noResultsStandard = document.getElementById('noResultsStandard');
         const noResultsSubmit = document.getElementById('noResultsSubmit');
@@ -358,6 +477,8 @@
         const cardViewTab = document.getElementById('cardViewTab');
         const agendaViewTab = document.getElementById('agendaViewTab');
         const submitViewTab = document.getElementById('submitViewTab');
+        const helpViewTab = document.getElementById('helpViewTab');
+        const cutPasteViewTab = document.getElementById('cutPasteViewTab');
         const dayFilters = document.getElementById('dayFilters');
         const filtersAndSearch = document.getElementById('filtersAndSearch');
         const showApprovedOnlyCheckbox = document.getElementById('showApprovedOnly');
@@ -408,6 +529,12 @@
         const partyUrlInput = document.getElementById('partyUrlInput');
         const submitPartyBtn = document.getElementById('submitPartyBtn');
         const submitStatus = document.getElementById('submitStatus');
+        const profileSelector = document.getElementById('profileSelector');
+        const addNewProfileBtn = document.getElementById('addNewProfileBtn');
+        const deleteProfileBtn = document.getElementById('deleteProfileBtn');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const profileForm = document.getElementById('profileForm');
+        const profileStatus = document.getElementById('profileStatus');
 
         let allEvents = [];
         let currentView = 'card';
@@ -419,6 +546,7 @@
         const LAST_REFRESH_KEY = 'calendarLastRefresh';
         const NEW_EVENTS_KEY = 'calendarNewEvents';
         const HIDDEN_KEYWORDS_KEY = 'calendarHiddenKeywords';
+        const PROFILES_KEY = 'calendarProfiles';
         const MANUAL_REFRESH_COOLDOWN = 5 * 60 * 1000; // 5 minutes
         const AUTO_REFRESH_INTERVAL = 48 * 60 * 60 * 1000; // 48 hours
 
@@ -611,9 +739,13 @@
             cardViewTab.classList.remove('tab-active');
             agendaViewTab.classList.remove('tab-active');
             submitViewTab.classList.remove('tab-active-red');
+            helpViewTab.classList.remove('tab-active');
+            cutPasteViewTab.classList.remove('tab-active');
             cardViewContainer.classList.add('hidden');
             agendaViewContainer.classList.add('hidden');
             submitViewContainer.classList.add('hidden');
+            helpViewContainer.classList.add('hidden');
+            cutPasteViewContainer.classList.add('hidden');
             filtersAndSearch.classList.add('hidden');
 
             if (view === 'card') {
@@ -629,6 +761,13 @@
             } else if (view === 'submit') {
                 submitViewTab.classList.add('tab-active-red');
                 submitViewContainer.classList.remove('hidden');
+            } else if (view === 'help') {
+                helpViewTab.classList.add('tab-active');
+                helpViewContainer.classList.remove('hidden');
+            } else if (view === 'cutPaste') {
+                cutPasteViewTab.classList.add('tab-active');
+                cutPasteViewContainer.classList.remove('hidden');
+                loadProfiles();
             }
             
             if (view !== 'agenda') {
@@ -709,7 +848,7 @@
             const searchTerm = searchInput.value.trim();
             const isUrl = /^(https?:\/\/)/.test(searchTerm);
 
-            if (filteredEvents.length === 0 && currentView !== 'submit') { 
+            if (filteredEvents.length === 0 && (currentView === 'card' || currentView === 'agenda')) { 
                 noResults.classList.remove('hidden');
                 if (isUrl) {
                     noResultsStandard.classList.add('hidden');
@@ -1131,10 +1270,103 @@
             renderCurrentView();
         }
 
+        // --- CUT & PASTE LOGIC ---
+        function getProfiles() {
+            const profiles = localStorage.getItem(PROFILES_KEY);
+            const defaultProfiles = { "My Info": { fullName: "", email: "", title: "", phone: "", address: "", zip: "", state: "" } };
+            try {
+                const parsed = profiles ? JSON.parse(profiles) : defaultProfiles;
+                if (!parsed["My Info"]) {
+                    parsed["My Info"] = { fullName: "", email: "", title: "", phone: "", address: "", zip: "", state: "" };
+                }
+                return parsed;
+            } catch (e) {
+                return defaultProfiles;
+            }
+        }
+        function saveProfiles(profiles) {
+            localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+        }
+        function loadProfiles() {
+            const profiles = getProfiles();
+            const currentProfileName = profileSelector.value || "My Info";
+
+            profileSelector.innerHTML = '';
+            Object.keys(profiles).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                profileSelector.appendChild(option);
+            });
+
+            profileSelector.value = currentProfileName in profiles ? currentProfileName : "My Info";
+            loadProfileData(profileSelector.value);
+        }
+        function loadProfileData(profileName) {
+            const profiles = getProfiles();
+            const data = profiles[profileName] || {};
+            profileForm.querySelector('#fullName').value = data.fullName || '';
+            profileForm.querySelector('#email').value = data.email || '';
+            profileForm.querySelector('#title').value = data.title || '';
+            profileForm.querySelector('#phone').value = data.phone || '';
+            profileForm.querySelector('#address').value = data.address || '';
+            profileForm.querySelector('#zip').value = data.zip || '';
+            profileForm.querySelector('#state').value = data.state || '';
+            deleteProfileBtn.disabled = profileName === "My Info";
+        }
+        function saveCurrentProfile() {
+            const profiles = getProfiles();
+            const currentProfileName = profileSelector.value;
+            if (!currentProfileName) return;
+
+            profiles[currentProfileName] = {
+                fullName: profileForm.querySelector('#fullName').value,
+                email: profileForm.querySelector('#email').value,
+                title: profileForm.querySelector('#title').value,
+                phone: profileForm.querySelector('#phone').value,
+                address: profileForm.querySelector('#address').value,
+                zip: profileForm.querySelector('#zip').value,
+                state: profileForm.querySelector('#state').value,
+            };
+            saveProfiles(profiles);
+
+            profileStatus.textContent = `Profile "${currentProfileName}" saved!`;
+            setTimeout(() => { profileStatus.textContent = ''; }, 3000);
+        }
+        function addNewProfile() {
+            const newName = prompt("Enter a name for the new profile:");
+            if (newName && newName.trim()) {
+                const profiles = getProfiles();
+                if (profiles[newName.trim()]) {
+                    alert("A profile with that name already exists.");
+                    return;
+                }
+                profiles[newName.trim()] = { fullName: "", email: "", title: "", phone: "", address: "", zip: "", state: "" };
+                saveProfiles(profiles);
+                profileSelector.value = newName.trim();
+                loadProfiles();
+            }
+        }
+        function deleteCurrentProfile() {
+            const currentProfileName = profileSelector.value;
+            if (currentProfileName === "My Info") {
+                alert("Cannot delete the default profile.");
+                return;
+            }
+            if (confirm(`Are you sure you want to delete the "${currentProfileName}" profile?`)) {
+                const profiles = getProfiles();
+                delete profiles[currentProfileName];
+                saveProfiles(profiles);
+                loadProfiles();
+            }
+        }
+
         // --- EVENT LISTENERS ---
         cardViewTab.addEventListener('click', () => switchView('card'));
         agendaViewTab.addEventListener('click', () => switchView('agenda'));
         submitViewTab.addEventListener('click', () => switchView('submit'));
+        helpViewTab.addEventListener('click', () => switchView('help'));
+        cutPasteViewTab.addEventListener('click', () => switchView('cutPaste'));
         document.querySelectorAll('.day-filter').forEach(cb => cb.addEventListener('change', renderCurrentView));
         showApprovedOnlyCheckbox.addEventListener('change', renderCurrentView);
         showNewOnlyCheckbox.addEventListener('change', renderCurrentView);
@@ -1229,6 +1461,32 @@
             searchInput.value = '';
             handleSearchInput();
             searchInput.focus();
+        });
+        addNewProfileBtn.addEventListener('click', addNewProfile);
+        deleteProfileBtn.addEventListener('click', deleteCurrentProfile);
+        saveProfileBtn.addEventListener('click', saveCurrentProfile);
+        profileSelector.addEventListener('change', () => loadProfileData(profileSelector.value));
+        
+        cutPasteViewContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('.copy-btn');
+            if (button) {
+                const targetId = button.dataset.target;
+                const targetInput = document.getElementById(targetId);
+                if (targetInput && targetInput.value) {
+                    const tempTextArea = document.createElement('textarea');
+                    tempTextArea.value = targetInput.value;
+                    document.body.appendChild(tempTextArea);
+                    tempTextArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempTextArea);
+
+                    const originalContent = button.innerHTML;
+                    button.innerHTML = `<span class="text-xs text-indigo-600 font-bold">Copied!</span>`;
+                    setTimeout(() => {
+                        button.innerHTML = originalContent;
+                    }, 1500);
+                }
+            }
         });
 
         // --- INITIAL LOAD ---
