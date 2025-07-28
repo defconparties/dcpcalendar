@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEFCON PARTIES LABS Calendar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .event-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Styles for active tab */
+        .tab-active {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        /* Agenda View Styles */
+        .agenda-day-header {
+            position: sticky;
+            top: 0;
+            background-color: #f9fafb; /* bg-gray-50 */
+            z-index: 10;
+        }
+        /* Approved event styles */
+        .my-approved-event {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-left: 4px solid #22c55e; /* green-500 */
+        }
+        .my-approved-event:hover {
+             background-color: #bbf7d0 !important; /* green-200 */
+        }
+        .friend-approved-event {
+            background-color: #ffedd5 !important; /* orange-100 */
+            border-left: 4px solid #f97316; /* orange-500 */
+        }
+        .friend-approved-event:hover {
+            background-color: #fed7aa !important; /* orange-200 */
+        }
+        .new-event-badge {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            padding: 2px 6px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">DEFCON PARTIES CALENDAR BETA</h1>
+            <p class="text-md text-gray-600 mt-2">A searchable interface for your events.</p>
+            <p class="text-sm text-gray-500 mt-1">All event times are displayed in Pacific Time (PST/PDT).</p>
+        </header>
+
+        <!-- Refresh Status -->
+        <div id="refreshContainer" class="text-center text-sm text-gray-600 mb-4 flex items-center justify-center gap-4">
+            <span id="lastRefreshedText"></span>
+            <button id="refreshBtn" class="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50">Refresh Now</button>
+        </div>
+
+        <!-- Share/Sync Section -->
+        <details class="max-w-5xl mx-auto mb-6 bg-white p-3 rounded-lg shadow-sm">
+            <summary class="font-medium text-indigo-600 cursor-pointer">Share/Sync Schedules</summary>
+            <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-gray-700 mb-2">Export My Schedule</h4>
+                    <p class="text-sm text-gray-600 mb-2">Copy this code to move your approved events to another browser or share it with a friend.</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="shareCodeInput" readonly class="flex-grow bg-gray-100 border border-gray-300 rounded-md p-2 text-sm text-gray-700">
+                        <button id="exportBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 flex-shrink-0">Copy Code</button>
+                    </div>
+                </div>
+                 <div>
+                    <h4 class="font-semibold text-gray-700 mb-2">Import a Schedule</h4>
+                    <p class="text-sm text-gray-600 mb-2">Paste a code to sync your schedule. Add a nickname to import a friend's schedule (in orange).</p>
+                    <div class="flex flex-wrap gap-2">
+                        <input type="text" id="importNicknameInput" placeholder="Friend's Nickname (optional)" class="flex-grow border border-gray-300 rounded-md p-2 text-sm min-w-[150px]">
+                        <input type="text" id="importCodeInput" placeholder="Paste code here..." class="flex-grow border border-gray-300 rounded-md p-2 text-sm min-w-[150px]">
+                        <button id="importBtn" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 flex-shrink-0">Import</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t">
+                <h4 class="font-semibold text-gray-700 mb-2">Manage Friend Schedules</h4>
+                <div id="friendListContainer"></div>
+            </div>
+             <p id="shareStatus" class="text-sm mt-2 font-medium h-4 text-center"></p>
+        </details>
+
+        <!-- Keyword Filter Section -->
+        <details id="keywordFilterDetails" class="max-w-5xl mx-auto mb-6 bg-white p-3 rounded-lg shadow-sm">
+            <summary class="font-medium text-indigo-600 cursor-pointer">Keyword Filters (Hide Events)</summary>
+            <div class="mt-4 pt-4 border-t">
+                <p class="text-sm text-gray-600 mb-2">Enter keywords to hide events. Separate each word or phrase with a comma (e.g., breakfast, ice bar, brunch).</p>
+                <div class="flex flex-col gap-2">
+                    <textarea id="hiddenKeywordsTextarea" rows="3" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="ice bar, breakfast, brunch..."></textarea>
+                    <button id="saveHiddenKeywordsBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 self-end">Save & Apply Filters</button>
+                </div>
+            </div>
+        </details>
+
+        <!-- View Toggles & Event Count -->
+        <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-200">
+            <div class="flex justify-center sm:justify-start">
+                <button id="cardViewTab" class="px-4 py-2 font-medium text-sm border-b-2 tab-active">Card View</button>
+                <button id="agendaViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Agenda View</button>
+            </div>
+            <div id="eventCountContainer" class="text-sm font-medium text-gray-600 text-center py-2 sm:text-right sm:py-0 sm:pr-2">
+                Showing <span id="visibleEventCount">0</span> of <span id="totalEventCount">0</span> events
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="mb-8 max-w-5xl mx-auto">
+             <div class="relative mb-4">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                </div>
+                <input type="text" id="searchInput" onkeyup="renderCurrentView()" placeholder="Search by title, date, location, URL..." class="block w-full bg-white border border-gray-300 rounded-md py-3 pl-10 pr-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <!-- Day Filters (for Agenda View) -->
+            <div id="dayFilters" class="hidden justify-center items-center flex-wrap gap-x-4 gap-y-2 text-sm p-2 border-t border-b border-gray-200">
+                 <label class="flex items-center space-x-2 cursor-pointer font-bold text-gray-700 pr-4">
+                    <input type="checkbox" id="hidePastEvents" class="h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500" checked>
+                    <span>Hide Past</span>
+                </label>
+                 <label class="flex items-center space-x-2 cursor-pointer font-bold text-green-700 pr-4">
+                    <input type="checkbox" id="showApprovedOnly" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <span>Show My Approved</span>
+                </label>
+                 <label class="flex items-center space-x-2 cursor-pointer font-bold text-orange-700 pr-4">
+                    <input type="checkbox" id="showFriendSchedules" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500" checked>
+                    <span>Show Friends</span>
+                </label>
+                 <label class="flex items-center space-x-2 cursor-pointer font-bold text-indigo-700 pr-4">
+                    <input type="checkbox" id="showNewOnly" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <span>Show New</span>
+                </label>
+                <span class="font-medium text-gray-700">Filter by day:</span>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="1" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Mon</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="2" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Tue</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="3" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Wed</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="4" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Thu</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="5" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Fri</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="6" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Sat</span></label>
+                <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="0" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Sun</span></label>
+                <div class="ml-2">
+                    <button id="selectAllDays" class="font-medium text-indigo-600 hover:text-indigo-800">Select All</button>
+                    <span class="mx-1 text-gray-300">|</span>
+                    <button id="clearAllDays" class="font-medium text-indigo-600 hover:text-indigo-800">Clear All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card View Container -->
+        <div id="cardViewContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+        <!-- Agenda View Container -->
+        <div id="agendaViewContainer" class="hidden bg-white rounded-lg shadow-md overflow-hidden"></div>
+        
+        <!-- No Results Message -->
+        <div id="noResults" class="hidden text-center py-16">
+            <h2 class="text-xl font-semibold text-gray-700">No Events Found</h2>
+            <p class="text-gray-500 mt-2">Try adjusting your search terms or filters.</p>
+        </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div id="eventModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+        <div id="modalContent" class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0">
+            <!-- Modal Header -->
+            <div class="p-4 sm:p-5 border-b flex justify-between items-start">
+                <h3 id="modalTitle" class="text-xl font-bold text-gray-800"></h3>
+                <button id="closeModal" class="text-gray-400 hover:text-gray-800 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-5 space-y-4">
+                <div id="modalTime" class="flex items-center text-gray-600"></div>
+                <div id="modalLocation" class="flex items-start text-gray-600"></div>
+                <div id="modalDescription" class="prose prose-sm max-w-none text-gray-700"></div>
+                <div id="modalApprovedBy" class="text-sm text-gray-500"></div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="p-3 sm:p-4 bg-gray-50 rounded-b-lg flex justify-between items-center">
+                 <a id="modalLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    More details
+                    <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>
+                 </a>
+                 <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="modalApprovedCheckbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <span class="font-medium text-gray-700">Approve (My Schedule)</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const cardViewContainer = document.getElementById('cardViewContainer');
+        const agendaViewContainer = document.getElementById('agendaViewContainer');
+        const noResults = document.getElementById('noResults');
+        const searchInput = document.getElementById('searchInput');
+        const cardViewTab = document.getElementById('cardViewTab');
+        const agendaViewTab = document.getElementById('agendaViewTab');
+        const dayFilters = document.getElementById('dayFilters');
+        const showApprovedOnlyCheckbox = document.getElementById('showApprovedOnly');
+        const showNewOnlyCheckbox = document.getElementById('showNewOnly');
+        const showFriendSchedulesCheckbox = document.getElementById('showFriendSchedules');
+        const hidePastEventsCheckbox = document.getElementById('hidePastEvents');
+        const selectAllDaysBtn = document.getElementById('selectAllDays');
+        const clearAllDaysBtn = document.getElementById('clearAllDays');
+        const eventModal = document.getElementById('eventModal');
+        const modalContent = document.getElementById('modalContent');
+        const closeModal = document.getElementById('closeModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalTime = document.getElementById('modalTime');
+        const modalLocation = document.getElementById('modalLocation');
+        const modalDescription = document.getElementById('modalDescription');
+        const modalApprovedBy = document.getElementById('modalApprovedBy');
+        const modalLink = document.getElementById('modalLink');
+        const modalApprovedCheckbox = document.getElementById('modalApprovedCheckbox');
+        const shareDetails = document.querySelector('details');
+        const shareCodeInput = document.getElementById('shareCodeInput');
+        const exportBtn = document.getElementById('exportBtn');
+        const importNicknameInput = document.getElementById('importNicknameInput');
+        const importCodeInput = document.getElementById('importCodeInput');
+        const importBtn = document.getElementById('importBtn');
+        const shareStatus = document.getElementById('shareStatus');
+        const friendListContainer = document.getElementById('friendListContainer');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const lastRefreshedText = document.getElementById('lastRefreshedText');
+        const keywordFilterDetails = document.getElementById('keywordFilterDetails');
+        const hiddenKeywordsTextarea = document.getElementById('hiddenKeywordsTextarea');
+        const saveHiddenKeywordsBtn = document.getElementById('saveHiddenKeywordsBtn');
+        const visibleEventCount = document.getElementById('visibleEventCount');
+        const totalEventCount = document.getElementById('totalEventCount');
+
+        let allEvents = [];
+        let currentView = 'card';
+        const SCHEDULES_KEY = 'calendarSchedules';
+        const MY_SCHEDULE_KEY = '__ME__';
+        const CACHE_KEY = 'calendarDataCache';
+        const LAST_REFRESH_KEY = 'calendarLastRefresh';
+        const NEW_EVENTS_KEY = 'calendarNewEvents';
+        const HIDDEN_KEYWORDS_KEY = 'calendarHiddenKeywords';
+        const MANUAL_REFRESH_COOLDOWN = 5 * 60 * 1000; // 5 minutes
+        const AUTO_REFRESH_INTERVAL = 48 * 60 * 60 * 1000; // 48 hours
+
+        // --- SCHEDULE & LOCAL STORAGE HELPERS ---
+        function getSchedules() {
+            const schedules = localStorage.getItem(SCHEDULES_KEY);
+            const defaultSchedules = { [MY_SCHEDULE_KEY]: [] };
+            try { return schedules ? JSON.parse(schedules) : defaultSchedules; } catch (e) { return defaultSchedules; }
+        }
+        function saveSchedules(schedules) { localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules)); }
+        function isEventApprovedByMe(eventId) { const schedules = getSchedules(); return schedules[MY_SCHEDULE_KEY]?.includes(eventId); }
+        function getFriendApprovals(eventId) {
+            const schedules = getSchedules();
+            const friends = [];
+            for (const nickname in schedules) {
+                if (nickname !== MY_SCHEDULE_KEY && schedules[nickname]?.includes(eventId)) { friends.push(nickname); }
+            }
+            return friends;
+        }
+        function toggleMyApprovedStatus(eventId) {
+            const schedules = getSchedules();
+            if (!schedules[MY_SCHEDULE_KEY]) { schedules[MY_SCHEDULE_KEY] = []; }
+            const mySchedule = new Set(schedules[MY_SCHEDULE_KEY]);
+            if (mySchedule.has(eventId)) { mySchedule.delete(eventId); } else { mySchedule.add(eventId); }
+            schedules[MY_SCHEDULE_KEY] = Array.from(mySchedule);
+            saveSchedules(schedules);
+        }
+        function getNewEventIds() {
+            const newIds = localStorage.getItem(NEW_EVENTS_KEY);
+            return newIds ? new Set(JSON.parse(newIds)) : new Set();
+        }
+        function getHiddenKeywords() {
+            const keywords = localStorage.getItem(HIDDEN_KEYWORDS_KEY);
+            return keywords ? JSON.parse(keywords) : [];
+        }
+        function saveHiddenKeywords(keywordsArray) {
+            localStorage.setItem(HIDDEN_KEYWORDS_KEY, JSON.stringify(keywordsArray));
+        }
+
+        // --- DATA FETCHING & PARSING ---
+        function getStartDateString(event) { if (!event || !event.start) return null; if (typeof event.start === 'string') return event.start; if (typeof event.start === 'object') return event.start.dateTime || event.start.date; return null; }
+        function getEndDateString(event) { if (!event || !event.end) return null; if (typeof event.end === 'string') return event.end; if (typeof event.end === 'object') return event.end.dateTime || event.end.date; return null; }
+        function getPacificDateKey(dateString) { if (!dateString) return null; const eventDate = new Date(dateString); if (isNaN(eventDate.getTime())) return null; return eventDate.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); }
+
+        async function fetchAndCacheEvents(isManual = false) {
+            if (isManual) {
+                const lastManualRefresh = sessionStorage.getItem('lastManualRefresh');
+                if (lastManualRefresh && (Date.now() - lastManualRefresh < MANUAL_REFRESH_COOLDOWN)) {
+                    const remaining = Math.ceil((MANUAL_REFRESH_COOLDOWN - (Date.now() - lastManualRefresh)) / 60000);
+                    lastRefreshedText.textContent = `Please wait ${remaining} more minute(s) to refresh.`;
+                    return;
+                }
+            }
+
+            lastRefreshedText.textContent = 'Refreshing...';
+            const url = "https://prod-177.westus.logic.azure.com:443/workflows/2d1197ea71b546d7a2ccf373e4a4b205/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=i34wve4AyoAhB32Xjn5A6nhvy3oMRLgHXPBH_zvnkQs";
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                let fetchedEvents = [];
+                if (Array.isArray(data.items)) fetchedEvents = data.items;
+                else if (Array.isArray(data.value)) fetchedEvents = data.value;
+                else if (Array.isArray(data)) fetchedEvents = data;
+                
+                const oldDataRaw = localStorage.getItem(CACHE_KEY);
+                let newlyAddedIds = []; 
+
+                if (oldDataRaw) {
+                    const oldEvents = JSON.parse(oldDataRaw);
+                    const oldEventIds = new Set(oldEvents.map(e => e.id));
+                    const newEventIds = new Set(fetchedEvents.map(e => e.id));
+                    newlyAddedIds = [...newEventIds].filter(id => !oldEventIds.has(id));
+                }
+
+                localStorage.setItem(CACHE_KEY, JSON.stringify(fetchedEvents));
+                localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString());
+                localStorage.setItem(NEW_EVENTS_KEY, JSON.stringify(newlyAddedIds));
+                if (isManual) sessionStorage.setItem('lastManualRefresh', Date.now().toString());
+
+                allEvents = fetchedEvents;
+                updateRefreshTimestamp();
+                renderCurrentView();
+            } catch (error) {
+                console.error("Could not fetch data from URL:", error);
+                lastRefreshedText.textContent = 'Refresh failed. Using cached data.';
+            }
+        }
+
+        function loadInitialData() {
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            const lastRefresh = parseInt(localStorage.getItem(LAST_REFRESH_KEY) || '0');
+            const needsAutoRefresh = Date.now() - lastRefresh > AUTO_REFRESH_INTERVAL;
+
+            if (cachedData && !needsAutoRefresh) {
+                allEvents = JSON.parse(cachedData);
+                updateRefreshTimestamp();
+                renderCurrentView();
+            } else {
+                fetchAndCacheEvents();
+            }
+        }
+        
+        // --- VIEW & FILTER LOGIC ---
+        function switchView(view) {
+            currentView = view;
+            if (view === 'card') {
+                cardViewTab.classList.add('tab-active'); agendaViewTab.classList.remove('tab-active');
+                cardViewContainer.classList.remove('hidden'); agendaViewContainer.classList.add('hidden');
+                dayFilters.classList.add('hidden');
+            } else {
+                agendaViewTab.classList.add('tab-active'); cardViewTab.classList.remove('tab-active');
+                agendaViewContainer.classList.remove('hidden'); cardViewContainer.classList.add('hidden');
+                dayFilters.classList.remove('hidden'); dayFilters.classList.add('flex');
+            }
+            renderCurrentView();
+        }
+
+        function getFilteredEvents() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedDays = new Set(Array.from(document.querySelectorAll('.day-filter:checked')).map(cb => parseInt(cb.value)));
+            const showApprovedOnly = showApprovedOnlyCheckbox.checked;
+            const showNewOnly = showNewOnlyCheckbox.checked;
+            const showFriendSchedules = showFriendSchedulesCheckbox.checked;
+            const hidePast = hidePastEventsCheckbox.checked;
+            const newEventIds = getNewEventIds();
+            const hiddenKeywords = getHiddenKeywords().map(k => k.toLowerCase()).filter(k => k);
+            const now = new Date();
+
+            return allEvents.filter(event => {
+                const startDateString = getStartDateString(event);
+                const endDateString = getEndDateString(event);
+                if (!startDateString) return false;
+
+                if (hidePast && endDateString) {
+                    const endDate = new Date(endDateString);
+                    if (endDate < now) return false;
+                }
+
+                const isApprovedByMe = isEventApprovedByMe(event.id);
+                const isApprovedByFriend = getFriendApprovals(event.id).length > 0;
+
+                if (showApprovedOnly && !isApprovedByMe) return false;
+                if (showNewOnly && !newEventIds.has(event.id)) return false;
+                if (!showFriendSchedules && isApprovedByFriend && !isApprovedByMe) return false;
+
+                if (currentView === 'agenda') {
+                    const pacificDateKey = getPacificDateKey(startDateString);
+                    if (!pacificDateKey) return false;
+                    const pacificDate = new Date(pacificDateKey + 'T00:00:00Z');
+                    if (!selectedDays.has(pacificDate.getUTCDay())) return false;
+                }
+
+                const title = (event.summary || '').toLowerCase();
+                const location = (event.location || '').toLowerCase();
+                const description = (event.description || '').toLowerCase();
+                const url = (event.htmlLink || '').toLowerCase();
+                
+                if (hiddenKeywords.length > 0) {
+                    const eventText = `${title} ${location} ${description}`;
+                    if (hiddenKeywords.some(keyword => eventText.includes(keyword))) {
+                        return false; 
+                    }
+                }
+
+                return (title.includes(searchTerm) || (startDateString && startDateString.toLowerCase().includes(searchTerm)) || (endDateString && endDateString.toLowerCase().includes(searchTerm)) || location.includes(searchTerm) || description.includes(searchTerm) || url.includes(searchTerm));
+            });
+        }
+        
+        function renderCurrentView() {
+            const adIdentifier = 'DEFCON PARTIES 🥃 - SWAG';
+            const countableTotalEvents = allEvents.filter(event => !(event.summary || '').includes(adIdentifier));
+            
+            const filteredEvents = getFilteredEvents();
+            const countableVisibleEvents = filteredEvents.filter(event => !(event.summary || '').includes(adIdentifier));
+
+            visibleEventCount.textContent = countableVisibleEvents.length;
+            totalEventCount.textContent = countableTotalEvents.length;
+            
+            cardViewContainer.innerHTML = ''; agendaViewContainer.innerHTML = '';
+            if (filteredEvents.length === 0) { noResults.classList.remove('hidden'); return; }
+            noResults.classList.add('hidden');
+            const sortedEvents = filteredEvents.sort((a, b) => new Date(getStartDateString(a)) - new Date(getStartDateString(b)));
+            if (currentView === 'card') { renderCardView(sortedEvents); } 
+            else { renderAgendaView(sortedEvents); }
+        }
+
+        // --- MODAL LOGIC & RENDER FUNCTIONS ---
+        function showModal(event) {
+            modalContent.dataset.eventId = event.id;
+            modalTitle.textContent = event.summary || 'No Title';
+            if (getNewEventIds().has(event.id)) {
+                modalTitle.innerHTML += '<span class="new-event-badge">New</span>';
+            }
+            modalLink.href = event.htmlLink || '#';
+            modalDescription.innerHTML = event.description || '<p class="text-gray-500">No description provided.</p>';
+            modalApprovedCheckbox.checked = isEventApprovedByMe(event.id);
+            
+            const friendApprovals = getFriendApprovals(event.id);
+            const myApproval = isEventApprovedByMe(event.id) ? ['You'] : [];
+            const allApprovals = [...myApproval, ...friendApprovals];
+            
+            if (allApprovals.length > 0) {
+                modalApprovedBy.textContent = `Approved by: ${allApprovals.join(', ')}`;
+                modalApprovedBy.classList.remove('hidden');
+            } else {
+                modalApprovedBy.classList.add('hidden');
+            }
+
+            const startDateString = getStartDateString(event);
+            const isAllDay = startDateString && !startDateString.includes('T');
+            let timeText = '';
+            if (isAllDay) {
+                const eventDate = new Date(startDateString + 'T00:00:00Z');
+                timeText = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+            } else {
+                const startDate = new Date(startDateString);
+                const endDateString = getEndDateString(event);
+                const datePart = startDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/Los_Angeles' });
+                const startTimePart = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+                let timeRange = startTimePart;
+                if (endDateString) {
+                    const endDate = new Date(endDateString);
+                    timeRange += ` - ${endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}`;
+                }
+                timeText = `${datePart} · ${timeRange} PDT`;
+            }
+            modalTime.innerHTML = `<svg class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>${timeText}</span>`;
+            modalLocation.innerHTML = `<svg class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>${event.location || 'Location not specified'}</span>`;
+
+            eventModal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function hideModal() {
+            modalContent.classList.add('scale-95', 'opacity-0');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            setTimeout(() => {
+                eventModal.classList.add('hidden');
+            }, 300);
+        }
+
+        function applyApprovalStyles(element, eventId) {
+            element.classList.remove('my-approved-event', 'friend-approved-event');
+            if (isEventApprovedByMe(eventId)) {
+                element.classList.add('my-approved-event');
+            } else if (getFriendApprovals(eventId).length > 0) {
+                element.classList.add('friend-approved-event');
+            }
+        }
+
+        function renderAgendaView(events) {
+            const groupedEvents = events.reduce((acc, event) => {
+                const dateKey = getPacificDateKey(getStartDateString(event));
+                if (!dateKey) return acc;
+                if (!acc[dateKey]) acc[dateKey] = [];
+                acc[dateKey].push(event);
+                return acc;
+            }, {});
+            agendaViewContainer.innerHTML = ''; 
+            const newEventIds = getNewEventIds();
+            Object.keys(groupedEvents).sort().forEach(dateKey => {
+                const dayEvents = groupedEvents[dateKey];
+                const dayHeader = document.createElement('div');
+                const eventDate = new Date(dateKey + 'T00:00:00Z');
+                dayHeader.className = 'agenda-day-header p-3 border-b border-t font-bold text-lg text-gray-700 bg-gray-50';
+                dayHeader.textContent = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+                agendaViewContainer.appendChild(dayHeader);
+                dayEvents.forEach(event => {
+                    const eventRow = document.createElement('div');
+                    eventRow.className = 'flex items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors';
+                    applyApprovalStyles(eventRow, event.id);
+                    eventRow.addEventListener('click', () => showModal(event));
+                    const startDateString = getStartDateString(event);
+                    const isAllDay = startDateString && !startDateString.includes('T');
+                    let timeRange = 'All-day';
+                    if (!isAllDay) {
+                        const startDate = new Date(startDateString);
+                        const endDateString = getEndDateString(event);
+                        timeRange = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+                        if (endDateString) {
+                            const endDate = new Date(endDateString);
+                            timeRange += ` - ${endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}`;
+                        }
+                    }
+                    const newBadge = newEventIds.has(event.id) ? '<span class="new-event-badge">New</span>' : '';
+                    eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${timeRange}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center">${event.summary || 'No Title'} ${newBadge}</p><p class="text-gray-500">${event.location || ''}</p></div>`;
+                    agendaViewContainer.appendChild(eventRow);
+                });
+            });
+        }
+        
+        function renderCardView(events) {
+            cardViewContainer.innerHTML = ''; 
+            const newEventIds = getNewEventIds();
+            events.forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'event-card bg-white rounded-lg shadow-md overflow-hidden p-6 flex flex-col cursor-pointer';
+                applyApprovalStyles(eventCard, event.id);
+                eventCard.addEventListener('click', () => showModal(event));
+                let formattedDate, formattedTime;
+                const startDateString = getStartDateString(event);
+                const isAllDay = startDateString && !startDateString.includes('T');
+                if (!startDateString) {
+                    formattedDate = 'Date not specified'; formattedTime = '';
+                } else {
+                    const eventDate = new Date(isAllDay ? startDateString + 'T00:00:00Z' : startDateString);
+                    if (isNaN(eventDate.getTime())) {
+                        formattedDate = 'Invalid Date'; formattedTime = '';
+                    } else {
+                        if (isAllDay) {
+                            formattedDate = eventDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+                            formattedTime = 'All-day';
+                        } else {
+                            formattedDate = eventDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Los_Angeles' });
+                            const formattedStartTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+                            let timeRange = formattedStartTime;
+                            const endDateString = getEndDateString(event);
+                            if (endDateString) {
+                                const endDate = new Date(endDateString);
+                                if (!isNaN(endDate.getTime())) {
+                                    timeRange += ` - ${endDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Los_Angeles' })}`;
+                                }
+                            }
+                            formattedTime = `${timeRange} PDT`;
+                        }
+                    }
+                }
+                const newBadge = newEventIds.has(event.id) ? '<span class="new-event-badge">New</span>' : '';
+                eventCard.innerHTML = `<div class="flex-grow"><h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${event.summary || 'No Title'} ${newBadge}</h3><div class="flex items-center text-gray-600 text-sm mb-4"><svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span>${formattedDate} ${formattedTime !== 'All-day' ? 'at ' + formattedTime : `(${formattedTime || ''})`}</span></div><div class="flex items-center text-gray-600 text-sm mb-4"><svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>${event.location || 'Not specified'}</span></div><p class="text-gray-700 text-sm">${event.description || ''}</p></div>`;
+                cardViewContainer.appendChild(eventCard);
+            });
+        }
+
+        // --- SHARE/SYNC LOGIC ---
+        function updateExportField() {
+            const schedules = getSchedules();
+            const myScheduleIds = schedules[MY_SCHEDULE_KEY] || [];
+            shareCodeInput.value = myScheduleIds.join(',');
+        }
+        function exportApproved() {
+            updateExportField(); 
+            if (!shareCodeInput.value) {
+                shareStatus.textContent = 'No approved events to export.';
+                shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                return;
+            }
+            shareCodeInput.select();
+            document.execCommand('copy');
+            shareStatus.textContent = 'Copied to clipboard!';
+            shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+            setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+        }
+        function importApproved() {
+            const nickname = importNicknameInput.value.trim();
+            const code = importCodeInput.value.trim();
+            if (!code) {
+                shareStatus.textContent = 'Please paste a code to import.';
+                shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                return;
+            }
+            const ids = code.split(',').filter(id => id);
+            const schedules = getSchedules();
+            const importKey = nickname || MY_SCHEDULE_KEY;
+            schedules[importKey] = ids;
+            saveSchedules(schedules);
+            renderCurrentView();
+            if (nickname) {
+                shareStatus.textContent = `Successfully imported ${nickname}'s schedule!`;
+            } else {
+                shareStatus.textContent = `Successfully synced your schedule!`;
+            }
+            shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+            importCodeInput.value = '';
+            importNicknameInput.value = '';
+            setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+        }
+        function renderFriendList() {
+            const schedules = getSchedules();
+            friendListContainer.innerHTML = ''; 
+            const friends = Object.keys(schedules).filter(key => key !== MY_SCHEDULE_KEY);
+            if (friends.length === 0) {
+                friendListContainer.innerHTML = '<p class="text-sm text-gray-500">No friend schedules have been imported yet.</p>';
+                return;
+            }
+            const list = document.createElement('ul');
+            list.className = 'space-y-2';
+            friends.forEach(friend => {
+                const listItem = document.createElement('li');
+                listItem.className = 'flex justify-between items-center bg-gray-50 p-2 rounded-md';
+                listItem.innerHTML = `<span class="text-sm font-medium text-gray-800">${friend}</span><button data-friend-name="${friend}" class="remove-friend-btn text-sm text-red-500 hover:text-red-700 font-semibold">Remove</button>`;
+                list.appendChild(listItem);
+            });
+            friendListContainer.appendChild(list);
+            document.querySelectorAll('.remove-friend-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const friendNameToRemove = e.target.dataset.friendName;
+                    const schedules = getSchedules();
+                    delete schedules[friendNameToRemove];
+                    saveSchedules(schedules);
+                    renderFriendList(); 
+                    renderCurrentView(); 
+                });
+            });
+        }
+        function updateRefreshTimestamp() {
+            const lastRefresh = parseInt(localStorage.getItem(LAST_REFRESH_KEY) || '0');
+            if (lastRefresh) {
+                lastRefreshedText.textContent = `Last refreshed: ${new Date(lastRefresh).toLocaleString()}`;
+            } else {
+                lastRefreshedText.textContent = 'No cached data available.';
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        cardViewTab.addEventListener('click', () => switchView('card'));
+        agendaViewTab.addEventListener('click', () => switchView('agenda'));
+        document.querySelectorAll('.day-filter').forEach(cb => cb.addEventListener('change', renderCurrentView));
+        showApprovedOnlyCheckbox.addEventListener('change', renderCurrentView);
+        showNewOnlyCheckbox.addEventListener('change', renderCurrentView);
+        showFriendSchedulesCheckbox.addEventListener('change', renderCurrentView);
+        hidePastEventsCheckbox.addEventListener('change', renderCurrentView);
+        closeModal.addEventListener('click', hideModal);
+        eventModal.addEventListener('click', (e) => { if (e.target === eventModal) hideModal(); });
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !eventModal.classList.contains('hidden')) hideModal(); });
+        selectAllDaysBtn.addEventListener('click', () => {
+            document.querySelectorAll('.day-filter').forEach(cb => cb.checked = true);
+            renderCurrentView();
+        });
+        clearAllDaysBtn.addEventListener('click', () => {
+            document.querySelectorAll('.day-filter').forEach(cb => cb.checked = false);
+            renderCurrentView();
+        });
+        modalApprovedCheckbox.addEventListener('change', () => {
+            const eventId = modalContent.dataset.eventId;
+            if (eventId) {
+                toggleMyApprovedStatus(eventId);
+                renderCurrentView();
+                const event = allEvents.find(e => e.id === eventId);
+                if (event) showModal(event);
+            }
+        });
+        shareDetails.addEventListener('toggle', (event) => {
+            if (event.target.open) {
+                updateExportField();
+                renderFriendList();
+            }
+        });
+        exportBtn.addEventListener('click', exportApproved);
+        importBtn.addEventListener('click', importApproved);
+        refreshBtn.addEventListener('click', () => fetchAndCacheEvents(true));
+        saveHiddenKeywordsBtn.addEventListener('click', () => {
+            const keywordsText = hiddenKeywordsTextarea.value;
+            const keywordsArray = keywordsText.split(',').map(k => k.trim()).filter(k => k);
+            saveHiddenKeywords(keywordsArray);
+            renderCurrentView();
+            shareStatus.textContent = 'Hidden keyword filter saved!';
+            shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+            setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+        });
+        keywordFilterDetails.addEventListener('toggle', (event) => {
+            if (event.target.open) {
+                hiddenKeywordsTextarea.value = getHiddenKeywords().join(', ');
+            }
+        });
+
+        // --- INITIAL LOAD ---
+        loadInitialData();
+        
+    </script>
+</body>
+</html>
