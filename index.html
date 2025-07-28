@@ -35,7 +35,7 @@
             background-color: #f9fafb; /* bg-gray-50 */
             z-index: 10;
         }
-        /* Approved event styles */
+        /* Event Status Styles */
         .my-approved-event {
             background-color: #dcfce7 !important; /* green-100 */
             border-left: 4px solid #22c55e; /* green-500 */
@@ -49,6 +49,20 @@
         }
         .friend-approved-event:hover {
             background-color: #fed7aa !important; /* orange-200 */
+        }
+        .rejected-event {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-left: 4px solid #ef4444; /* red-500 */
+        }
+        .rejected-event:hover {
+             background-color: #fecaca !important; /* red-200 */
+        }
+        .pending-event {
+            background-color: #e0f2fe !important; /* light blue-100 */
+            border-left: 4px solid #0ea5e9; /* light blue-500 */
+        }
+        .pending-event:hover {
+            background-color: #bae6fd !important; /* light blue-200 */
         }
         .new-event-badge {
             background-color: #e0e7ff;
@@ -134,7 +148,7 @@
             <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h4 class="font-semibold text-gray-700 mb-2">Export My Schedule</h4>
-                    <p class="text-sm text-gray-600 mb-2">Copy this code to move your approved events to another browser or share it with a friend.</p>
+                    <p class="text-sm text-gray-600 mb-2">Copy this code to move your personal schedule (Approved/Rejected/Pending) to another browser or share it with a friend.</p>
                     <div class="flex gap-2">
                         <input type="text" id="shareCodeInput" readonly class="flex-grow bg-gray-100 border border-gray-300 rounded-md p-2 text-sm text-gray-700">
                         <button id="exportBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 flex-shrink-0">Copy Code</button>
@@ -187,13 +201,24 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
                 </div>
-                <input type="text" id="searchInput" onkeyup="renderCurrentView()" placeholder="Search by title, date, location, URL..." class="block w-full bg-white border border-gray-300 rounded-md py-3 pl-10 pr-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <input type="text" id="searchInput" placeholder="Search by title, date, location, URL..." class="block w-full bg-white border border-gray-300 rounded-md py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <button id="clearSearchBtn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             <!-- Day Filters (for Agenda View) -->
             <div id="dayFilters" class="hidden justify-center items-center flex-wrap gap-x-4 gap-y-2 text-sm p-2 border-t border-b border-gray-200">
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-gray-700 pr-4">
                     <input type="checkbox" id="hidePastEvents" class="h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500" checked>
                     <span>Hide Past</span>
+                </label>
+                 <label class="flex items-center space-x-2 cursor-pointer font-bold text-red-700 pr-4">
+                    <input type="checkbox" id="hideRejected" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                    <span>Hide Rejected</span>
+                </label>
+                 <label class="flex items-center space-x-2 cursor-pointer font-bold text-blue-700 pr-4">
+                    <input type="checkbox" id="hidePending" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <span>Hide Pending</span>
                 </label>
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-green-700 pr-4">
                     <input type="checkbox" id="showApprovedOnly" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
@@ -245,8 +270,16 @@
         
         <!-- No Results Message -->
         <div id="noResults" class="hidden text-center py-16">
-            <h2 class="text-xl font-semibold text-gray-700">No Events Found</h2>
-            <p class="text-gray-500 mt-2">Try adjusting your search terms or filters.</p>
+            <div id="noResultsStandard">
+                <h2 class="text-xl font-semibold text-gray-700">No Events Found</h2>
+                <p class="text-gray-500 mt-2">Try adjusting your search terms or filters.</p>
+            </div>
+            <div id="noResultsSubmit" class="hidden">
+                <h2 class="text-xl font-semibold text-gray-700">Event not found.</h2>
+                <p class="text-gray-500 mt-2 mb-4">Would you like to submit this URL to be added to the calendar?</p>
+                <button id="submitSearchedUrlBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Submit URL</button>
+                <p id="submitSearchStatus" class="text-sm mt-2 font-medium h-4"></p>
+            </div>
         </div>
     </div>
 
@@ -268,15 +301,30 @@
                 <div id="modalApprovedBy" class="text-sm text-gray-500"></div>
             </div>
             <!-- Modal Footer -->
-            <div class="p-3 sm:p-4 bg-gray-50 rounded-b-lg flex justify-between items-center">
-                 <a id="modalLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    More details
-                    <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>
-                 </a>
-                 <label class="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" id="modalApprovedCheckbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
-                    <span class="font-medium text-gray-700">Approve (My Schedule)</span>
-                </label>
+            <div class="p-3 sm:p-4 bg-gray-50 rounded-b-lg flex justify-between items-center flex-wrap gap-2">
+                 <div class="flex items-center gap-4">
+                    <a id="modalSignUpBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Sign Up
+                        <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg>
+                    </a>
+                    <a id="modalMoreDetailsLink" href="#" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-indigo-600 hover:underline">
+                        Google Calendar
+                    </a>
+                </div>
+                 <div class="flex items-center gap-4">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="modalPendingCheckbox" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="font-medium text-gray-700">Pending</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="modalRejectedCheckbox" class="h-5 w-5 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <span class="font-medium text-gray-700">Rejected</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="modalApprovedCheckbox" class="h-5 w-5 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                        <span class="font-medium text-gray-700">Approved</span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -292,7 +340,7 @@
     </div>
 
     <footer class="text-center py-4">
-        <p class="text-sm text-gray-500">Version 0.9.6-beta</p>
+        <p class="text-sm text-gray-500">Version 1.0.4-beta</p>
     </footer>
 
     <script>
@@ -301,7 +349,12 @@
         const agendaViewContainer = document.getElementById('agendaViewContainer');
         const submitViewContainer = document.getElementById('submitViewContainer');
         const noResults = document.getElementById('noResults');
+        const noResultsStandard = document.getElementById('noResultsStandard');
+        const noResultsSubmit = document.getElementById('noResultsSubmit');
+        const submitSearchedUrlBtn = document.getElementById('submitSearchedUrlBtn');
+        const submitSearchStatus = document.getElementById('submitSearchStatus');
         const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
         const cardViewTab = document.getElementById('cardViewTab');
         const agendaViewTab = document.getElementById('agendaViewTab');
         const submitViewTab = document.getElementById('submitViewTab');
@@ -311,6 +364,8 @@
         const showNewOnlyCheckbox = document.getElementById('showNewOnly');
         const showFriendSchedulesCheckbox = document.getElementById('showFriendSchedules');
         const hidePastEventsCheckbox = document.getElementById('hidePastEvents');
+        const hideRejectedCheckbox = document.getElementById('hideRejected');
+        const hidePendingCheckbox = document.getElementById('hidePending');
         const selectAllDaysBtn = document.getElementById('selectAllDays');
         const clearAllDaysBtn = document.getElementById('clearAllDays');
         const eventModal = document.getElementById('eventModal');
@@ -321,8 +376,11 @@
         const modalLocation = document.getElementById('modalLocation');
         const modalDescription = document.getElementById('modalDescription');
         const modalApprovedBy = document.getElementById('modalApprovedBy');
-        const modalLink = document.getElementById('modalLink');
+        const modalSignUpBtn = document.getElementById('modalSignUpBtn');
+        const modalMoreDetailsLink = document.getElementById('modalMoreDetailsLink');
         const modalApprovedCheckbox = document.getElementById('modalApprovedCheckbox');
+        const modalRejectedCheckbox = document.getElementById('modalRejectedCheckbox');
+        const modalPendingCheckbox = document.getElementById('modalPendingCheckbox');
         const shareDetails = document.querySelector('details');
         const shareCodeInput = document.getElementById('shareCodeInput');
         const exportBtn = document.getElementById('exportBtn');
@@ -355,6 +413,8 @@
         let currentView = 'card';
         const SCHEDULES_KEY = 'calendarSchedules';
         const MY_SCHEDULE_KEY = '__ME__';
+        const REJECTED_EVENTS_KEY = 'calendarRejectedEvents';
+        const PENDING_EVENTS_KEY = 'calendarPendingEvents';
         const CACHE_KEY = 'calendarDataCache';
         const LAST_REFRESH_KEY = 'calendarLastRefresh';
         const NEW_EVENTS_KEY = 'calendarNewEvents';
@@ -378,14 +438,93 @@
             }
             return friends;
         }
+        function getRejectedEvents() {
+            const rejected = localStorage.getItem(REJECTED_EVENTS_KEY);
+            return rejected ? new Set(JSON.parse(rejected)) : new Set();
+        }
+        function saveRejectedEvents(rejectedIdsSet) {
+            localStorage.setItem(REJECTED_EVENTS_KEY, JSON.stringify(Array.from(rejectedIdsSet)));
+        }
+        function isEventRejected(eventId) {
+            return getRejectedEvents().has(eventId);
+        }
+        function getPendingEvents() {
+            const pending = localStorage.getItem(PENDING_EVENTS_KEY);
+            return pending ? new Set(JSON.parse(pending)) : new Set();
+        }
+        function savePendingEvents(pendingIdsSet) {
+            localStorage.setItem(PENDING_EVENTS_KEY, JSON.stringify(Array.from(pendingIdsSet)));
+        }
+        function isEventPending(eventId) {
+            return getPendingEvents().has(eventId);
+        }
+        function toggleRejectedStatus(eventId) {
+            const rejectedIds = getRejectedEvents();
+            const schedules = getSchedules();
+            const mySchedule = new Set(schedules[MY_SCHEDULE_KEY]);
+            const pendingIds = getPendingEvents();
+
+            if (rejectedIds.has(eventId)) {
+                rejectedIds.delete(eventId);
+            } else {
+                rejectedIds.add(eventId);
+                if (mySchedule.has(eventId)) {
+                    mySchedule.delete(eventId);
+                    schedules[MY_SCHEDULE_KEY] = Array.from(mySchedule);
+                    saveSchedules(schedules);
+                }
+                if (pendingIds.has(eventId)) {
+                    pendingIds.delete(eventId);
+                    savePendingEvents(pendingIds);
+                }
+            }
+            saveRejectedEvents(rejectedIds);
+        }
+        function togglePendingStatus(eventId) {
+            const pendingIds = getPendingEvents();
+            const schedules = getSchedules();
+            const mySchedule = new Set(schedules[MY_SCHEDULE_KEY]);
+            const rejectedIds = getRejectedEvents();
+
+            if (pendingIds.has(eventId)) {
+                pendingIds.delete(eventId);
+            } else {
+                pendingIds.add(eventId);
+                if (mySchedule.has(eventId)) {
+                    mySchedule.delete(eventId);
+                    schedules[MY_SCHEDULE_KEY] = Array.from(mySchedule);
+                    saveSchedules(schedules);
+                }
+                if (rejectedIds.has(eventId)) {
+                    rejectedIds.delete(eventId);
+                    saveRejectedEvents(rejectedIds);
+                }
+            }
+            savePendingEvents(pendingIds);
+        }
         function toggleMyApprovedStatus(eventId) {
             const schedules = getSchedules();
             if (!schedules[MY_SCHEDULE_KEY]) { schedules[MY_SCHEDULE_KEY] = []; }
             const mySchedule = new Set(schedules[MY_SCHEDULE_KEY]);
-            if (mySchedule.has(eventId)) { mySchedule.delete(eventId); } else { mySchedule.add(eventId); }
+            const rejectedIds = getRejectedEvents();
+            const pendingIds = getPendingEvents();
+
+            if (mySchedule.has(eventId)) {
+                mySchedule.delete(eventId);
+            } else {
+                mySchedule.add(eventId);
+                if (rejectedIds.has(eventId)) {
+                    rejectedIds.delete(eventId);
+                    saveRejectedEvents(rejectedIds);
+                }
+                if (pendingIds.has(eventId)) {
+                    pendingIds.delete(eventId);
+                    savePendingEvents(pendingIds);
+                }
+            }
             schedules[MY_SCHEDULE_KEY] = Array.from(mySchedule);
             saveSchedules(schedules);
-            updatePartyOMeter(); // Update meter on change
+            updatePartyOMeter();
         }
         function getNewEventIds() {
             const newIds = localStorage.getItem(NEW_EVENTS_KEY);
@@ -506,6 +645,8 @@
             const showNewOnly = showNewOnlyCheckbox.checked;
             const showFriendSchedules = showFriendSchedulesCheckbox.checked;
             const hidePast = hidePastEventsCheckbox.checked;
+            const hideRejected = hideRejectedCheckbox.checked;
+            const hidePending = hidePendingCheckbox.checked;
             const newEventIds = getNewEventIds();
             const hiddenKeywords = getHiddenKeywords().map(k => k.toLowerCase()).filter(k => k);
             const now = new Date();
@@ -519,6 +660,9 @@
                     const endDate = new Date(endDateString);
                     if (endDate < now) return false;
                 }
+                
+                if (hideRejected && isEventRejected(event.id)) return false;
+                if (hidePending && isEventPending(event.id)) return false;
 
                 const isApprovedByMe = isEventApprovedByMe(event.id);
                 const isApprovedByFriend = getFriendApprovals(event.id).length > 0;
@@ -561,7 +705,21 @@
             totalEventCount.textContent = countableTotalEvents.length;
             
             cardViewContainer.innerHTML = ''; agendaViewContainer.innerHTML = '';
-            if (filteredEvents.length === 0 && currentView !== 'submit') { noResults.classList.remove('hidden'); return; }
+            
+            const searchTerm = searchInput.value.trim();
+            const isUrl = /^(https?:\/\/)/.test(searchTerm);
+
+            if (filteredEvents.length === 0 && currentView !== 'submit') { 
+                noResults.classList.remove('hidden');
+                if (isUrl) {
+                    noResultsStandard.classList.add('hidden');
+                    noResultsSubmit.classList.remove('hidden');
+                } else {
+                    noResultsStandard.classList.remove('hidden');
+                    noResultsSubmit.classList.add('hidden');
+                }
+                return; 
+            }
             noResults.classList.add('hidden');
             const sortedEvents = filteredEvents.sort((a, b) => new Date(getStartDateString(a)) - new Date(getStartDateString(b)));
             if (currentView === 'card') { renderCardView(sortedEvents); } 
@@ -576,9 +734,24 @@
             if (getNewEventIds().has(event.id)) {
                 modalTitle.innerHTML += '<span class="new-event-badge">New</span>';
             }
-            modalLink.href = event.htmlLink || '#';
-            modalDescription.innerHTML = event.description || '<p class="text-gray-500">No description provided.</p>';
+            
+            const descriptionText = event.description || '';
+            const signupLinkMatch = descriptionText.match(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"/);
+            const signupUrl = signupLinkMatch ? signupLinkMatch[1] : null;
+
+            if (signupUrl) {
+                modalSignUpBtn.href = signupUrl;
+                modalSignUpBtn.classList.remove('hidden');
+                modalDescription.innerHTML = descriptionText.replace(/<a[^>]*>.*<\/a>/, '');
+            } else {
+                modalSignUpBtn.classList.add('hidden');
+                modalDescription.innerHTML = descriptionText || '<p class="text-gray-500">No description provided.</p>';
+            }
+
+            modalMoreDetailsLink.href = event.htmlLink || '#';
             modalApprovedCheckbox.checked = isEventApprovedByMe(event.id);
+            modalRejectedCheckbox.checked = isEventRejected(event.id);
+            modalPendingCheckbox.checked = isEventPending(event.id);
             
             const friendApprovals = getFriendApprovals(event.id);
             const myApproval = isEventApprovedByMe(event.id) ? ['You'] : [];
@@ -628,8 +801,12 @@
         }
 
         function applyApprovalStyles(element, eventId) {
-            element.classList.remove('my-approved-event', 'friend-approved-event');
-            if (isEventApprovedByMe(eventId)) {
+            element.classList.remove('my-approved-event', 'friend-approved-event', 'rejected-event', 'pending-event');
+            if (isEventRejected(eventId)) {
+                element.classList.add('rejected-event');
+            } else if (isEventPending(eventId)) {
+                element.classList.add('pending-event');
+            } else if (isEventApprovedByMe(eventId)) {
                 element.classList.add('my-approved-event');
             } else if (getFriendApprovals(eventId).length > 0) {
                 element.classList.add('friend-approved-event');
@@ -748,7 +925,15 @@
         function updateExportField() {
             const schedules = getSchedules();
             const myScheduleIds = schedules[MY_SCHEDULE_KEY] || [];
-            shareCodeInput.value = myScheduleIds.join(',');
+            const rejectedIds = Array.from(getRejectedEvents());
+            const pendingIds = Array.from(getPendingEvents());
+            
+            const exportData = {
+                approved: myScheduleIds,
+                rejected: rejectedIds,
+                pending: pendingIds
+            };
+            shareCodeInput.value = btoa(JSON.stringify(exportData));
         }
         function exportApproved() {
             updateExportField(); 
@@ -771,21 +956,49 @@
                 shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
                 return;
             }
-            const ids = code.split(',').filter(id => id);
-            const schedules = getSchedules();
-            const importKey = nickname || MY_SCHEDULE_KEY;
-            schedules[importKey] = ids;
-            saveSchedules(schedules);
-            renderCurrentView();
-            if (nickname) {
-                shareStatus.textContent = `Successfully imported ${nickname}'s schedule!`;
-            } else {
-                shareStatus.textContent = `Successfully synced your schedule!`;
+
+            try {
+                const decoded = atob(code);
+                const parsedData = JSON.parse(decoded);
+
+                if (nickname) { // Importing a friend's schedule
+                    const schedules = getSchedules();
+                    schedules[nickname] = parsedData.approved || [];
+                    saveSchedules(schedules);
+                    shareStatus.textContent = `Successfully imported ${nickname}'s schedule!`;
+                } else { // Syncing my own schedule
+                    const schedules = getSchedules();
+                    schedules[MY_SCHEDULE_KEY] = parsedData.approved || [];
+                    saveSchedules(schedules);
+                    saveRejectedEvents(new Set(parsedData.rejected || []));
+                    savePendingEvents(new Set(parsedData.pending || []));
+                    shareStatus.textContent = `Successfully synced your schedule!`;
+                }
+                
+                renderCurrentView();
+                shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+                importCodeInput.value = '';
+                importNicknameInput.value = '';
+                setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+
+            } catch (error) {
+                // Fallback for old, simple comma-separated format
+                const ids = code.split(',').filter(id => id);
+                const schedules = getSchedules();
+                const importKey = nickname || MY_SCHEDULE_KEY;
+                schedules[importKey] = ids;
+                saveSchedules(schedules);
+                renderCurrentView();
+                if (nickname) {
+                    shareStatus.textContent = `Successfully imported ${nickname}'s (legacy) schedule!`;
+                } else {
+                    shareStatus.textContent = `Successfully synced your (legacy) schedule!`;
+                }
+                shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+                importCodeInput.value = '';
+                importNicknameInput.value = '';
+                setTimeout(() => { shareStatus.textContent = ''; }, 3000);
             }
-            shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
-            importCodeInput.value = '';
-            importNicknameInput.value = '';
-            setTimeout(() => { shareStatus.textContent = ''; }, 3000);
         }
         function renderFriendList() {
             const schedules = getSchedules();
@@ -872,11 +1085,10 @@
             emailBtn.href = `mailto:?subject=${emailSubject}&body=${encodedMessage}`;
         }
 
-        async function submitToGoogleForm() {
-            const urlToSubmit = partyUrlInput.value.trim();
-            if (!urlToSubmit) {
-                submitStatus.textContent = 'Please enter a URL.';
-                submitStatus.className = 'text-sm text-red-600 mt-2 font-medium';
+        async function submitToGoogleForm(url, statusElement, buttonElement) {
+            if (!url) {
+                statusElement.textContent = 'Please enter a URL.';
+                statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
                 return;
             }
 
@@ -884,12 +1096,12 @@
             const urlEntryId = 'entry.1363926836';
 
             const formData = new FormData();
-            formData.append(urlEntryId, urlToSubmit);
+            formData.append(urlEntryId, url);
 
             try {
-                submitPartyBtn.disabled = true;
-                submitStatus.textContent = 'Submitting...';
-                submitStatus.className = 'text-sm text-gray-600 mt-2 font-medium';
+                buttonElement.disabled = true;
+                statusElement.textContent = 'Submitting...';
+                statusElement.className = 'text-sm text-gray-600 mt-2 font-medium';
 
                 await fetch(googleFormUrl, {
                     method: 'POST',
@@ -897,17 +1109,26 @@
                     mode: 'no-cors' 
                 });
 
-                submitStatus.textContent = 'Thank you! Your submission has been received.';
-                submitStatus.className = 'text-sm text-green-600 mt-2 font-medium';
-                partyUrlInput.value = '';
+                statusElement.textContent = 'Thank you! Your submission has been received.';
+                statusElement.className = 'text-sm text-green-600 mt-2 font-medium';
+                if (partyUrlInput.value) partyUrlInput.value = '';
             } catch (error) {
                 console.error('Error submitting form:', error);
-                submitStatus.textContent = 'An error occurred. Please try again.';
-                submitStatus.className = 'text-sm text-red-600 mt-2 font-medium';
+                statusElement.textContent = 'An error occurred. Please try again.';
+                statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
             } finally {
-                submitPartyBtn.disabled = false;
-                setTimeout(() => { submitStatus.textContent = ''; }, 5000);
+                buttonElement.disabled = false;
+                setTimeout(() => { statusElement.textContent = ''; }, 5000);
             }
+        }
+        
+        function handleSearchInput() {
+            if (searchInput.value.trim().length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+            renderCurrentView();
         }
 
         // --- EVENT LISTENERS ---
@@ -919,6 +1140,8 @@
         showNewOnlyCheckbox.addEventListener('change', renderCurrentView);
         showFriendSchedulesCheckbox.addEventListener('change', renderCurrentView);
         hidePastEventsCheckbox.addEventListener('change', renderCurrentView);
+        hideRejectedCheckbox.addEventListener('change', renderCurrentView);
+        hidePendingCheckbox.addEventListener('change', renderCurrentView);
         closeModal.addEventListener('click', hideModal);
         eventModal.addEventListener('click', (e) => { if (e.target === eventModal) hideModal(); });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !eventModal.classList.contains('hidden')) hideModal(); });
@@ -934,6 +1157,24 @@
             const eventId = modalContent.dataset.eventId;
             if (eventId) {
                 toggleMyApprovedStatus(eventId);
+                renderCurrentView();
+                const event = allEvents.find(e => e.id === eventId);
+                if (event) showModal(event);
+            }
+        });
+        modalRejectedCheckbox.addEventListener('change', () => {
+            const eventId = modalContent.dataset.eventId;
+            if (eventId) {
+                toggleRejectedStatus(eventId);
+                renderCurrentView();
+                const event = allEvents.find(e => e.id === eventId);
+                if (event) showModal(event);
+            }
+        });
+        modalPendingCheckbox.addEventListener('change', () => {
+            const eventId = modalContent.dataset.eventId;
+            if (eventId) {
+                togglePendingStatus(eventId);
                 renderCurrentView();
                 const event = allEvents.find(e => e.id === eventId);
                 if (event) showModal(event);
@@ -981,7 +1222,14 @@
                 scrollNav.classList.remove('flex');
             }
         });
-        submitPartyBtn.addEventListener('click', submitToGoogleForm);
+        submitPartyBtn.addEventListener('click', () => submitToGoogleForm(partyUrlInput.value.trim(), submitStatus, submitPartyBtn));
+        submitSearchedUrlBtn.addEventListener('click', () => submitToGoogleForm(searchInput.value.trim(), submitSearchStatus, submitSearchedUrlBtn));
+        searchInput.addEventListener('keyup', handleSearchInput);
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            handleSearchInput();
+            searchInput.focus();
+        });
 
         // --- INITIAL LOAD ---
         loadInitialData();
