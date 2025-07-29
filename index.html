@@ -219,8 +219,8 @@
                     <span>Hide Rejected</span>
                 </label>
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-blue-700 pr-4">
-                    <input type="checkbox" id="hidePending" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <span>Hide Pending</span>
+                    <input type="checkbox" id="showPendingOnly" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <span>Show Pending Only</span>
                 </label>
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-green-700 pr-4">
                     <input type="checkbox" id="showApprovedOnly" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
@@ -314,6 +314,7 @@
                 <li><strong>Submit a Party:</strong> Use the "Submit a Party" tab or search for a URL to suggest new events for the calendar.</li>
                 <li><strong>Cut & Paste:</strong> Save your registration info for yourself and friends to easily copy/paste into forms.</li>
                 <li><strong>Smart Refresh:</strong> Calendar data is cached for 48 hours to reduce load times. You can force a refresh every 5 minutes with the "Refresh Now" button.</li>
+                <li><strong>Analytics:</strong> Clicks on "Sign Up," "Approved," and "Rejected" are tracked anonymously to help us understand which events are the most popular.</li>
             </ul>
         </div>
         
@@ -457,7 +458,7 @@
     </div>
 
     <footer class="text-center py-4">
-        <p class="text-sm text-gray-500">Version 1.0.9-beta</p>
+        <p class="text-sm text-gray-500">Version 1.1.0-beta</p>
     </footer>
 
     <script>
@@ -486,7 +487,7 @@
         const showFriendSchedulesCheckbox = document.getElementById('showFriendSchedules');
         const hidePastEventsCheckbox = document.getElementById('hidePastEvents');
         const hideRejectedCheckbox = document.getElementById('hideRejected');
-        const hidePendingCheckbox = document.getElementById('hidePending');
+        const showPendingOnlyCheckbox = document.getElementById('showPendingOnly');
         const selectAllDaysBtn = document.getElementById('selectAllDays');
         const clearAllDaysBtn = document.getElementById('clearAllDays');
         const eventModal = document.getElementById('eventModal');
@@ -549,6 +550,13 @@
         const PROFILES_KEY = 'calendarProfiles';
         const MANUAL_REFRESH_COOLDOWN = 5 * 60 * 1000; // 5 minutes
         const AUTO_REFRESH_INTERVAL = 48 * 60 * 60 * 1000; // 48 hours
+        
+        // --- IMPORTANT: PASTE YOUR GOOGLE FORM DETAILS HERE FOR ANALYTICS ---
+        const analyticsFormUrl = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSf3LDwZiQ8S59nm5BVYoId0fp2CkyDr0IJVACbn2h4vTLe2yw/formResponse';
+        const signUpEntryId = 'entry.1733744458';
+        const approvedEntryId = 'entry.427064668';
+        const rejectedEntryId = 'entry.1156301161';
+        // ---------------------------------------------------------------
 
         // --- SCHEDULE & LOCAL STORAGE HELPERS ---
         function getSchedules() {
@@ -591,11 +599,13 @@
             const schedules = getSchedules();
             const mySchedule = new Set(schedules[MY_SCHEDULE_KEY]);
             const pendingIds = getPendingEvents();
+            const event = allEvents.find(e => e.id === eventId);
 
             if (rejectedIds.has(eventId)) {
                 rejectedIds.delete(eventId);
             } else {
                 rejectedIds.add(eventId);
+                if(event) trackEventAction(rejectedEntryId, event.summary, 'rejected');
                 if (mySchedule.has(eventId)) {
                     mySchedule.delete(eventId);
                     schedules[MY_SCHEDULE_KEY] = Array.from(mySchedule);
@@ -636,11 +646,13 @@
             const mySchedule = new Set(schedules[MY_SCHEDULE_KEY]);
             const rejectedIds = getRejectedEvents();
             const pendingIds = getPendingEvents();
+            const event = allEvents.find(e => e.id === eventId);
 
             if (mySchedule.has(eventId)) {
                 mySchedule.delete(eventId);
             } else {
                 mySchedule.add(eventId);
+                if(event) trackEventAction(approvedEntryId, event.summary, 'approved');
                 if (rejectedIds.has(eventId)) {
                     rejectedIds.delete(eventId);
                     saveRejectedEvents(rejectedIds);
@@ -785,7 +797,7 @@
             const showFriendSchedules = showFriendSchedulesCheckbox.checked;
             const hidePast = hidePastEventsCheckbox.checked;
             const hideRejected = hideRejectedCheckbox.checked;
-            const hidePending = hidePendingCheckbox.checked;
+            const showPendingOnly = document.getElementById('showPendingOnly').checked;
             const newEventIds = getNewEventIds();
             const hiddenKeywords = getHiddenKeywords().map(k => k.toLowerCase()).filter(k => k);
             const now = new Date();
@@ -800,8 +812,11 @@
                     if (endDate < now) return false;
                 }
                 
-                if (hideRejected && isEventRejected(event.id)) return false;
-                if (hidePending && isEventPending(event.id)) return false;
+                if (showPendingOnly) {
+                    if (!isEventPending(event.id)) return false;
+                } else {
+                    if (hideRejected && isEventRejected(event.id)) return false;
+                }
 
                 const isApprovedByMe = isEventApprovedByMe(event.id);
                 const isApprovedByFriend = getFriendApprovals(event.id).length > 0;
@@ -882,6 +897,12 @@
                 modalSignUpBtn.href = signupUrl;
                 modalSignUpBtn.classList.remove('hidden');
                 modalDescription.innerHTML = descriptionText.replace(/<a[^>]*>.*<\/a>/, '');
+                
+                // Add a one-time event listener for tracking
+                modalSignUpBtn.onclick = () => {
+                    trackEventAction(signUpEntryId, event.summary, 'signup');
+                };
+
             } else {
                 modalSignUpBtn.classList.add('hidden');
                 modalDescription.innerHTML = descriptionText || '<p class="text-gray-500">No description provided.</p>';
@@ -1261,6 +1282,23 @@
             }
         }
         
+        async function trackEventAction(entryId, eventTitle, action) {
+            if (!analyticsFormUrl || !entryId || !eventTitle) return;
+            
+            const formData = new FormData();
+            formData.append(entryId, eventTitle);
+
+            try {
+                await fetch(analyticsFormUrl, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors'
+                });
+            } catch (error) {
+                console.error(`Error tracking ${action} action for event ${eventTitle}:`, error);
+            }
+        }
+
         function handleSearchInput() {
             if (searchInput.value.trim().length > 0) {
                 clearSearchBtn.classList.remove('hidden');
@@ -1362,135 +1400,137 @@
         }
 
         // --- EVENT LISTENERS ---
-        cardViewTab.addEventListener('click', () => switchView('card'));
-        agendaViewTab.addEventListener('click', () => switchView('agenda'));
-        submitViewTab.addEventListener('click', () => switchView('submit'));
-        helpViewTab.addEventListener('click', () => switchView('help'));
-        cutPasteViewTab.addEventListener('click', () => switchView('cutPaste'));
-        document.querySelectorAll('.day-filter').forEach(cb => cb.addEventListener('change', renderCurrentView));
-        showApprovedOnlyCheckbox.addEventListener('change', renderCurrentView);
-        showNewOnlyCheckbox.addEventListener('change', renderCurrentView);
-        showFriendSchedulesCheckbox.addEventListener('change', renderCurrentView);
-        hidePastEventsCheckbox.addEventListener('change', renderCurrentView);
-        hideRejectedCheckbox.addEventListener('change', renderCurrentView);
-        hidePendingCheckbox.addEventListener('change', renderCurrentView);
-        closeModal.addEventListener('click', hideModal);
-        eventModal.addEventListener('click', (e) => { if (e.target === eventModal) hideModal(); });
-        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !eventModal.classList.contains('hidden')) hideModal(); });
-        selectAllDaysBtn.addEventListener('click', () => {
-            document.querySelectorAll('.day-filter').forEach(cb => cb.checked = true);
-            renderCurrentView();
-        });
-        clearAllDaysBtn.addEventListener('click', () => {
-            document.querySelectorAll('.day-filter').forEach(cb => cb.checked = false);
-            renderCurrentView();
-        });
-        modalApprovedCheckbox.addEventListener('change', () => {
-            const eventId = modalContent.dataset.eventId;
-            if (eventId) {
-                toggleMyApprovedStatus(eventId);
+        document.addEventListener('DOMContentLoaded', () => {
+            cardViewTab.addEventListener('click', () => switchView('card'));
+            agendaViewTab.addEventListener('click', () => switchView('agenda'));
+            submitViewTab.addEventListener('click', () => switchView('submit'));
+            helpViewTab.addEventListener('click', () => switchView('help'));
+            cutPasteViewTab.addEventListener('click', () => switchView('cutPaste'));
+            document.querySelectorAll('.day-filter').forEach(cb => cb.addEventListener('change', renderCurrentView));
+            showApprovedOnlyCheckbox.addEventListener('change', renderCurrentView);
+            showNewOnlyCheckbox.addEventListener('change', renderCurrentView);
+            showFriendSchedulesCheckbox.addEventListener('change', renderCurrentView);
+            hidePastEventsCheckbox.addEventListener('change', renderCurrentView);
+            hideRejectedCheckbox.addEventListener('change', renderCurrentView);
+            showPendingOnlyCheckbox.addEventListener('change', renderCurrentView);
+            closeModal.addEventListener('click', hideModal);
+            eventModal.addEventListener('click', (e) => { if (e.target === eventModal) hideModal(); });
+            window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !eventModal.classList.contains('hidden')) hideModal(); });
+            selectAllDaysBtn.addEventListener('click', () => {
+                document.querySelectorAll('.day-filter').forEach(cb => cb.checked = true);
                 renderCurrentView();
-                const event = allEvents.find(e => e.id === eventId);
-                if (event) showModal(event);
-            }
-        });
-        modalRejectedCheckbox.addEventListener('change', () => {
-            const eventId = modalContent.dataset.eventId;
-            if (eventId) {
-                toggleRejectedStatus(eventId);
+            });
+            clearAllDaysBtn.addEventListener('click', () => {
+                document.querySelectorAll('.day-filter').forEach(cb => cb.checked = false);
                 renderCurrentView();
-                const event = allEvents.find(e => e.id === eventId);
-                if (event) showModal(event);
-            }
-        });
-        modalPendingCheckbox.addEventListener('change', () => {
-            const eventId = modalContent.dataset.eventId;
-            if (eventId) {
-                togglePendingStatus(eventId);
-                renderCurrentView();
-                const event = allEvents.find(e => e.id === eventId);
-                if (event) showModal(event);
-            }
-        });
-        shareDetails.addEventListener('toggle', (event) => {
-            if (event.target.open) {
-                updateExportField();
-                renderFriendList();
-            }
-        });
-        exportBtn.addEventListener('click', exportApproved);
-        importBtn.addEventListener('click', importApproved);
-        refreshBtn.addEventListener('click', () => fetchAndCacheEvents(true));
-        saveHiddenKeywordsBtn.addEventListener('click', () => {
-            const keywordsText = hiddenKeywordsTextarea.value;
-            const keywordsArray = keywordsText.split(',').map(k => k.trim()).filter(k => k);
-            saveHiddenKeywords(keywordsArray);
-            renderCurrentView();
-            shareStatus.textContent = 'Hidden keyword filter saved!';
-            shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
-            setTimeout(() => { shareStatus.textContent = ''; }, 3000);
-        });
-        keywordFilterDetails.addEventListener('toggle', (event) => {
-            if (event.target.open) {
-                hiddenKeywordsTextarea.value = getHiddenKeywords().join(', ');
-            }
-        });
-        closeSwagBannerBtn.addEventListener('click', () => {
-            swagBanner.style.display = 'none';
-            sessionStorage.setItem('swagBannerClosed', 'true');
-        });
-        scrollTopBtn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-        scrollBottomBtn.addEventListener('click', () => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        });
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 200) {
-                scrollNav.classList.remove('hidden');
-                scrollNav.classList.add('flex');
-            } else {
-                scrollNav.classList.add('hidden');
-                scrollNav.classList.remove('flex');
-            }
-        });
-        submitPartyBtn.addEventListener('click', () => submitToGoogleForm(partyUrlInput.value.trim(), submitStatus, submitPartyBtn));
-        submitSearchedUrlBtn.addEventListener('click', () => submitToGoogleForm(searchInput.value.trim(), submitSearchStatus, submitSearchedUrlBtn));
-        searchInput.addEventListener('keyup', handleSearchInput);
-        clearSearchBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            handleSearchInput();
-            searchInput.focus();
-        });
-        addNewProfileBtn.addEventListener('click', addNewProfile);
-        deleteProfileBtn.addEventListener('click', deleteCurrentProfile);
-        saveProfileBtn.addEventListener('click', saveCurrentProfile);
-        profileSelector.addEventListener('change', () => loadProfileData(profileSelector.value));
-        
-        cutPasteViewContainer.addEventListener('click', (e) => {
-            const button = e.target.closest('.copy-btn');
-            if (button) {
-                const targetId = button.dataset.target;
-                const targetInput = document.getElementById(targetId);
-                if (targetInput && targetInput.value) {
-                    const tempTextArea = document.createElement('textarea');
-                    tempTextArea.value = targetInput.value;
-                    document.body.appendChild(tempTextArea);
-                    tempTextArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tempTextArea);
-
-                    const originalContent = button.innerHTML;
-                    button.innerHTML = `<span class="text-xs text-indigo-600 font-bold">Copied!</span>`;
-                    setTimeout(() => {
-                        button.innerHTML = originalContent;
-                    }, 1500);
+            });
+            modalApprovedCheckbox.addEventListener('change', () => {
+                const eventId = modalContent.dataset.eventId;
+                if (eventId) {
+                    toggleMyApprovedStatus(eventId);
+                    renderCurrentView();
+                    const event = allEvents.find(e => e.id === eventId);
+                    if (event) showModal(event);
                 }
-            }
-        });
+            });
+            modalRejectedCheckbox.addEventListener('change', () => {
+                const eventId = modalContent.dataset.eventId;
+                if (eventId) {
+                    toggleRejectedStatus(eventId);
+                    renderCurrentView();
+                    const event = allEvents.find(e => e.id === eventId);
+                    if (event) showModal(event);
+                }
+            });
+            modalPendingCheckbox.addEventListener('change', () => {
+                const eventId = modalContent.dataset.eventId;
+                if (eventId) {
+                    togglePendingStatus(eventId);
+                    renderCurrentView();
+                    const event = allEvents.find(e => e.id === eventId);
+                    if (event) showModal(event);
+                }
+            });
+            shareDetails.addEventListener('toggle', (event) => {
+                if (event.target.open) {
+                    updateExportField();
+                    renderFriendList();
+                }
+            });
+            exportBtn.addEventListener('click', exportApproved);
+            importBtn.addEventListener('click', importApproved);
+            refreshBtn.addEventListener('click', () => fetchAndCacheEvents(true));
+            saveHiddenKeywordsBtn.addEventListener('click', () => {
+                const keywordsText = hiddenKeywordsTextarea.value;
+                const keywordsArray = keywordsText.split(',').map(k => k.trim()).filter(k => k);
+                saveHiddenKeywords(keywordsArray);
+                renderCurrentView();
+                shareStatus.textContent = 'Hidden keyword filter saved!';
+                shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+                setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+            });
+            keywordFilterDetails.addEventListener('toggle', (event) => {
+                if (event.target.open) {
+                    hiddenKeywordsTextarea.value = getHiddenKeywords().join(', ');
+                }
+            });
+            closeSwagBannerBtn.addEventListener('click', () => {
+                swagBanner.style.display = 'none';
+                sessionStorage.setItem('swagBannerClosed', 'true');
+            });
+            scrollTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            scrollBottomBtn.addEventListener('click', () => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            });
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 200) {
+                    scrollNav.classList.remove('hidden');
+                    scrollNav.classList.add('flex');
+                } else {
+                    scrollNav.classList.add('hidden');
+                    scrollNav.classList.remove('flex');
+                }
+            });
+            submitPartyBtn.addEventListener('click', () => submitToGoogleForm(partyUrlInput.value.trim(), submitStatus, submitPartyBtn));
+            submitSearchedUrlBtn.addEventListener('click', () => submitToGoogleForm(searchInput.value.trim(), submitSearchStatus, submitSearchedUrlBtn));
+            searchInput.addEventListener('keyup', handleSearchInput);
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                handleSearchInput();
+                searchInput.focus();
+            });
+            addNewProfileBtn.addEventListener('click', addNewProfile);
+            deleteProfileBtn.addEventListener('click', deleteCurrentProfile);
+            saveProfileBtn.addEventListener('click', saveCurrentProfile);
+            profileSelector.addEventListener('change', () => loadProfileData(profileSelector.value));
+            
+            cutPasteViewContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.copy-btn');
+                if (button) {
+                    const targetId = button.dataset.target;
+                    const targetInput = document.getElementById(targetId);
+                    if (targetInput && targetInput.value) {
+                        const tempTextArea = document.createElement('textarea');
+                        tempTextArea.value = targetInput.value;
+                        document.body.appendChild(tempTextArea);
+                        tempTextArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(tempTextArea);
 
-        // --- INITIAL LOAD ---
-        loadInitialData();
+                        const originalContent = button.innerHTML;
+                        button.innerHTML = `<span class="text-xs text-indigo-600 font-bold">Copied!</span>`;
+                        setTimeout(() => {
+                            button.innerHTML = originalContent;
+                        }, 1500);
+                    }
+                }
+            });
+
+            // --- INITIAL LOAD ---
+            loadInitialData();
+        });
         
     </script>
 </body>
