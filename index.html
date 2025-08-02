@@ -109,6 +109,24 @@
             color: #DAA520 !important; /* GoldenRod for a slightly darker gold */
             font-weight: 700;
         }
+        /* Custom Floridaman Event Styles */
+        .floridaman-event {
+            background-color: #FF69B4 !important; /* Hot Pink */
+            color: black !important;
+        }
+        .floridaman-event h3, 
+        .floridaman-event p, 
+        .floridaman-event span,
+        .floridaman-event .text-gray-600 {
+            color: black !important;
+        }
+        .floridaman-event svg {
+            stroke: black !important;
+        }
+        .floridaman-agenda-title {
+            color: #FF1493 !important; /* Deep Pink for a slightly darker pink */
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -476,7 +494,7 @@
     </div>
 
     <footer class="text-center py-4">
-        <p class="text-sm text-gray-500">Version 1.1.1-beta</p>
+        <p class="text-sm text-gray-500">Version 1.1.2-beta</p>
     </footer>
 
     <script>
@@ -1013,6 +1031,7 @@
                     eventRow.className = 'flex items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors';
                     const isDC801 = (event.summary || '').toLowerCase().includes('dc801');
                     const isHackerJeopardy = (event.summary || '').toLowerCase().includes('hacker jeopardy');
+                    const isFloridaman = (event.summary || '').toLowerCase().includes('floridaman');
 
                     applyApprovalStyles(eventRow, event.id);
                     eventRow.addEventListener('click', () => showModal(event));
@@ -1034,6 +1053,8 @@
                         titleClass = 'dc801-agenda-title';
                     } else if (isHackerJeopardy) {
                         titleClass = 'hacker-jeopardy-agenda-title';
+                    } else if (isFloridaman) {
+                        titleClass = 'floridaman-agenda-title';
                     }
                     eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${timeRange}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center ${titleClass}">${event.summary || 'No Title'} ${newBadge}</p><p class="text-gray-500">${event.location || ''}</p></div>`;
                     agendaViewContainer.appendChild(eventRow);
@@ -1049,11 +1070,14 @@
                 eventCard.className = 'event-card bg-white rounded-lg shadow-md overflow-hidden p-6 flex flex-col cursor-pointer';
                 const isDC801 = (event.summary || '').toLowerCase().includes('dc801');
                 const isHackerJeopardy = (event.summary || '').toLowerCase().includes('hacker jeopardy');
+                const isFloridaman = (event.summary || '').toLowerCase().includes('floridaman');
 
                 if (isDC801) {
                     eventCard.classList.add('dc801-event');
                 } else if (isHackerJeopardy) {
                     eventCard.classList.add('hacker-jeopardy-event');
+                } else if (isFloridaman) {
+                    eventCard.classList.add('floridaman-event');
                 } else {
                     applyApprovalStyles(eventCard, event.id);
                 }
@@ -1093,6 +1117,8 @@
                     imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium" alt="DC801 Event Image" class="max-h-full w-auto object-contain" onerror="this.style.display='none'"></div>`;
                 } else if (isHackerJeopardy) {
                     imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://hackerjeopardy.com/img/hj-title.png" alt="Hacker Jeopardy Image" class="max-h-full w-auto object-contain" onerror="this.style.display='none'"></div>`;
+                } else if (isFloridaman) {
+                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://floridaman.party/Floyd-the-flamingo-badge-clear.svg" alt="Floridaman Party Image" class="max-h-full w-auto object-contain" onerror="this.style.display='none'"></div>`;
                 }
                 
                 eventCard.innerHTML = `
