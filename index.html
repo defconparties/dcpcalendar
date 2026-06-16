@@ -3,8 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DEFCON PARTIES LABS Calendar</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src https: data:; connect-src https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com https://docs.google.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action https://docs.google.com;">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>DEFCON Parties Calendar</title>
+    <script>
+        (function () {
+            const themeKey = 'calendarTheme_2026';
+            const saved = localStorage.getItem(themeKey);
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js" integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu" crossorigin="anonymous"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -127,9 +143,188 @@
             color: #FF1493 !important; /* Deep Pink for a slightly darker pink */
             font-weight: 700;
         }
+
+        /* Dark mode */
+        html.dark {
+            color-scheme: dark;
+        }
+        html.dark body {
+            background-color: #111827;
+            color: #e5e7eb;
+        }
+        html.dark .bg-white {
+            background-color: #1f2937 !important;
+        }
+        html.dark .bg-gray-50 {
+            background-color: #374151 !important;
+        }
+        html.dark .bg-gray-100 {
+            background-color: #111827 !important;
+        }
+        html.dark .bg-gray-200 {
+            background-color: #4b5563 !important;
+        }
+        html.dark .text-gray-900,
+        html.dark .text-gray-800,
+        html.dark .text-gray-700 {
+            color: #f3f4f6 !important;
+        }
+        html.dark .text-gray-600,
+        html.dark .text-gray-500 {
+            color: #d1d5db !important;
+        }
+        html.dark .text-gray-400 {
+            color: #9ca3af !important;
+        }
+        html.dark .border-gray-200,
+        html.dark .border-gray-300,
+        html.dark .border-b,
+        html.dark .border-t {
+            border-color: #4b5563 !important;
+        }
+        html.dark input,
+        html.dark textarea,
+        html.dark select {
+            background-color: #374151 !important;
+            color: #f3f4f6 !important;
+            border-color: #4b5563 !important;
+        }
+        html.dark input::placeholder,
+        html.dark textarea::placeholder {
+            color: #9ca3af !important;
+        }
+        html.dark .tab-active {
+            border-color: #818cf8 !important;
+            color: #a5b4fc !important;
+            background-color: #312e81 !important;
+        }
+        html.dark .tab-active-red {
+            border-color: #f87171 !important;
+            color: #fca5a5 !important;
+            background-color: #7f1d1d !important;
+        }
+        html.dark .agenda-day-header {
+            background-color: #1f2937 !important;
+            color: #f3f4f6 !important;
+        }
+        html.dark .my-approved-event {
+            background-color: #14532d !important;
+            border-left-color: #4ade80 !important;
+        }
+        html.dark .my-approved-event:hover {
+            background-color: #166534 !important;
+        }
+        html.dark .friend-approved-event {
+            background-color: #7c2d12 !important;
+            border-left-color: #fb923c !important;
+        }
+        html.dark .friend-approved-event:hover {
+            background-color: #9a3412 !important;
+        }
+        html.dark .rejected-event {
+            background-color: #7f1d1d !important;
+            border-left-color: #f87171 !important;
+        }
+        html.dark .rejected-event:hover {
+            background-color: #991b1b !important;
+        }
+        html.dark .pending-event {
+            background-color: #0c4a6e !important;
+            border-left-color: #38bdf8 !important;
+        }
+        html.dark .pending-event:hover {
+            background-color: #075985 !important;
+        }
+        html.dark .new-event-badge {
+            background-color: #312e81 !important;
+            color: #c7d2fe !important;
+        }
+        html.dark .event-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+        }
+        html.dark .agenda-event-row:hover {
+            background-color: #374151 !important;
+        }
+        html.dark #modalDescription,
+        html.dark #helpViewContainer {
+            color: #d1d5db !important;
+        }
+        html.dark #modalDescription a,
+        html.dark #helpViewContainer a {
+            color: #818cf8 !important;
+        }
+        html.dark #themeToggle {
+            background-color: #374151;
+            color: #e5e7eb;
+            border-color: #4b5563;
+        }
+        html.dark #themeToggle:hover {
+            background-color: #4b5563;
+        }
+        html.dark #darkModeIcon {
+            display: block;
+        }
+        html.dark #lightModeIcon {
+            display: none;
+        }
+        #darkModeIcon {
+            display: none;
+        }
+        /* Keep signature events loud in dark mode */
+        html.dark .dc801-event {
+            background-color: #ff5722 !important;
+            color: black !important;
+        }
+        html.dark .dc801-event h3,
+        html.dark .dc801-event p,
+        html.dark .dc801-event span,
+        html.dark .dc801-event div,
+        html.dark .dc801-event .text-gray-600,
+        html.dark .dc801-event .text-gray-700,
+        html.dark .dc801-event .text-gray-900 {
+            color: black !important;
+        }
+        html.dark .dc801-event svg {
+            stroke: black !important;
+        }
+        html.dark .dc801-agenda-title {
+            color: #ff5722 !important;
+        }
+        html.dark .hacker-jeopardy-event {
+            background-color: #FFD700 !important;
+            color: black !important;
+        }
+        html.dark .hacker-jeopardy-event h3,
+        html.dark .hacker-jeopardy-event p,
+        html.dark .hacker-jeopardy-event span,
+        html.dark .hacker-jeopardy-event div,
+        html.dark .hacker-jeopardy-event .text-gray-600,
+        html.dark .hacker-jeopardy-event .text-gray-700,
+        html.dark .hacker-jeopardy-event .text-gray-900 {
+            color: black !important;
+        }
+        html.dark .hacker-jeopardy-agenda-title {
+            color: #DAA520 !important;
+        }
+        html.dark .floridaman-event {
+            background-color: #FF69B4 !important;
+            color: black !important;
+        }
+        html.dark .floridaman-event h3,
+        html.dark .floridaman-event p,
+        html.dark .floridaman-event span,
+        html.dark .floridaman-event div,
+        html.dark .floridaman-event .text-gray-600,
+        html.dark .floridaman-event .text-gray-700,
+        html.dark .floridaman-event .text-gray-900 {
+            color: black !important;
+        }
+        html.dark .floridaman-agenda-title {
+            color: #FF1493 !important;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
 
     <!-- Swag Banner -->
     <div id="swagBanner" class="bg-indigo-600 text-white text-center p-2 relative">
@@ -144,10 +339,14 @@
     </div>
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-        <header class="text-center mb-6">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">DEFCON PARTIES CALENDAR BETA</h1>
-            <p class="text-md text-gray-600 mt-2">A searchable interface for your events.</p>
-            <p class="text-sm text-gray-500 mt-1">All event times are displayed in Pacific Time (PST/PDT).</p>
+        <header class="text-center mb-6 relative">
+            <button id="themeToggle" type="button" class="absolute right-0 top-0 p-2 rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg id="lightModeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="darkModeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">DEFCON PARTIES CALENDAR BETA</h1>
+            <p class="text-md text-gray-600 dark:text-gray-300 mt-2">A searchable interface for your events.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">All event times are displayed in Pacific Time (PST/PDT).</p>
         </header>
 
         <!-- Party-O-Meter -->
@@ -173,9 +372,11 @@
         </div>
 
         <!-- Refresh Status -->
-        <div id="refreshContainer" class="text-center text-sm text-gray-600 mb-4 flex items-center justify-center gap-4">
+        <div id="refreshContainer" class="text-center text-sm text-gray-600 mb-4 flex flex-wrap items-center justify-center gap-3">
             <span id="lastRefreshedText"></span>
+            <span id="unseenCountText" class="font-semibold text-indigo-700 dark:text-indigo-300 hidden"></span>
             <button id="refreshBtn" class="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50">Refresh Now</button>
+            <button id="markAllSeenBtn" class="px-3 py-1 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 hidden">Mark all seen</button>
         </div>
 
         <!-- Share/Sync Section -->
@@ -308,56 +509,90 @@
         
         <!-- Help View Container -->
         <div id="helpViewContainer" class="hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md prose prose-indigo">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Help & Features</h2>
-            
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Help &amp; About</h2>
+            <p class="text-sm text-gray-500 mb-6 not-prose">Release: <span id="helpAppVersion"></span></p>
+
+            <h3>About DEFCON Parties Calendar</h3>
+            <p>
+                The longest-running unofficial party list for <strong>Black Hat</strong>, <strong>BSides Las Vegas</strong>,
+                and <strong>DEF CON</strong> in Las Vegas. This beta is a searchable front-end for the live party feed —
+                built for planning your Hacker Summer Camp week, tracking what you have applied to, and spotting new listings
+                as vendors publish them.
+            </p>
+            <p>
+                All times are shown in <strong>Pacific Time (PT)</strong>. Event signup links open the vendor&apos;s registration page;
+                we do not run registrations on this site.
+            </p>
+
+            <h3>What&apos;s New</h3>
+            <ul>
+                <li><strong>New since your last visit:</strong> Parties added since you last closed the calendar get a <strong>New</strong> badge — so you can see what changed without re-reading the whole list.</li>
+                <li><strong>Mark all seen:</strong> Clears <strong>New</strong> badges and updates your baseline when you have caught up.</li>
+                <li><strong>Smarter refresh during HSC:</strong> Auto-sync every <strong>6 hours</strong> Aug 1–11 (every 48 hours off-season). <strong>Refresh Now</strong> forces a sync (5-minute cooldown).</li>
+                <li><strong>Show New filter:</strong> In Card or Agenda view, toggle <strong>Show New</strong> to focus on unseen or freshly synced parties only.</li>
+            </ul>
+
             <h3>Viewing Events</h3>
             <ul>
-                <li><strong>Card View:</strong> A visual grid of all events.</li>
-                <li><strong>Agenda View:</strong> A list of events grouped by day.</li>
+                <li><strong>Card View:</strong> A visual grid of all events. Click a card for details and signup.</li>
+                <li><strong>Agenda View:</strong> Events grouped by day with time ranges. Good for building a day-by-day plan.</li>
+                <li><strong>New badges:</strong> Shown on cards, agenda rows, and the event modal when a party is new to you or newly added on the last sync.</li>
             </ul>
 
             <h3>Personalizing Your Schedule</h3>
             <ul>
-                <li><strong>Approved (Green):</strong> Mark events you plan to attend. These are counted in your "Party-O-Meter".</li>
-                <li><strong>Pending (Blue):</strong> Mark events you've applied to but haven't heard back from yet.</li>
-                <li><strong>Rejected (Red):</strong> Mark events you were rejected from to keep track.</li>
-                <li>Your choices are saved automatically in your browser!</li>
+                <li><strong>Approved (Green):</strong> Mark events you plan to attend. These count toward your Party-O-Meter™.</li>
+                <li><strong>Pending (Blue):</strong> Mark events you have applied to but have not heard back on yet.</li>
+                <li><strong>Rejected (Red):</strong> Mark events you were turned down from so they stay out of your way.</li>
+                <li>Your choices are saved automatically in this browser — no account required.</li>
             </ul>
             
-            <h3>Filtering</h3>
+            <h3>Filtering &amp; Finding Parties</h3>
             <ul>
-                <li><strong>Search Bar:</strong> Instantly search by title, location, date, or description.</li>
-                <li><strong>Agenda Filters:</strong> When in Agenda View, you can filter by day of the week and hide events based on their status (Past, Rejected, Pending, etc.).</li>
-                <li><strong>Keyword Filters:</strong> Permanently hide events containing specific words (like "breakfast") using the "Keyword Filters" section.</li>
+                <li><strong>Search Bar:</strong> Search by title, location, date, or description. Paste a URL to submit a missing party.</li>
+                <li><strong>Show New:</strong> Show only events with a <strong>New</strong> badge (unseen since your last visit or added on last refresh).</li>
+                <li><strong>Show My Approved / Pending / Friends:</strong> Focus on your schedule or imported friend schedules.</li>
+                <li><strong>Agenda day filters:</strong> In Agenda View, filter by weekday (Mon–Sun).</li>
+                <li><strong>Hide Past / Rejected:</strong> Trim noise from events that already happened or you ruled out.</li>
+                <li><strong>Keyword Filters:</strong> Permanently hide events matching words you choose (e.g. breakfast, brunch) under Share/Sync → Keyword Filters.</li>
             </ul>
 
-            <h3>Sharing & Collaboration</h3>
+            <h3>Staying Up to Date</h3>
             <ul>
-                <li><strong>Export My Schedule:</strong> Generates a code that saves all your event statuses (Approved, Rejected, Pending).</li>
+                <li><strong>Last refreshed:</strong> Shown above the event list with the current auto-refresh interval.</li>
+                <li><strong>Refresh Now:</strong> Pulls the latest calendar from the server. Use after you hear about new parties or before planning your day.</li>
+                <li><strong>Leaving the site:</strong> When you close or hide this tab, we save a snapshot of event IDs so the next visit can highlight what was added since then.</li>
+                <li><strong>First visit:</strong> Existing parties are not marked New — only additions after your baseline appear.</li>
+            </ul>
+
+            <h3>Sharing &amp; Collaboration</h3>
+            <ul>
+                <li><strong>Export My Schedule:</strong> Copy a code with your Approved / Rejected / Pending choices.</li>
                 <li><strong>Import a Schedule:</strong>
                     <ul>
-                        <li>Paste a code without a nickname to sync your own schedule across devices.</li>
-                        <li>Paste a code with a nickname to import a friend's approved schedule, which will appear in orange.</li>
+                        <li>Paste your own code to sync across devices.</li>
+                        <li>Add a nickname to import a friend&apos;s approved list (shown in orange).</li>
                     </ul>
                 </li>
-                <li><strong>Manage Friends:</strong> Easily remove imported friend schedules.</li>
+                <li><strong>Manage Friends:</strong> Remove imported friend schedules from the Share/Sync panel.</li>
+                <li><strong>Flex on &apos;em:</strong> Share your approved party count on X or email from the Party-O-Meter area.</li>
             </ul>
 
             <h3>Other Features</h3>
             <ul>
-                <li><strong>Party-O-Meter™:</strong> A fun progress bar that shows how full your approved schedule is.</li>
-                <li><strong>Flex on 'em:</strong> Share your party count on X or via email with one click.</li>
-                <li><strong>Submit a Party:</strong> Use the "Submit a Party" tab or search for a URL to suggest new events for the calendar.</li>
-                <li><strong>Cut & Paste:</strong> Save your registration info for yourself and friends to easily copy/paste into forms.</li>
-                <li><strong>Smart Refresh:</strong> Calendar data is cached for 48 hours to reduce load times. You can force a refresh every 5 minutes with the "Refresh Now" button.</li>
-                <li><strong>Analytics:</strong> Clicks on "Sign Up," "Approved," and "Rejected" are tracked anonymously to help us understand which events are the most popular.</li>
+                <li><strong>Party-O-Meter™:</strong> Progress bar for how full your approved schedule is.</li>
+                <li><strong>Submit a Party:</strong> Use the Submit tab or paste a URL in search when an event is missing.</li>
+                <li><strong>Cut &amp; Paste:</strong> Store registration fields (name, email, title, shirt size, etc.) for fast form fill on Lu.ma, Google Forms, HubSpot, and similar signups.</li>
+                <li><strong>Dark Mode:</strong> Toggle with the sun/moon button in the header.</li>
+                <li><strong>Analytics:</strong> Sign Up, Approved, and Rejected clicks are tracked anonymously to see which events are popular.</li>
+                <li><strong>Privacy:</strong> Schedules, filters, profiles, and &quot;seen&quot; baselines live in your browser only. Share codes are encoded, not encrypted — share only with people you trust.</li>
             </ul>
         </div>
         
         <!-- Cut & Paste View Container -->
         <div id="cutPasteViewContainer" class="hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Cut & Paste Registration Info</h2>
-            <p class="text-gray-600 mb-4">Save your info here to quickly copy and paste it into registration forms. You can add profiles for friends too!</p>
+            <p class="text-gray-600 mb-4">Save your info here to quickly copy and paste it into registration forms. Includes shirt size, optional HTML snippets, and fields common on Lu.ma, Google Forms, HubSpot, and Wix signups. You can add profiles for friends too!</p>
             
             <div class="flex items-center gap-4 mb-4">
                 <select id="profileSelector" class="flex-grow border border-gray-300 rounded-md p-2 text-sm"></select>
@@ -374,6 +609,20 @@
                     </button>
                 </div>
                 <div class="relative">
+                    <label for="profileFirstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                    <input type="text" id="profileFirstName" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                    <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="profileFirstName">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <label for="profileLastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                    <input type="text" id="profileLastName" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                    <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="profileLastName">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
                     <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
                     <input type="email" id="email" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
                      <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="email">
@@ -381,11 +630,39 @@
                     </button>
                 </div>
                 <div class="relative">
-                    <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+                    <label for="title" class="block text-sm font-medium text-gray-700">Job Title</label>
                     <input type="text" id="title" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
                      <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="title">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                     </button>
+                </div>
+                <div class="relative">
+                    <label for="profileCompany" class="block text-sm font-medium text-gray-700">Company</label>
+                    <input type="text" id="profileCompany" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                    <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="profileCompany">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <label for="profileLinkedin" class="block text-sm font-medium text-gray-700">LinkedIn URL</label>
+                    <input type="url" id="profileLinkedin" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10" placeholder="https://linkedin.com/in/...">
+                    <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="profileLinkedin">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative sm:col-span-2">
+                    <label for="profileRolePreset" class="block text-sm font-medium text-gray-700">Role preset (for dropdowns)</label>
+                    <select id="profileRolePreset" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm">
+                        <option value="">— pick if a form asks —</option>
+                        <option value="Founder">Founder</option>
+                        <option value="Security Executive">Security Executive</option>
+                        <option value="Engineer / Researcher">Engineer / Researcher</option>
+                        <option value="Media">Media</option>
+                        <option value="C-Level or VP Security at an Enterprise">C-Level or VP Security at an Enterprise</option>
+                        <option value="Security Manager at an Enterprise">Security Manager at an Enterprise</option>
+                        <option value="Pentester at an Enterprise">Pentester at an Enterprise</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
                 <div class="relative">
                     <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
@@ -413,6 +690,31 @@
                     <input type="text" id="state" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
                      <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="state">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="relative">
+                    <label for="profileShirtSize" class="block text-sm font-medium text-gray-700">Shirt size</label>
+                    <select id="profileShirtSize" class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm pr-10">
+                        <option value="">— pick if a form asks —</option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="2XL">2XL</option>
+                        <option value="3XL">3XL</option>
+                        <option value="Don't want a shirt">Don't want a shirt</option>
+                    </select>
+                    <button class="copy-btn absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" data-target="profileShirtSize" style="top: 1.75rem; bottom: auto; height: 2.5rem;">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    </button>
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="profilePasteHtml" class="block text-sm font-medium text-gray-700">HTML copy &amp; paste</label>
+                    <p class="text-xs text-gray-500 mt-1 mb-2">Optional HTML for rich-text fields on some signup forms. Save it here, then copy when you need it.</p>
+                    <textarea id="profilePasteHtml" rows="5" class="block w-full border border-gray-300 rounded-md p-2 text-sm font-mono" placeholder="<p>Name, title, company…</p>"></textarea>
+                    <button type="button" class="copy-btn mt-2 inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50" data-target="profilePasteHtml">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        Copy HTML
                     </button>
                 </div>
             </div>
@@ -494,7 +796,7 @@
     </div>
 
     <footer class="text-center py-4">
-        <p class="text-sm text-gray-500">Version 1.1.2-beta</p>
+        <p id="appVersionText" class="text-sm text-gray-500"></p>
     </footer>
 
     <script>
@@ -549,6 +851,8 @@
         const friendListContainer = document.getElementById('friendListContainer');
         const refreshBtn = document.getElementById('refreshBtn');
         const lastRefreshedText = document.getElementById('lastRefreshedText');
+        const unseenCountText = document.getElementById('unseenCountText');
+        const markAllSeenBtn = document.getElementById('markAllSeenBtn');
         const keywordFilterDetails = document.getElementById('keywordFilterDetails');
         const hiddenKeywordsTextarea = document.getElementById('hiddenKeywordsTextarea');
         const saveHiddenKeywordsBtn = document.getElementById('saveHiddenKeywordsBtn');
@@ -575,17 +879,30 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const SCHEDULES_KEY = 'calendarSchedules';
+        const APP_VERSION = '1.3.1-beta';
+        const CACHE_VERSION = '2026';
+        const SCHEDULES_KEY = `calendarSchedules_${CACHE_VERSION}`;
         const MY_SCHEDULE_KEY = '__ME__';
-        const REJECTED_EVENTS_KEY = 'calendarRejectedEvents';
-        const PENDING_EVENTS_KEY = 'calendarPendingEvents';
-        const CACHE_KEY = 'calendarDataCache';
-        const LAST_REFRESH_KEY = 'calendarLastRefresh';
-        const NEW_EVENTS_KEY = 'calendarNewEvents';
-        const HIDDEN_KEYWORDS_KEY = 'calendarHiddenKeywords';
-        const PROFILES_KEY = 'calendarProfiles';
+        const REJECTED_EVENTS_KEY = `calendarRejectedEvents_${CACHE_VERSION}`;
+        const PENDING_EVENTS_KEY = `calendarPendingEvents_${CACHE_VERSION}`;
+        const CACHE_KEY = `calendarDataCache_${CACHE_VERSION}`;
+        const LAST_REFRESH_KEY = `calendarLastRefresh_${CACHE_VERSION}`;
+        const NEW_EVENTS_KEY = `calendarNewEvents_${CACHE_VERSION}`;
+        const LAST_SESSION_EVENT_IDS_KEY = `calendarLastSessionEventIds_${CACHE_VERSION}`;
+        const HIDDEN_KEYWORDS_KEY = `calendarHiddenKeywords_${CACHE_VERSION}`;
+        const PROFILES_KEY = `calendarProfiles_${CACHE_VERSION}`;
+        const THEME_KEY = `calendarTheme_${CACHE_VERSION}`;
         const MANUAL_REFRESH_COOLDOWN = 5 * 60 * 1000; // 5 minutes
-        const AUTO_REFRESH_INTERVAL = 48 * 60 * 60 * 1000; // 48 hours
+        const AUTO_REFRESH_INTERVAL_HSC = 6 * 60 * 60 * 1000; // 6 hours during HSC season
+        const AUTO_REFRESH_INTERVAL_DEFAULT = 48 * 60 * 60 * 1000; // 48 hours off-season
+        const HSC_SEASON_START = '2026-08-01';
+        const HSC_SEASON_END = '2026-08-11';
+        const EVENTS_API_URL = 'https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2d1197ea71b546d7a2ccf373e4a4b205/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aG0pyghxWH8Xq-w5Lt0ZOIO47aiy_MqIEq8R35WmeVA';
+        const MAX_IMPORT_CODE_LENGTH = 100000;
+        const MAX_NICKNAME_LENGTH = 50;
+        const MAX_EVENT_IDS = 500;
+        const MAX_PROFILES = 20;
+        const EVENT_ID_PATTERN = /^[a-zA-Z0-9_@.-]+$/;
         
         // --- IMPORTANT: PASTE YOUR GOOGLE FORM DETAILS HERE FOR ANALYTICS ---
         const analyticsFormUrl = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSf3LDwZiQ8S59nm5BVYoId0fp2CkyDr0IJVACbn2h4vTLe2yw/formResponse';
@@ -593,6 +910,149 @@
         const approvedEntryId = 'entry.427064668';
         const rejectedEntryId = 'entry.1156301161';
         // ---------------------------------------------------------------
+
+        // --- SECURITY HELPERS ---
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        function sanitizeUrl(url) {
+            if (!url || typeof url !== 'string') return null;
+            try {
+                const parsed = new URL(url.trim());
+                if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                    return parsed.href;
+                }
+            } catch (error) {
+                return null;
+            }
+            return null;
+        }
+        const DESCRIPTION_ALLOWED_TAGS = ['a', 'p', 'br', 'b', 'strong', 'i', 'em', 'u'];
+        function hardenDescriptionLinks(root) {
+            root.querySelectorAll('a').forEach((node) => {
+                const safeHref = sanitizeUrl(node.getAttribute('href'));
+                [...node.attributes].forEach((attr) => node.removeAttribute(attr.name));
+                if (safeHref) {
+                    node.setAttribute('href', safeHref);
+                    node.setAttribute('target', '_blank');
+                    node.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+        }
+        function sanitizeDescriptionHtmlFallback(html) {
+            const allowedTags = new Set(['A', 'P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U']);
+            const template = document.createElement('template');
+            template.innerHTML = html;
+            const nodesToRemove = [];
+            template.content.querySelectorAll('*').forEach((node) => {
+                if (!allowedTags.has(node.tagName)) {
+                    nodesToRemove.push(node);
+                    return;
+                }
+                if (node.tagName === 'A') {
+                    const safeHref = sanitizeUrl(node.getAttribute('href'));
+                    [...node.attributes].forEach((attr) => node.removeAttribute(attr.name));
+                    if (safeHref) {
+                        node.setAttribute('href', safeHref);
+                        node.setAttribute('target', '_blank');
+                        node.setAttribute('rel', 'noopener noreferrer');
+                    }
+                    return;
+                }
+                [...node.attributes].forEach((attr) => node.removeAttribute(attr.name));
+            });
+            nodesToRemove.forEach((node) => {
+                while (node.firstChild) {
+                    node.parentNode.insertBefore(node.firstChild, node);
+                }
+                node.remove();
+            });
+            return template.innerHTML;
+        }
+        function sanitizeDescriptionHtml(html) {
+            if (!html || typeof html !== 'string') return '';
+            if (typeof DOMPurify !== 'undefined') {
+                const clean = DOMPurify.sanitize(html, {
+                    ALLOWED_TAGS: DESCRIPTION_ALLOWED_TAGS,
+                    ALLOWED_ATTR: ['href'],
+                });
+                const template = document.createElement('template');
+                template.innerHTML = clean;
+                hardenDescriptionLinks(template.content);
+                return template.innerHTML;
+            }
+            return sanitizeDescriptionHtmlFallback(html);
+        }
+        function hideBrokenImages(root) {
+            root.querySelectorAll('img').forEach((img) => {
+                img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
+            });
+        }
+        function sanitizeEventIds(ids) {
+            if (!Array.isArray(ids)) return [];
+            return ids
+                .filter((id) => typeof id === 'string' && id.length > 0 && id.length <= 256 && EVENT_ID_PATTERN.test(id))
+                .slice(0, MAX_EVENT_IDS);
+        }
+        function sanitizeNickname(nickname) {
+            return String(nickname ?? '')
+                .replace(/[<>"'&]/g, '')
+                .trim()
+                .slice(0, MAX_NICKNAME_LENGTH);
+        }
+        function normalizeEventsPayload(data) {
+            let items = [];
+            if (Array.isArray(data?.items)) items = data.items;
+            else if (Array.isArray(data?.value)) items = data.value;
+            else if (Array.isArray(data)) items = data;
+            else throw new Error('Unexpected API response shape');
+            return items.filter((event) => (
+                event
+                && typeof event === 'object'
+                && typeof event.id === 'string'
+                && event.id.length > 0
+                && event.id.length <= 256
+            ));
+        }
+        async function copyToClipboard(text) {
+            try {
+                if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (error) {
+                console.warn('Clipboard API unavailable, using fallback.', error);
+            }
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.setAttribute('readonly', '');
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                return document.execCommand('copy');
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // --- THEME ---
+        function isDarkModeEnabled() {
+            return document.documentElement.classList.contains('dark');
+        }
+        function applyTheme(isDark) {
+            document.documentElement.classList.toggle('dark', isDark);
+            localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+        }
+        function toggleTheme() {
+            applyTheme(!isDarkModeEnabled());
+        }
 
         // --- SCHEDULE & LOCAL STORAGE HELPERS ---
         function getSchedules() {
@@ -702,9 +1162,68 @@
             saveSchedules(schedules);
             updatePartyOMeter();
         }
-        function getNewEventIds() {
+        function isHscSeason() {
+            const pacificToday = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+            return pacificToday >= HSC_SEASON_START && pacificToday <= HSC_SEASON_END;
+        }
+        function getAutoRefreshInterval() {
+            return isHscSeason() ? AUTO_REFRESH_INTERVAL_HSC : AUTO_REFRESH_INTERVAL_DEFAULT;
+        }
+        function getSyncNewEventIds() {
             const newIds = localStorage.getItem(NEW_EVENTS_KEY);
             return newIds ? new Set(JSON.parse(newIds)) : new Set();
+        }
+        function getLastSessionEventIds() {
+            const raw = localStorage.getItem(LAST_SESSION_EVENT_IDS_KEY);
+            if (raw === null) return null;
+            try {
+                return new Set(JSON.parse(raw));
+            } catch (error) {
+                return null;
+            }
+        }
+        function saveSessionEventSnapshot() {
+            if (!Array.isArray(allEvents) || allEvents.length === 0) return;
+            const ids = allEvents.map(event => event.id).filter(Boolean);
+            localStorage.setItem(LAST_SESSION_EVENT_IDS_KEY, JSON.stringify(ids));
+        }
+        function initializeSessionBaselineIfNeeded() {
+            if (localStorage.getItem(LAST_SESSION_EVENT_IDS_KEY) !== null) return;
+            if (!allEvents.length) return;
+            saveSessionEventSnapshot();
+        }
+        function getUnseenSinceLastVisitIds() {
+            const lastSession = getLastSessionEventIds();
+            if (lastSession === null) return new Set();
+            const unseen = new Set();
+            allEvents.forEach(event => {
+                if (event.id && !lastSession.has(event.id)) {
+                    unseen.add(event.id);
+                }
+            });
+            return unseen;
+        }
+        function getNewEventIds() {
+            const combined = getUnseenSinceLastVisitIds();
+            getSyncNewEventIds().forEach(id => combined.add(id));
+            return combined;
+        }
+        function updateUnseenCountUI() {
+            const count = getNewEventIds().size;
+            if (count > 0) {
+                unseenCountText.textContent = `${count} new since your last visit`;
+                unseenCountText.classList.remove('hidden');
+                markAllSeenBtn.classList.remove('hidden');
+            } else {
+                unseenCountText.textContent = '';
+                unseenCountText.classList.add('hidden');
+                markAllSeenBtn.classList.add('hidden');
+            }
+        }
+        function markAllEventsSeen() {
+            saveSessionEventSnapshot();
+            localStorage.setItem(NEW_EVENTS_KEY, JSON.stringify([]));
+            renderCurrentView();
         }
         function getHiddenKeywords() {
             const keywords = localStorage.getItem(HIDDEN_KEYWORDS_KEY);
@@ -730,15 +1249,11 @@
             }
 
             lastRefreshedText.textContent = 'Refreshing...';
-            const url = "https://prod-177.westus.logic.azure.com:443/workflows/2d1197ea71b546d7a2ccf373e4a4b205/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=i34wve4AyoAhB32Xjn5A6nhvy3oMRLgHXPBH_zvnkQs";
             try {
-                const response = await fetch(url);
+                const response = await fetch(EVENTS_API_URL);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
-                let fetchedEvents = [];
-                if (Array.isArray(data.items)) fetchedEvents = data.items;
-                else if (Array.isArray(data.value)) fetchedEvents = data.value;
-                else if (Array.isArray(data)) fetchedEvents = data;
+                const fetchedEvents = normalizeEventsPayload(data);
                 
                 const oldDataRaw = localStorage.getItem(CACHE_KEY);
                 let newlyAddedIds = []; 
@@ -756,6 +1271,7 @@
                 if (isManual) sessionStorage.setItem('lastManualRefresh', Date.now().toString());
 
                 allEvents = fetchedEvents;
+                initializeSessionBaselineIfNeeded();
                 updateRefreshTimestamp();
                 renderCurrentView();
             } catch (error) {
@@ -770,12 +1286,18 @@
             }
             const cachedData = localStorage.getItem(CACHE_KEY);
             const lastRefresh = parseInt(localStorage.getItem(LAST_REFRESH_KEY) || '0');
-            const needsAutoRefresh = Date.now() - lastRefresh > AUTO_REFRESH_INTERVAL;
+            const needsAutoRefresh = Date.now() - lastRefresh > getAutoRefreshInterval();
 
             if (cachedData && !needsAutoRefresh) {
-                allEvents = JSON.parse(cachedData);
-                updateRefreshTimestamp();
-                renderCurrentView();
+                try {
+                    allEvents = normalizeEventsPayload(JSON.parse(cachedData));
+                    initializeSessionBaselineIfNeeded();
+                    updateRefreshTimestamp();
+                    renderCurrentView();
+                } catch (error) {
+                    console.warn('Cached calendar data was invalid; fetching fresh data.', error);
+                    fetchAndCacheEvents();
+                }
             } else {
                 fetchAndCacheEvents();
             }
@@ -908,6 +1430,7 @@
                     noResultsStandard.classList.remove('hidden');
                     noResultsSubmit.classList.add('hidden');
                 }
+                updateUnseenCountUI();
                 return; 
             }
             noResults.classList.add('hidden');
@@ -915,36 +1438,42 @@
             if (currentView === 'card') { renderCardView(sortedEvents); } 
             else if (currentView === 'agenda') { renderAgendaView(sortedEvents); }
             updatePartyOMeter();
+            updateUnseenCountUI();
         }
 
         // --- MODAL LOGIC & RENDER FUNCTIONS ---
         function showModal(event) {
             modalContent.dataset.eventId = event.id;
-            modalTitle.textContent = event.summary || 'No Title';
+            modalTitle.replaceChildren(document.createTextNode(event.summary || 'No Title'));
             if (getNewEventIds().has(event.id)) {
-                modalTitle.innerHTML += '<span class="new-event-badge">New</span>';
+                const badge = document.createElement('span');
+                badge.className = 'new-event-badge';
+                badge.textContent = 'New';
+                modalTitle.appendChild(badge);
             }
             
             const descriptionText = event.description || '';
-            const signupLinkMatch = descriptionText.match(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"/);
-            const signupUrl = signupLinkMatch ? signupLinkMatch[1] : null;
+            const signupLinkMatch = descriptionText.match(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"/i);
+            const signupUrl = signupLinkMatch ? sanitizeUrl(signupLinkMatch[1]) : null;
 
             if (signupUrl) {
                 modalSignUpBtn.href = signupUrl;
                 modalSignUpBtn.classList.remove('hidden');
-                modalDescription.innerHTML = descriptionText.replace(/<a[^>]*>.*<\/a>/, '');
+                modalDescription.innerHTML = sanitizeDescriptionHtml(descriptionText.replace(/<a[^>]*>.*?<\/a>/i, ''));
                 
-                // Add a one-time event listener for tracking
                 modalSignUpBtn.onclick = () => {
                     trackEventAction(signUpEntryId, event.summary, 'signup');
                 };
 
             } else {
                 modalSignUpBtn.classList.add('hidden');
-                modalDescription.innerHTML = descriptionText || '<p class="text-gray-500">No description provided.</p>';
+                modalSignUpBtn.onclick = null;
+                modalDescription.innerHTML = descriptionText
+                    ? sanitizeDescriptionHtml(descriptionText)
+                    : '<p class="text-gray-500">No description provided.</p>';
             }
 
-            modalMoreDetailsLink.href = event.htmlLink || '#';
+            modalMoreDetailsLink.href = sanitizeUrl(event.htmlLink) || '#';
             modalApprovedCheckbox.checked = isEventApprovedByMe(event.id);
             modalRejectedCheckbox.checked = isEventRejected(event.id);
             modalPendingCheckbox.checked = isEventPending(event.id);
@@ -978,8 +1507,17 @@
                 }
                 timeText = `${datePart} · ${timeRange} PDT`;
             }
-            modalTime.innerHTML = `<svg class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>${timeText}</span>`;
-            modalLocation.innerHTML = `<svg class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>${event.location || 'Location not specified'}</span>`;
+            modalTime.replaceChildren();
+            modalTime.insertAdjacentHTML('afterbegin', '<svg class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>');
+            const modalTimeText = document.createElement('span');
+            modalTimeText.textContent = timeText;
+            modalTime.appendChild(modalTimeText);
+
+            modalLocation.replaceChildren();
+            modalLocation.insertAdjacentHTML('afterbegin', '<svg class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>');
+            const modalLocationText = document.createElement('span');
+            modalLocationText.textContent = event.location || 'Location not specified';
+            modalLocation.appendChild(modalLocationText);
 
             eventModal.classList.remove('hidden');
             setTimeout(() => {
@@ -1028,7 +1566,7 @@
                 agendaViewContainer.appendChild(dayHeader);
                 dayEvents.forEach(event => {
                     const eventRow = document.createElement('div');
-                    eventRow.className = 'flex items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors';
+                    eventRow.className = 'agenda-event-row flex items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors';
                     const isDC801 = (event.summary || '').toLowerCase().includes('dc801');
                     const isHackerJeopardy = (event.summary || '').toLowerCase().includes('hacker jeopardy');
                     const isFloridaman = (event.summary || '').toLowerCase().includes('floridaman');
@@ -1056,7 +1594,7 @@
                     } else if (isFloridaman) {
                         titleClass = 'floridaman-agenda-title';
                     }
-                    eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${timeRange}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center ${titleClass}">${event.summary || 'No Title'} ${newBadge}</p><p class="text-gray-500">${event.location || ''}</p></div>`;
+                    eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${escapeHtml(timeRange)}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${newBadge}</p><p class="text-gray-500">${escapeHtml(event.location || '')}</p></div>`;
                     agendaViewContainer.appendChild(eventRow);
                 });
             });
@@ -1114,27 +1652,31 @@
                 const newBadge = newEventIds.has(event.id) ? '<span class="new-event-badge">New</span>' : '';
                 let imageHTML = '';
                 if (isDC801) {
-                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium" alt="DC801 Event Image" class="max-h-full w-auto object-contain" onerror="this.style.display='none'"></div>`;
+                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium" alt="DC801 Event Image" class="max-h-full w-auto object-contain"></div>`;
                 } else if (isHackerJeopardy) {
-                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://hackerjeopardy.com/img/hj-title.png" alt="Hacker Jeopardy Image" class="max-h-full w-auto object-contain" onerror="this.style.display='none'"></div>`;
+                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://hackerjeopardy.com/img/hj-title.png" alt="Hacker Jeopardy Image" class="max-h-full w-auto object-contain"></div>`;
                 } else if (isFloridaman) {
-                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://floridaman.party/Floyd-the-flamingo-badge-clear.svg" alt="Floridaman Party Image" class="max-h-full w-auto object-contain" onerror="this.style.display='none'"></div>`;
+                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://floridaman.party/Floyd-the-flamingo-badge-clear.svg" alt="Floridaman Party Image" class="max-h-full w-auto object-contain"></div>`;
                 }
                 
+                const dateDisplay = formattedTime !== 'All-day'
+                    ? `${formattedDate} at ${formattedTime}`
+                    : `${formattedDate} (${formattedTime || ''})`;
                 eventCard.innerHTML = `
                     ${imageHTML}
                     <div class="flex-grow">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${event.summary || 'No Title'} ${newBadge}</h3>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${escapeHtml(event.summary || 'No Title')} ${newBadge}</h3>
                         <div class="flex items-center text-gray-600 text-sm mb-4">
                             <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span>${formattedDate} ${formattedTime !== 'All-day' ? 'at ' + formattedTime : `(${formattedTime || ''})`}</span>
+                            <span>${escapeHtml(dateDisplay)}</span>
                         </div>
                         <div class="flex items-center text-gray-600 text-sm mb-4">
                             <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            <span>${event.location || 'Not specified'}</span>
+                            <span>${escapeHtml(event.location || 'Not specified')}</span>
                         </div>
-                        <p class="text-gray-700 text-sm">${event.description || ''}</p>
+                        <div class="text-gray-700 text-sm">${sanitizeDescriptionHtml(event.description || '')}</div>
                     </div>`;
+                hideBrokenImages(eventCard);
                 cardViewContainer.appendChild(eventCard);
             });
         }
@@ -1153,24 +1695,30 @@
             };
             shareCodeInput.value = btoa(JSON.stringify(exportData));
         }
-        function exportApproved() {
+        async function exportApproved() {
             updateExportField(); 
             if (!shareCodeInput.value) {
                 shareStatus.textContent = 'No approved events to export.';
                 shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
                 return;
             }
-            shareCodeInput.select();
-            document.execCommand('copy');
-            shareStatus.textContent = 'Copied to clipboard!';
-            shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+            const copied = await copyToClipboard(shareCodeInput.value);
+            shareStatus.textContent = copied ? 'Copied to clipboard!' : 'Could not copy to clipboard.';
+            shareStatus.className = copied
+                ? 'text-sm text-green-600 mt-2 font-medium text-center'
+                : 'text-sm text-red-600 mt-2 font-medium text-center';
             setTimeout(() => { shareStatus.textContent = ''; }, 3000);
         }
         function importApproved() {
-            const nickname = importNicknameInput.value.trim();
+            const nickname = sanitizeNickname(importNicknameInput.value);
             const code = importCodeInput.value.trim();
             if (!code) {
                 shareStatus.textContent = 'Please paste a code to import.';
+                shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                return;
+            }
+            if (code.length > MAX_IMPORT_CODE_LENGTH) {
+                shareStatus.textContent = 'Import code is too large.';
                 shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
                 return;
             }
@@ -1178,19 +1726,25 @@
             try {
                 const decoded = atob(code);
                 const parsedData = JSON.parse(decoded);
+                if (!parsedData || typeof parsedData !== 'object') {
+                    throw new Error('Invalid import payload');
+                }
+                const approvedIds = sanitizeEventIds(parsedData.approved);
+                const rejectedIds = sanitizeEventIds(parsedData.rejected);
+                const pendingIds = sanitizeEventIds(parsedData.pending);
 
-                if (nickname) { // Importing a friend's schedule
+                if (nickname) {
                     const schedules = getSchedules();
-                    schedules[nickname] = parsedData.approved || [];
+                    schedules[nickname] = approvedIds;
                     saveSchedules(schedules);
                     shareStatus.textContent = `Successfully imported ${nickname}'s schedule!`;
-                } else { // Syncing my own schedule
+                } else {
                     const schedules = getSchedules();
-                    schedules[MY_SCHEDULE_KEY] = parsedData.approved || [];
+                    schedules[MY_SCHEDULE_KEY] = approvedIds;
                     saveSchedules(schedules);
-                    saveRejectedEvents(new Set(parsedData.rejected || []));
-                    savePendingEvents(new Set(parsedData.pending || []));
-                    shareStatus.textContent = `Successfully synced your schedule!`;
+                    saveRejectedEvents(new Set(rejectedIds));
+                    savePendingEvents(new Set(pendingIds));
+                    shareStatus.textContent = 'Successfully synced your schedule!';
                 }
                 
                 renderCurrentView();
@@ -1200,18 +1754,20 @@
                 setTimeout(() => { shareStatus.textContent = ''; }, 3000);
 
             } catch (error) {
-                // Fallback for old, simple comma-separated format
-                const ids = code.split(',').filter(id => id);
+                const ids = sanitizeEventIds(code.split(',').map((id) => id.trim()).filter(Boolean));
+                if (ids.length === 0) {
+                    shareStatus.textContent = 'Invalid import code.';
+                    shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                    return;
+                }
                 const schedules = getSchedules();
                 const importKey = nickname || MY_SCHEDULE_KEY;
                 schedules[importKey] = ids;
                 saveSchedules(schedules);
                 renderCurrentView();
-                if (nickname) {
-                    shareStatus.textContent = `Successfully imported ${nickname}'s (legacy) schedule!`;
-                } else {
-                    shareStatus.textContent = `Successfully synced your (legacy) schedule!`;
-                }
+                shareStatus.textContent = nickname
+                    ? `Successfully imported ${nickname}'s (legacy) schedule!`
+                    : 'Successfully synced your (legacy) schedule!';
                 shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
                 importCodeInput.value = '';
                 importNicknameInput.value = '';
@@ -1231,13 +1787,22 @@
             friends.forEach(friend => {
                 const listItem = document.createElement('li');
                 listItem.className = 'flex justify-between items-center bg-gray-50 p-2 rounded-md';
-                listItem.innerHTML = `<span class="text-sm font-medium text-gray-800">${friend}</span><button data-friend-name="${friend}" class="remove-friend-btn text-sm text-red-500 hover:text-red-700 font-semibold">Remove</button>`;
+                const friendLabel = document.createElement('span');
+                friendLabel.className = 'text-sm font-medium text-gray-800';
+                friendLabel.textContent = friend;
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.dataset.friendName = friend;
+                removeButton.className = 'remove-friend-btn text-sm text-red-500 hover:text-red-700 font-semibold';
+                removeButton.textContent = 'Remove';
+                listItem.appendChild(friendLabel);
+                listItem.appendChild(removeButton);
                 list.appendChild(listItem);
             });
             friendListContainer.appendChild(list);
             document.querySelectorAll('.remove-friend-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
-                    const friendNameToRemove = e.target.dataset.friendName;
+                    const friendNameToRemove = e.currentTarget.dataset.friendName;
                     const schedules = getSchedules();
                     delete schedules[friendNameToRemove];
                     saveSchedules(schedules);
@@ -1248,10 +1813,12 @@
         }
         function updateRefreshTimestamp() {
             const lastRefresh = parseInt(localStorage.getItem(LAST_REFRESH_KEY) || '0');
+            const refreshHours = Math.round(getAutoRefreshInterval() / (60 * 60 * 1000));
+            const seasonNote = isHscSeason() ? ' (HSC season)' : '';
             if (lastRefresh) {
-                lastRefreshedText.textContent = `Last refreshed: ${new Date(lastRefresh).toLocaleString()}`;
+                lastRefreshedText.textContent = `Last refreshed: ${new Date(lastRefresh).toLocaleString()} · auto every ${refreshHours}h${seasonNote}`;
             } else {
-                lastRefreshedText.textContent = 'No cached data available.';
+                lastRefreshedText.textContent = `No cached data available · auto every ${refreshHours}h${seasonNote}`;
             }
         }
         function updatePartyOMeter() {
@@ -1304,8 +1871,9 @@
         }
 
         async function submitToGoogleForm(url, statusElement, buttonElement) {
-            if (!url) {
-                statusElement.textContent = 'Please enter a URL.';
+            const safeUrl = sanitizeUrl(url);
+            if (!safeUrl) {
+                statusElement.textContent = 'Please enter a valid http(s) URL.';
                 statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
                 return;
             }
@@ -1314,7 +1882,7 @@
             const urlEntryId = 'entry.1363926836';
 
             const formData = new FormData();
-            formData.append(urlEntryId, url);
+            formData.append(urlEntryId, safeUrl);
 
             try {
                 buttonElement.disabled = true;
@@ -1367,14 +1935,39 @@
         }
 
         // --- CUT & PASTE LOGIC ---
+        const EMPTY_PROFILE = {
+            fullName: "", firstName: "", lastName: "", email: "", title: "", company: "",
+            linkedin: "", rolePreset: "", phone: "", address: "", zip: "", state: "",
+            shirtSize: "", pasteHtml: ""
+        };
+        function splitFullName(fullName) {
+            const parts = (fullName || "").trim().split(/\s+/).filter(Boolean);
+            if (!parts.length) return { firstName: "", lastName: "" };
+            return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+        }
+        function normalizeProfile(data) {
+            const profile = { ...EMPTY_PROFILE, ...(data || {}) };
+            if (!profile.firstName && !profile.lastName && profile.fullName) {
+                const split = splitFullName(profile.fullName);
+                profile.firstName = split.firstName;
+                profile.lastName = split.lastName;
+            }
+            if (!profile.fullName && (profile.firstName || profile.lastName)) {
+                profile.fullName = `${profile.firstName} ${profile.lastName}`.trim();
+            }
+            return profile;
+        }
         function getProfiles() {
             const profiles = localStorage.getItem(PROFILES_KEY);
-            const defaultProfiles = { "My Info": { fullName: "", email: "", title: "", phone: "", address: "", zip: "", state: "" } };
+            const defaultProfiles = { "My Info": { ...EMPTY_PROFILE } };
             try {
                 const parsed = profiles ? JSON.parse(profiles) : defaultProfiles;
                 if (!parsed["My Info"]) {
-                    parsed["My Info"] = { fullName: "", email: "", title: "", phone: "", address: "", zip: "", state: "" };
+                    parsed["My Info"] = { ...EMPTY_PROFILE };
                 }
+                Object.keys(parsed).forEach(name => {
+                    parsed[name] = normalizeProfile(parsed[name]);
+                });
                 return parsed;
             } catch (e) {
                 return defaultProfiles;
@@ -1400,14 +1993,21 @@
         }
         function loadProfileData(profileName) {
             const profiles = getProfiles();
-            const data = profiles[profileName] || {};
+            const data = normalizeProfile(profiles[profileName] || {});
             profileForm.querySelector('#fullName').value = data.fullName || '';
+            profileForm.querySelector('#profileFirstName').value = data.firstName || '';
+            profileForm.querySelector('#profileLastName').value = data.lastName || '';
             profileForm.querySelector('#email').value = data.email || '';
             profileForm.querySelector('#title').value = data.title || '';
+            profileForm.querySelector('#profileCompany').value = data.company || '';
+            profileForm.querySelector('#profileLinkedin').value = data.linkedin || '';
+            profileForm.querySelector('#profileRolePreset').value = data.rolePreset || '';
             profileForm.querySelector('#phone').value = data.phone || '';
             profileForm.querySelector('#address').value = data.address || '';
             profileForm.querySelector('#zip').value = data.zip || '';
             profileForm.querySelector('#state').value = data.state || '';
+            profileForm.querySelector('#profileShirtSize').value = data.shirtSize || '';
+            profileForm.querySelector('#profilePasteHtml').value = data.pasteHtml || '';
             deleteProfileBtn.disabled = profileName === "My Info";
         }
         function saveCurrentProfile() {
@@ -1415,31 +2015,45 @@
             const currentProfileName = profileSelector.value;
             if (!currentProfileName) return;
 
-            profiles[currentProfileName] = {
-                fullName: profileForm.querySelector('#fullName').value,
+            const fullName = profileForm.querySelector('#fullName').value.trim();
+            const firstName = profileForm.querySelector('#profileFirstName').value.trim();
+            const lastName = profileForm.querySelector('#profileLastName').value.trim();
+            profiles[currentProfileName] = normalizeProfile({
+                fullName: fullName || `${firstName} ${lastName}`.trim(),
+                firstName,
+                lastName,
                 email: profileForm.querySelector('#email').value,
                 title: profileForm.querySelector('#title').value,
+                company: profileForm.querySelector('#profileCompany').value,
+                linkedin: profileForm.querySelector('#profileLinkedin').value,
+                rolePreset: profileForm.querySelector('#profileRolePreset').value,
                 phone: profileForm.querySelector('#phone').value,
                 address: profileForm.querySelector('#address').value,
                 zip: profileForm.querySelector('#zip').value,
                 state: profileForm.querySelector('#state').value,
-            };
+                shirtSize: profileForm.querySelector('#profileShirtSize').value,
+                pasteHtml: profileForm.querySelector('#profilePasteHtml').value,
+            });
             saveProfiles(profiles);
 
             profileStatus.textContent = `Profile "${currentProfileName}" saved!`;
             setTimeout(() => { profileStatus.textContent = ''; }, 3000);
         }
         function addNewProfile() {
-            const newName = prompt("Enter a name for the new profile:");
-            if (newName && newName.trim()) {
+            const newName = sanitizeNickname(prompt("Enter a name for the new profile:"));
+            if (newName) {
                 const profiles = getProfiles();
-                if (profiles[newName.trim()]) {
+                if (Object.keys(profiles).length >= MAX_PROFILES) {
+                    alert(`You can save up to ${MAX_PROFILES} profiles.`);
+                    return;
+                }
+                if (profiles[newName]) {
                     alert("A profile with that name already exists.");
                     return;
                 }
-                profiles[newName.trim()] = { fullName: "", email: "", title: "", phone: "", address: "", zip: "", state: "" };
+                profiles[newName] = { ...EMPTY_PROFILE };
                 saveProfiles(profiles);
-                profileSelector.value = newName.trim();
+                profileSelector.value = newName;
                 loadProfiles();
             }
         }
@@ -1459,6 +2073,7 @@
 
         // --- EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             cardViewTab.addEventListener('click', () => switchView('card'));
             agendaViewTab.addEventListener('click', () => switchView('agenda'));
             submitViewTab.addEventListener('click', () => switchView('submit'));
@@ -1518,6 +2133,13 @@
             exportBtn.addEventListener('click', exportApproved);
             importBtn.addEventListener('click', importApproved);
             refreshBtn.addEventListener('click', () => fetchAndCacheEvents(true));
+            markAllSeenBtn.addEventListener('click', markAllEventsSeen);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    saveSessionEventSnapshot();
+                }
+            });
+            window.addEventListener('pagehide', saveSessionEventSnapshot);
             saveHiddenKeywordsBtn.addEventListener('click', () => {
                 const keywordsText = hiddenKeywordsTextarea.value;
                 const keywordsArray = keywordsText.split(',').map(k => k.trim()).filter(k => k);
@@ -1564,21 +2186,17 @@
             saveProfileBtn.addEventListener('click', saveCurrentProfile);
             profileSelector.addEventListener('change', () => loadProfileData(profileSelector.value));
             
-            cutPasteViewContainer.addEventListener('click', (e) => {
+            cutPasteViewContainer.addEventListener('click', async (e) => {
                 const button = e.target.closest('.copy-btn');
                 if (button) {
                     const targetId = button.dataset.target;
                     const targetInput = document.getElementById(targetId);
                     if (targetInput && targetInput.value) {
-                        const tempTextArea = document.createElement('textarea');
-                        tempTextArea.value = targetInput.value;
-                        document.body.appendChild(tempTextArea);
-                        tempTextArea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(tempTextArea);
-
+                        const copied = await copyToClipboard(targetInput.value);
                         const originalContent = button.innerHTML;
-                        button.innerHTML = `<span class="text-xs text-indigo-600 font-bold">Copied!</span>`;
+                        button.innerHTML = copied
+                            ? '<span class="text-xs text-indigo-600 font-bold">Copied!</span>'
+                            : '<span class="text-xs text-red-600 font-bold">Failed</span>';
                         setTimeout(() => {
                             button.innerHTML = originalContent;
                         }, 1500);
@@ -1587,6 +2205,15 @@
             });
 
             // --- INITIAL LOAD ---
+            const versionLabel = `Version ${APP_VERSION}`;
+            const appVersionText = document.getElementById('appVersionText');
+            if (appVersionText) {
+                appVersionText.textContent = versionLabel;
+            }
+            const helpAppVersion = document.getElementById('helpAppVersion');
+            if (helpAppVersion) {
+                helpAppVersion.textContent = versionLabel;
+            }
             loadInitialData();
         });
         
