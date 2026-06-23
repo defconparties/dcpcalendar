@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src https: data:; connect-src https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com https://docs.google.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action https://docs.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://api.onesignal.com https://onesignal.com https://*.onesignal.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src https: data:; connect-src 'self' https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com https://docs.google.com https://cdn.jsdelivr.net https://api.onesignal.com https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action https://docs.google.com;">
     <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link rel="manifest" href="/manifest.json">
     <title>DEFCON Parties Calendar</title>
     <script>
         (function () {
@@ -22,6 +23,56 @@
         tailwind.config = { darkMode: 'class' };
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            const host = window.location.hostname;
+            const isLocal = host === 'localhost' || host === '127.0.0.1';
+            const isProd = host === 'info.defconparties.com';
+            const appId = isLocal
+                ? '4f999ba9-c49e-4d23-8c58-be3586baeca1'
+                : (isProd ? '7caf4b95-8321-4b2f-9642-fe2c11af4a1e' : '');
+            if (!appId) return;
+            const setLocalPushStatus = (message) => {
+                const statusEl = document.getElementById('localPushStatus');
+                if (statusEl) statusEl.textContent = message;
+            };
+            if (isLocal) {
+                setLocalPushStatus(`Starting OneSignal for ${window.location.origin}…`);
+            }
+            if (host === '127.0.0.1') {
+                setLocalPushStatus('Use http://localhost:8080/ — OneSignal Site URL must match exactly (not 127.0.0.1).');
+                return;
+            }
+            const initOptions = {
+                appId,
+                serviceWorkerPath: 'push/onesignal/OneSignalSDKWorker.js',
+                serviceWorkerUpdaterPath: 'push/onesignal/OneSignalSDKUpdaterWorker.js',
+                serviceWorkerParam: { scope: '/push/onesignal/' },
+            };
+            if (isLocal) {
+                initOptions.allowLocalhostAsSecureOrigin = true;
+            }
+            try {
+                OneSignal.Debug.setLogLevel('warn');
+                await OneSignal.init(initOptions);
+                window.dcpOneSignal = OneSignal;
+                if (isLocal) {
+                    setLocalPushStatus('OneSignal ready — click Enable party push alerts above.');
+                }
+            } catch (error) {
+                const detail = error && (error.message || String(error));
+                console.error('OneSignal init failed:', error);
+                if (!isLocal) return;
+                if (detail && detail.includes('Can only be used on')) {
+                    setLocalPushStatus(`Site URL mismatch. Set OneSignal Site URL to exactly: ${window.location.origin}`);
+                } else {
+                    setLocalPushStatus(`OneSignal failed: ${detail || 'see browser console (F12)'}`);
+                }
+            }
+        });
+    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -80,14 +131,21 @@
         .pending-event:hover {
             background-color: #bae6fd !important; /* light blue-200 */
         }
-        .new-event-badge {
-            background-color: #e0e7ff;
-            color: #3730a3;
+        .new-event-badge,
+        .updated-event-badge {
             padding: 2px 6px;
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 500;
             margin-left: 8px;
+        }
+        .new-event-badge {
+            background-color: #e0e7ff;
+            color: #3730a3;
+        }
+        .updated-event-badge {
+            background-color: #fef3c7;
+            color: #92400e;
         }
         /* Custom DC801 Event Styles */
         .dc801-event {
@@ -238,6 +296,10 @@
         html.dark .new-event-badge {
             background-color: #312e81 !important;
             color: #c7d2fe !important;
+        }
+        html.dark .updated-event-badge {
+            background-color: #78350f !important;
+            color: #fde68a !important;
         }
         html.dark .event-card:hover {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
@@ -469,7 +531,7 @@
                 </label>
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-indigo-700 pr-4">
                     <input type="checkbox" id="showNewOnly" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                    <span>Show New</span>
+                    <span>Show New / Updated</span>
                 </label>
                 <span class="font-medium text-gray-700">Filter by day:</span>
                 <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="1" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Mon</span></label>
@@ -526,17 +588,19 @@
 
             <h3>What&apos;s New</h3>
             <ul>
-                <li><strong>New since your last visit:</strong> Parties added since you last closed the calendar get a <strong>New</strong> badge — so you can see what changed without re-reading the whole list.</li>
-                <li><strong>Mark all seen:</strong> Clears <strong>New</strong> badges and updates your baseline when you have caught up.</li>
+                <li><strong>New since your last visit:</strong> Parties added since you last closed the calendar get a <strong>New</strong> badge.</li>
+                <li><strong>Updated since your last visit:</strong> Existing parties with changed title, time, location, or description get an <strong>Updated</strong> badge (amber).</li>
+                <li><strong>Party reminders:</strong> In an event&apos;s details, choose <strong>15 min</strong>, <strong>30 min</strong>, or <strong>1 hour</strong> before start, or <strong>Off</strong> to cancel. Personal alerts only — not a site-wide subscriber push. On <strong>localhost</strong> you can allow system notifications; on a LAN IP (e.g. <code>192.168.x.x</code>) reminders alert while this tab stays open.</li>
+                <li><strong>Mark all seen:</strong> Clears <strong>New</strong> and <strong>Updated</strong> badges and updates your baseline when you have caught up.</li>
                 <li><strong>Smarter refresh during HSC:</strong> Auto-sync every <strong>6 hours</strong> Aug 1–11 (every 48 hours off-season). <strong>Refresh Now</strong> forces a sync (5-minute cooldown).</li>
-                <li><strong>Show New filter:</strong> In Card or Agenda view, toggle <strong>Show New</strong> to focus on unseen or freshly synced parties only.</li>
+                <li><strong>Show New / Updated filter:</strong> In Card or Agenda view, focus on unseen or freshly synced parties only.</li>
             </ul>
 
             <h3>Viewing Events</h3>
             <ul>
                 <li><strong>Card View:</strong> A visual grid of all events. Click a card for details and signup.</li>
                 <li><strong>Agenda View:</strong> Events grouped by day with time ranges. Good for building a day-by-day plan.</li>
-                <li><strong>New badges:</strong> Shown on cards, agenda rows, and the event modal when a party is new to you or newly added on the last sync.</li>
+                <li><strong>New / Updated badges:</strong> Shown on cards, agenda rows, and the event modal when a party is new to you, newly added on the last sync, or edited since your last visit.</li>
             </ul>
 
             <h3>Personalizing Your Schedule</h3>
@@ -550,7 +614,7 @@
             <h3>Filtering &amp; Finding Parties</h3>
             <ul>
                 <li><strong>Search Bar:</strong> Search by title, location, date, or description. Paste a URL to submit a missing party.</li>
-                <li><strong>Show New:</strong> Show only events with a <strong>New</strong> badge (unseen since your last visit or added on last refresh).</li>
+                <li><strong>Show New / Updated:</strong> Show only events with a <strong>New</strong> or <strong>Updated</strong> badge.</li>
                 <li><strong>Show My Approved / Pending / Friends:</strong> Focus on your schedule or imported friend schedules.</li>
                 <li><strong>Agenda day filters:</strong> In Agenda View, filter by weekday (Mon–Sun).</li>
                 <li><strong>Hide Past / Rejected:</strong> Trim noise from events that already happened or you ruled out.</li>
@@ -560,9 +624,11 @@
             <h3>Staying Up to Date</h3>
             <ul>
                 <li><strong>Last refreshed:</strong> Shown above the event list with the current auto-refresh interval.</li>
+                <li><strong>New / updated counts:</strong> Above the list — e.g. <strong>2 new · 1 updated since your last visit</strong>. Use <strong>Mark all seen</strong> when you are caught up.</li>
                 <li><strong>Refresh Now:</strong> Pulls the latest calendar from the server. Use after you hear about new parties or before planning your day.</li>
-                <li><strong>Leaving the site:</strong> When you close or hide this tab, we save a snapshot of event IDs so the next visit can highlight what was added since then.</li>
+                <li><strong>Leaving the site:</strong> When you close or hide this tab, we save a snapshot of event IDs (and edit fingerprints) so the next visit can highlight what changed.</li>
                 <li><strong>First visit:</strong> Existing parties are not marked New — only additions after your baseline appear.</li>
+                <li><strong>Subscriber push alerts</strong> (optional, site-wide): Not the same as per-party reminders. When enabled, the DCP team can send a manual or scheduled broadcast from the staging pipeline — you would opt in with a <strong>Subscribe to party alerts</strong> button (coming soon on this page). Calendar edits alone do not ping subscribers.</li>
             </ul>
 
             <h3>Sharing &amp; Collaboration</h3>
@@ -755,6 +821,31 @@
                 <div id="modalLocation" class="flex items-start text-gray-600"></div>
                 <div id="modalDescription" class="prose prose-sm max-w-none text-gray-700"></div>
                 <div id="modalApprovedBy" class="text-sm text-gray-500"></div>
+                <div id="modalReminderSection" class="border-t border-gray-200 dark:border-gray-600 pt-3 mt-1">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        Remind me before start
+                        <span class="text-gray-500 dark:text-gray-400 font-normal">(this browser only)</span>
+                    </p>
+                    <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-700 dark:text-gray-300" id="modalReminderOptions">
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="modalReminder" value="0" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <span>Off</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="modalReminder" value="15" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <span>15 min</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="modalReminder" value="30" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <span>30 min</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="modalReminder" value="60" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <span>1 hour</span>
+                        </label>
+                    </div>
+                    <p id="modalReminderStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-2"></p>
+                </div>
             </div>
             <!-- Modal Footer -->
             <div class="p-3 sm:p-4 bg-gray-50 rounded-b-lg flex justify-between items-center flex-wrap gap-2">
@@ -795,7 +886,15 @@
         </button>
     </div>
 
-    <footer class="text-center py-4">
+    <footer class="text-center py-4 space-y-2">
+        <div id="localPushPanel" class="hidden max-w-md mx-auto px-4">
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Subscriber push (local OneSignal test)</p>
+            <button id="localPushSubscribeBtn" type="button"
+                class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                Enable party push alerts
+            </button>
+            <p id="localPushStatus" class="text-xs text-gray-500 mt-2"></p>
+        </div>
         <p id="appVersionText" class="text-sm text-gray-500"></p>
     </footer>
 
@@ -879,7 +978,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.3.1-beta';
+        const APP_VERSION = '1.3.5-beta';
         const CACHE_VERSION = '2026';
         const SCHEDULES_KEY = `calendarSchedules_${CACHE_VERSION}`;
         const MY_SCHEDULE_KEY = '__ME__';
@@ -888,7 +987,12 @@
         const CACHE_KEY = `calendarDataCache_${CACHE_VERSION}`;
         const LAST_REFRESH_KEY = `calendarLastRefresh_${CACHE_VERSION}`;
         const NEW_EVENTS_KEY = `calendarNewEvents_${CACHE_VERSION}`;
+        const UPDATED_EVENTS_KEY = `calendarUpdatedEvents_${CACHE_VERSION}`;
         const LAST_SESSION_EVENT_IDS_KEY = `calendarLastSessionEventIds_${CACHE_VERSION}`;
+        const LAST_SESSION_EVENT_FINGERPRINTS_KEY = `calendarLastSessionFingerprints_${CACHE_VERSION}`;
+        const REMINDERS_KEY = `calendarReminders_${CACHE_VERSION}`;
+        const REMINDER_TIMER_IDS = new Map();
+        let swRegistration = null;
         const HIDDEN_KEYWORDS_KEY = `calendarHiddenKeywords_${CACHE_VERSION}`;
         const PROFILES_KEY = `calendarProfiles_${CACHE_VERSION}`;
         const THEME_KEY = `calendarTheme_${CACHE_VERSION}`;
@@ -1169,9 +1273,42 @@
         function getAutoRefreshInterval() {
             return isHscSeason() ? AUTO_REFRESH_INTERVAL_HSC : AUTO_REFRESH_INTERVAL_DEFAULT;
         }
+        function normalizeDescriptionForFingerprint(html) {
+            const template = document.createElement('template');
+            template.innerHTML = html || '';
+            return (template.content.textContent || '').replace(/\s+/g, ' ').trim();
+        }
+        function eventChangeFingerprint(event) {
+            if (!event || !event.id) return '';
+            return [
+                (event.summary || '').trim(),
+                getStartDateString(event) || '',
+                getEndDateString(event) || '',
+                (event.location || '').trim(),
+                normalizeDescriptionForFingerprint(event.description || ''),
+            ].join('\u001f');
+        }
+        function detectUpdatedEventIds(oldEvents, fetchedEvents) {
+            const oldById = new Map();
+            (oldEvents || []).forEach((event) => {
+                if (event && event.id) oldById.set(event.id, eventChangeFingerprint(event));
+            });
+            const updated = [];
+            (fetchedEvents || []).forEach((event) => {
+                if (!event || !event.id || !oldById.has(event.id)) return;
+                if (oldById.get(event.id) !== eventChangeFingerprint(event)) {
+                    updated.push(event.id);
+                }
+            });
+            return updated;
+        }
         function getSyncNewEventIds() {
             const newIds = localStorage.getItem(NEW_EVENTS_KEY);
             return newIds ? new Set(JSON.parse(newIds)) : new Set();
+        }
+        function getSyncUpdatedEventIds() {
+            const updatedIds = localStorage.getItem(UPDATED_EVENTS_KEY);
+            return updatedIds ? new Set(JSON.parse(updatedIds)) : new Set();
         }
         function getLastSessionEventIds() {
             const raw = localStorage.getItem(LAST_SESSION_EVENT_IDS_KEY);
@@ -1187,10 +1324,22 @@
             const ids = allEvents.map(event => event.id).filter(Boolean);
             localStorage.setItem(LAST_SESSION_EVENT_IDS_KEY, JSON.stringify(ids));
         }
+        function saveSessionEventFingerprints() {
+            if (!Array.isArray(allEvents) || allEvents.length === 0) return;
+            const fingerprints = {};
+            allEvents.forEach((event) => {
+                if (event && event.id) fingerprints[event.id] = eventChangeFingerprint(event);
+            });
+            localStorage.setItem(LAST_SESSION_EVENT_FINGERPRINTS_KEY, JSON.stringify(fingerprints));
+        }
         function initializeSessionBaselineIfNeeded() {
-            if (localStorage.getItem(LAST_SESSION_EVENT_IDS_KEY) !== null) return;
             if (!allEvents.length) return;
-            saveSessionEventSnapshot();
+            if (localStorage.getItem(LAST_SESSION_EVENT_IDS_KEY) === null) {
+                saveSessionEventSnapshot();
+            }
+            if (localStorage.getItem(LAST_SESSION_EVENT_FINGERPRINTS_KEY) === null) {
+                saveSessionEventFingerprints();
+            }
         }
         function getUnseenSinceLastVisitIds() {
             const lastSession = getLastSessionEventIds();
@@ -1203,15 +1352,58 @@
             });
             return unseen;
         }
+        function getUnseenUpdatedSinceLastVisitIds() {
+            const raw = localStorage.getItem(LAST_SESSION_EVENT_FINGERPRINTS_KEY);
+            if (!raw) return new Set();
+            let lastFingerprints;
+            try {
+                lastFingerprints = JSON.parse(raw);
+            } catch (error) {
+                return new Set();
+            }
+            const updated = new Set();
+            allEvents.forEach((event) => {
+                if (!event || !event.id || !Object.prototype.hasOwnProperty.call(lastFingerprints, event.id)) return;
+                if (lastFingerprints[event.id] !== eventChangeFingerprint(event)) {
+                    updated.add(event.id);
+                }
+            });
+            return updated;
+        }
         function getNewEventIds() {
             const combined = getUnseenSinceLastVisitIds();
             getSyncNewEventIds().forEach(id => combined.add(id));
             return combined;
         }
+        function getUpdatedEventIds() {
+            const combined = getUnseenUpdatedSinceLastVisitIds();
+            getSyncUpdatedEventIds().forEach((id) => {
+                if (!getNewEventIds().has(id)) combined.add(id);
+            });
+            return combined;
+        }
+        function getHighlightedEventIds() {
+            const combined = getNewEventIds();
+            getUpdatedEventIds().forEach((id) => combined.add(id));
+            return combined;
+        }
+        function getChangeBadgeHtml(eventId) {
+            if (getNewEventIds().has(eventId)) {
+                return '<span class="new-event-badge">New</span>';
+            }
+            if (getUpdatedEventIds().has(eventId)) {
+                return '<span class="updated-event-badge">Updated</span>';
+            }
+            return '';
+        }
         function updateUnseenCountUI() {
-            const count = getNewEventIds().size;
-            if (count > 0) {
-                unseenCountText.textContent = `${count} new since your last visit`;
+            const newCount = getNewEventIds().size;
+            const updatedCount = getUpdatedEventIds().size;
+            if (newCount > 0 || updatedCount > 0) {
+                const parts = [];
+                if (newCount > 0) parts.push(`${newCount} new`);
+                if (updatedCount > 0) parts.push(`${updatedCount} updated`);
+                unseenCountText.textContent = `${parts.join(' · ')} since your last visit`;
                 unseenCountText.classList.remove('hidden');
                 markAllSeenBtn.classList.remove('hidden');
             } else {
@@ -1222,7 +1414,9 @@
         }
         function markAllEventsSeen() {
             saveSessionEventSnapshot();
+            saveSessionEventFingerprints();
             localStorage.setItem(NEW_EVENTS_KEY, JSON.stringify([]));
+            localStorage.setItem(UPDATED_EVENTS_KEY, JSON.stringify([]));
             renderCurrentView();
         }
         function getHiddenKeywords() {
@@ -1256,18 +1450,21 @@
                 const fetchedEvents = normalizeEventsPayload(data);
                 
                 const oldDataRaw = localStorage.getItem(CACHE_KEY);
-                let newlyAddedIds = []; 
+                let newlyAddedIds = [];
+                let newlyUpdatedIds = [];
 
                 if (oldDataRaw) {
                     const oldEvents = JSON.parse(oldDataRaw);
                     const oldEventIds = new Set(oldEvents.map(e => e.id));
                     const newEventIds = new Set(fetchedEvents.map(e => e.id));
                     newlyAddedIds = [...newEventIds].filter(id => !oldEventIds.has(id));
+                    newlyUpdatedIds = detectUpdatedEventIds(oldEvents, fetchedEvents);
                 }
 
                 localStorage.setItem(CACHE_KEY, JSON.stringify(fetchedEvents));
                 localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString());
                 localStorage.setItem(NEW_EVENTS_KEY, JSON.stringify(newlyAddedIds));
+                localStorage.setItem(UPDATED_EVENTS_KEY, JSON.stringify(newlyUpdatedIds));
                 if (isManual) sessionStorage.setItem('lastManualRefresh', Date.now().toString());
 
                 allEvents = fetchedEvents;
@@ -1356,7 +1553,7 @@
             const hidePast = hidePastEventsCheckbox.checked;
             const hideRejected = hideRejectedCheckbox.checked;
             const showPendingOnly = document.getElementById('showPendingOnly').checked;
-            const newEventIds = getNewEventIds();
+            const highlightedEventIds = getHighlightedEventIds();
             const hiddenKeywords = getHiddenKeywords().map(k => k.toLowerCase()).filter(k => k);
             const now = new Date();
 
@@ -1380,7 +1577,7 @@
                 const isApprovedByFriend = getFriendApprovals(event.id).length > 0;
 
                 if (showApprovedOnly && !isApprovedByMe) return false;
-                if (showNewOnly && !newEventIds.has(event.id)) return false;
+                if (showNewOnly && !highlightedEventIds.has(event.id)) return false;
                 if (!showFriendSchedules && isApprovedByFriend && !isApprovedByMe) return false;
 
                 if (currentView === 'agenda') {
@@ -1441,6 +1638,256 @@
             updateUnseenCountUI();
         }
 
+        // --- LOCAL BROWSER REMINDERS (no server push) ---
+        function getStoredReminders() {
+            try {
+                const raw = localStorage.getItem(REMINDERS_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (error) {
+                return [];
+            }
+        }
+        function saveStoredReminders(reminders) {
+            localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
+        }
+        function getReminderForEvent(eventId) {
+            return getStoredReminders().find((item) => item.eventId === eventId) || null;
+        }
+        function reminderTag(eventId) {
+            return `party-reminder-${eventId}`;
+        }
+        function canUseSystemNotifications() {
+            return window.isSecureContext && 'Notification' in window;
+        }
+        function reminderStatusHint() {
+            if (canUseSystemNotifications()) {
+                return 'Uses your browser only — not a subscriber push. Allow notifications when prompted.';
+            }
+            const host = window.location.hostname;
+            if (host === 'localhost' || host === '127.0.0.1') {
+                return 'Uses your browser only — not a subscriber push.';
+            }
+            return `Reminders work while this tab stays open on http://${host}. For system notifications on this PC, use http://localhost:8080/`;
+        }
+        async function ensureNotificationPermission() {
+            if (!canUseSystemNotifications()) {
+                return false;
+            }
+            if (Notification.permission === 'granted') return true;
+            if (Notification.permission === 'denied') {
+                throw new Error('Notifications are blocked. Allow them in browser settings, or use http://localhost:8080/');
+            }
+            const result = await Notification.requestPermission();
+            return result === 'granted';
+        }
+        function showInPageReminder(title, body) {
+            let toast = document.getElementById('partyReminderToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'partyReminderToast';
+                toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md w-[calc(100%-2rem)] rounded-lg shadow-lg border border-indigo-200 bg-white dark:bg-gray-800 dark:border-indigo-700 p-4';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<p class="font-semibold text-gray-900 dark:text-gray-100">${escapeHtml(title)}</p><p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${escapeHtml(body)}</p>`;
+            toast.classList.remove('hidden');
+            window.setTimeout(() => toast.classList.add('hidden'), 30000);
+            if (document.hidden && typeof toast.scrollIntoView === 'function') {
+                toast.scrollIntoView({ block: 'nearest' });
+            }
+        }
+        async function clearScheduledReminderNotification(eventId) {
+            if (!swRegistration || !swRegistration.getNotifications) return;
+            const tag = reminderTag(eventId);
+            const existing = await swRegistration.getNotifications({ tag });
+            existing.forEach((notification) => notification.close());
+        }
+        function clearReminderTimer(eventId) {
+            const timerId = REMINDER_TIMER_IDS.get(eventId);
+            if (timerId) {
+                clearTimeout(timerId);
+                REMINDER_TIMER_IDS.delete(eventId);
+            }
+        }
+        function formatReminderTime(date) {
+            return date.toLocaleString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                timeZone: 'America/Los_Angeles',
+            });
+        }
+        function buildReminderBody(event, minutesBefore) {
+            const startDateString = getStartDateString(event);
+            const startText = startDateString
+                ? new Date(startDateString).toLocaleString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZone: 'America/Los_Angeles',
+                })
+                : 'soon';
+            const location = (event.location || '').trim();
+            return `Starts at ${startText} PT${location ? ` · ${location}` : ''} (${minutesBefore} min heads-up)`;
+        }
+        async function scheduleEventReminder(event, minutesBefore) {
+            const eventId = event.id;
+            const startDateString = getStartDateString(event);
+            if (!eventId || !startDateString) {
+                throw new Error('This event does not have a start time.');
+            }
+            const startDate = new Date(startDateString);
+            if (isNaN(startDate.getTime())) {
+                throw new Error('Could not read the event start time.');
+            }
+            const remindAt = new Date(startDate.getTime() - minutesBefore * 60 * 1000);
+            if (remindAt.getTime() <= Date.now()) {
+                throw new Error(`That reminder time has already passed (${minutesBefore} min before start).`);
+            }
+            const systemNotifications = canUseSystemNotifications();
+            let allowed = false;
+            if (systemNotifications) {
+                allowed = await ensureNotificationPermission();
+                if (!allowed) {
+                    throw new Error('Notification permission was not granted. Try http://localhost:8080/ on this PC.');
+                }
+            }
+            await clearScheduledReminderNotification(eventId);
+            clearReminderTimer(eventId);
+            const reminderRecord = {
+                eventId,
+                summary: event.summary || 'Party',
+                startAt: startDateString,
+                minutesBefore,
+                remindAt: remindAt.toISOString(),
+            };
+            const reminders = getStoredReminders().filter((item) => item.eventId !== eventId);
+            reminders.push(reminderRecord);
+            saveStoredReminders(reminders);
+            const title = `${event.summary || 'Party'} starts in ${minutesBefore} minutes`;
+            const body = buildReminderBody(event, minutesBefore);
+            const options = {
+                body,
+                tag: reminderTag(eventId),
+                data: { eventId },
+            };
+            let scheduledViaWorker = false;
+            if (allowed && swRegistration && typeof swRegistration.showNotification === 'function') {
+                try {
+                    await swRegistration.showNotification(title, {
+                        ...options,
+                        showTrigger: { timestamp: remindAt.getTime() },
+                    });
+                    scheduledViaWorker = true;
+                } catch (error) {
+                    console.warn('Scheduled notification via service worker failed; using timer fallback.', error);
+                }
+            }
+            const delay = remindAt.getTime() - Date.now();
+            clearReminderTimer(eventId);
+            const timerId = window.setTimeout(() => {
+                fireReminderNotification(reminderRecord);
+            }, delay);
+            REMINDER_TIMER_IDS.set(eventId, timerId);
+            return {
+                ...reminderRecord,
+                mode: allowed ? (scheduledViaWorker ? 'system-scheduled' : 'system-timer') : 'tab-open',
+            };
+        }
+        function fireReminderNotification(reminder) {
+            const title = `${reminder.summary || 'Party'} starts in ${reminder.minutesBefore} minutes`;
+            const body = `Starting soon (${reminder.minutesBefore} min heads-up)`;
+            let shown = false;
+            if (canUseSystemNotifications() && Notification.permission === 'granted') {
+                if (swRegistration && typeof swRegistration.showNotification === 'function') {
+                    swRegistration.showNotification(title, {
+                        body,
+                        tag: reminderTag(reminder.eventId),
+                        data: { eventId: reminder.eventId },
+                    });
+                    shown = true;
+                } else {
+                    new Notification(title, { body, tag: reminderTag(reminder.eventId) });
+                    shown = true;
+                }
+            }
+            if (!shown) {
+                showInPageReminder(title, body);
+            }
+            const reminders = getStoredReminders().filter((item) => item.eventId !== reminder.eventId);
+            saveStoredReminders(reminders);
+            clearReminderTimer(reminder.eventId);
+        }
+        async function cancelEventReminder(eventId) {
+            await clearScheduledReminderNotification(eventId);
+            clearReminderTimer(eventId);
+            const reminders = getStoredReminders().filter((item) => item.eventId !== eventId);
+            saveStoredReminders(reminders);
+        }
+        function restoreReminderTimers() {
+            const now = Date.now();
+            getStoredReminders().forEach((reminder) => {
+                const remindAt = new Date(reminder.remindAt).getTime();
+                if (isNaN(remindAt)) return;
+                if (remindAt <= now) {
+                    fireReminderNotification(reminder);
+                    return;
+                }
+                if (!REMINDER_TIMER_IDS.has(reminder.eventId)) {
+                    const timerId = window.setTimeout(() => {
+                        fireReminderNotification(reminder);
+                    }, remindAt - now);
+                    REMINDER_TIMER_IDS.set(reminder.eventId, timerId);
+                }
+            });
+        }
+        function updateModalReminderUI(event) {
+            const statusEl = document.getElementById('modalReminderStatus');
+            const saved = getReminderForEvent(event.id);
+            document.querySelectorAll('input[name="modalReminder"]').forEach((input) => {
+                const value = parseInt(input.value, 10);
+                input.checked = saved ? saved.minutesBefore === value : value === 0;
+            });
+            if (!statusEl) return;
+            if (!saved) {
+                statusEl.textContent = reminderStatusHint();
+                return;
+            }
+            let status = `Reminder set for ${formatReminderTime(new Date(saved.remindAt))} PT (${saved.minutesBefore} min before start).`;
+            if (!canUseSystemNotifications()) {
+                status += ' Alerts while this tab is open.';
+            }
+            statusEl.textContent = status;
+        }
+        function setModalReminderSelection(minutesBefore) {
+            document.querySelectorAll('input[name="modalReminder"]').forEach((input) => {
+                const value = parseInt(input.value, 10);
+                input.checked = minutesBefore ? value === minutesBefore : value === 0;
+            });
+        }
+        async function handleModalReminderChange(event, minutesBefore) {
+            const statusEl = document.getElementById('modalReminderStatus');
+            setModalReminderSelection(minutesBefore);
+            try {
+                if (!minutesBefore) {
+                    await cancelEventReminder(event.id);
+                    if (statusEl) statusEl.textContent = 'Reminder turned off.';
+                    return;
+                }
+                const saved = await scheduleEventReminder(event, minutesBefore);
+                if (statusEl) {
+                    let status = `Reminder set for ${formatReminderTime(new Date(saved.remindAt))} PT.`;
+                    if (saved.mode === 'tab-open') {
+                        status += ' Will alert while this tab stays open.';
+                    }
+                    statusEl.textContent = status;
+                }
+            } catch (error) {
+                if (statusEl) statusEl.textContent = error.message || 'Could not set reminder.';
+                setModalReminderSelection(getReminderForEvent(event.id)?.minutesBefore || 0);
+            }
+        }
+
         // --- MODAL LOGIC & RENDER FUNCTIONS ---
         function showModal(event) {
             modalContent.dataset.eventId = event.id;
@@ -1449,6 +1896,11 @@
                 const badge = document.createElement('span');
                 badge.className = 'new-event-badge';
                 badge.textContent = 'New';
+                modalTitle.appendChild(badge);
+            } else if (getUpdatedEventIds().has(event.id)) {
+                const badge = document.createElement('span');
+                badge.className = 'updated-event-badge';
+                badge.textContent = 'Updated';
                 modalTitle.appendChild(badge);
             }
             
@@ -1519,6 +1971,8 @@
             modalLocationText.textContent = event.location || 'Location not specified';
             modalLocation.appendChild(modalLocationText);
 
+            updateModalReminderUI(event);
+
             eventModal.classList.remove('hidden');
             setTimeout(() => {
                 modalContent.classList.remove('scale-95', 'opacity-0');
@@ -1556,7 +2010,6 @@
                 return acc;
             }, {});
             agendaViewContainer.innerHTML = ''; 
-            const newEventIds = getNewEventIds();
             Object.keys(groupedEvents).sort().forEach(dateKey => {
                 const dayEvents = groupedEvents[dateKey];
                 const dayHeader = document.createElement('div');
@@ -1585,7 +2038,7 @@
                             timeRange += ` - ${endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}`;
                         }
                     }
-                    const newBadge = newEventIds.has(event.id) ? '<span class="new-event-badge">New</span>' : '';
+                    const changeBadge = getChangeBadgeHtml(event.id);
                     let titleClass = '';
                     if (isDC801) {
                         titleClass = 'dc801-agenda-title';
@@ -1594,7 +2047,7 @@
                     } else if (isFloridaman) {
                         titleClass = 'floridaman-agenda-title';
                     }
-                    eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${escapeHtml(timeRange)}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${newBadge}</p><p class="text-gray-500">${escapeHtml(event.location || '')}</p></div>`;
+                    eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${escapeHtml(timeRange)}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p><p class="text-gray-500">${escapeHtml(event.location || '')}</p></div>`;
                     agendaViewContainer.appendChild(eventRow);
                 });
             });
@@ -1602,7 +2055,6 @@
         
         function renderCardView(events) {
             cardViewContainer.innerHTML = ''; 
-            const newEventIds = getNewEventIds();
             events.forEach(event => {
                 const eventCard = document.createElement('div');
                 eventCard.className = 'event-card bg-white rounded-lg shadow-md overflow-hidden p-6 flex flex-col cursor-pointer';
@@ -1649,7 +2101,7 @@
                         }
                     }
                 }
-                const newBadge = newEventIds.has(event.id) ? '<span class="new-event-badge">New</span>' : '';
+                const changeBadge = getChangeBadgeHtml(event.id);
                 let imageHTML = '';
                 if (isDC801) {
                     imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium" alt="DC801 Event Image" class="max-h-full w-auto object-contain"></div>`;
@@ -1665,7 +2117,7 @@
                 eventCard.innerHTML = `
                     ${imageHTML}
                     <div class="flex-grow">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${escapeHtml(event.summary || 'No Title')} ${newBadge}</h3>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</h3>
                         <div class="flex items-center text-gray-600 text-sm mb-4">
                             <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             <span>${escapeHtml(dateDisplay)}</span>
@@ -2137,9 +2589,13 @@
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden') {
                     saveSessionEventSnapshot();
+                    saveSessionEventFingerprints();
                 }
             });
-            window.addEventListener('pagehide', saveSessionEventSnapshot);
+            window.addEventListener('pagehide', () => {
+                saveSessionEventSnapshot();
+                saveSessionEventFingerprints();
+            });
             saveHiddenKeywordsBtn.addEventListener('click', () => {
                 const keywordsText = hiddenKeywordsTextarea.value;
                 const keywordsArray = keywordsText.split(',').map(k => k.trim()).filter(k => k);
@@ -2213,6 +2669,58 @@
             const helpAppVersion = document.getElementById('helpAppVersion');
             if (helpAppVersion) {
                 helpAppVersion.textContent = versionLabel;
+            }
+            const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const localPushPanel = document.getElementById('localPushPanel');
+            const localPushSubscribeBtn = document.getElementById('localPushSubscribeBtn');
+            const localPushStatus = document.getElementById('localPushStatus');
+            if (isLocalHost && localPushPanel) {
+                localPushPanel.classList.remove('hidden');
+            }
+            if (localPushSubscribeBtn) {
+                localPushSubscribeBtn.addEventListener('click', () => {
+                    const run = async (OneSignal) => {
+                        try {
+                            await OneSignal.Notifications.requestPermission();
+                            if (localPushStatus) {
+                                localPushStatus.textContent = OneSignal.Notifications.permission
+                                    ? 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.'
+                                    : 'Permission not granted. Check browser notification settings for localhost.';
+                            }
+                        } catch (error) {
+                            console.error('OneSignal permission request failed:', error);
+                            if (localPushStatus) localPushStatus.textContent = 'Request failed — see browser console (F12).';
+                        }
+                    };
+                    if (window.dcpOneSignal) {
+                        run(window.dcpOneSignal);
+                        return;
+                    }
+                    window.OneSignalDeferred = window.OneSignalDeferred || [];
+                    OneSignalDeferred.push(run);
+                });
+            }
+            document.querySelectorAll('input[name="modalReminder"]').forEach((input) => {
+                input.addEventListener('change', () => {
+                    const eventId = modalContent.dataset.eventId;
+                    const event = allEvents.find((item) => item.id === eventId);
+                    if (!event) return;
+                    const minutesBefore = parseInt(input.value, 10) || 0;
+                    handleModalReminderChange(event, minutesBefore);
+                });
+            });
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        swRegistration = registration;
+                        restoreReminderTimers();
+                    })
+                    .catch((error) => {
+                        console.warn('Service worker registration failed; reminder timers only work while this tab is open.', error);
+                        restoreReminderTimers();
+                    });
+            } else {
+                restoreReminderTimers();
             }
             loadInitialData();
         });
