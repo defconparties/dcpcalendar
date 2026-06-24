@@ -478,15 +478,22 @@
             position: relative;
             overflow: visible !important;
         }
+        .has-card-eyes:hover,
+        .has-card-eyes:focus-within {
+            z-index: 30;
+        }
+        #cardViewContainer {
+            overflow: visible;
+        }
         .dcp-card-eyes {
             position: absolute;
-            top: -6px;
+            top: -14px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             gap: 14px;
             pointer-events: none;
-            z-index: 5;
+            z-index: 40;
         }
         .dcp-card-eyes span {
             display: block;
@@ -509,11 +516,12 @@
             left: 11px;
         }
         .dcp-card-eyes--hover {
-            opacity: 0;
-            transform: translateX(-50%) translateY(8px);
+            opacity: 0.45;
+            transform: translateX(-50%) translateY(4px);
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
-        .has-card-eyes:hover .dcp-card-eyes--hover {
+        .has-card-eyes:hover .dcp-card-eyes--hover,
+        .has-card-eyes:focus-within .dcp-card-eyes--hover {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
@@ -1659,7 +1667,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.10-beta';
+        const APP_VERSION = '1.4.11-beta';
         const HIGHLIGHT_MARKER_PATTERN = /\[dcp-highlight:([a-z0-9_]+)\]/i;
         const SPONSOR_MARKER_PATTERN = /\[dcp-sponsor:([^|\]]*)\|([^|\]]*)(?:\|([^|\]]*))?\]/i;
         const DEFAULT_MODAL_SPONSORS = [
@@ -1741,6 +1749,7 @@
         const REJECTED_EVENTS_KEY = `calendarRejectedEvents_${CACHE_VERSION}`;
         const PENDING_EVENTS_KEY = `calendarPendingEvents_${CACHE_VERSION}`;
         const CACHE_KEY = `calendarDataCache_${CACHE_VERSION}`;
+        const APP_DATA_VERSION_KEY = `calendarAppDataVersion_${CACHE_VERSION}`;
         const LAST_REFRESH_KEY = `calendarLastRefresh_${CACHE_VERSION}`;
         const NEW_EVENTS_KEY = `calendarNewEvents_${CACHE_VERSION}`;
         const UPDATED_EVENTS_KEY = `calendarUpdatedEvents_${CACHE_VERSION}`;
@@ -2503,10 +2512,19 @@
             }
         }
 
+        function syncCacheWithAppVersion() {
+            const storedVersion = localStorage.getItem(APP_DATA_VERSION_KEY);
+            if (storedVersion !== APP_VERSION) {
+                localStorage.removeItem(CACHE_KEY);
+                localStorage.setItem(APP_DATA_VERSION_KEY, APP_VERSION);
+            }
+        }
+
         function loadInitialData() {
             if (sessionStorage.getItem('swagBannerClosed') === 'true') {
                 swagBanner.style.display = 'none';
             }
+            syncCacheWithAppVersion();
             const cachedData = localStorage.getItem(CACHE_KEY);
             const lastRefresh = parseInt(localStorage.getItem(LAST_REFRESH_KEY) || '0');
             const needsAutoRefresh = Date.now() - lastRefresh > getAutoRefreshInterval();
@@ -3406,6 +3424,9 @@
                 }
                 if (highlightPreset?.eyes) {
                     eventCard.classList.add('has-card-eyes');
+                }
+                if (highlightPreset) {
+                    eventCard.dataset.highlight = parseEventHighlightStyle(event) || '';
                 }
                 eventCard.dataset.eventId = event.id;
                 attachLongPressShare(eventCard, event);
