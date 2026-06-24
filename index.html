@@ -24,7 +24,7 @@
     <script>
         tailwind.config = { darkMode: 'class' };
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
         // Footer subscribe button copy. Slide prompt text is configured in OneSignal dashboard.
@@ -117,15 +117,112 @@
         });
     </script>
     <style>
+        :root {
+            --hack-green: #33ff99;
+            --hack-green-dim: #1a9f5c;
+            --hack-green-muted: #6ee7b7;
+            --hack-surface: #0c1210;
+            --hack-surface-raised: #111a16;
+            --hack-border: #1f3d2f;
+            --hack-glow: rgba(51, 255, 153, 0.22);
+            --hack-paper: #eef4f0;
+        }
         body {
             font-family: 'Inter', sans-serif;
         }
+        body.hacker-theme {
+            background-color: #0a0f0d;
+            background-image:
+                linear-gradient(rgba(51, 255, 153, 0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(51, 255, 153, 0.035) 1px, transparent 1px);
+            background-size: 22px 22px;
+        }
+        html:not(.dark) body.hacker-theme {
+            background-color: #e8ede9;
+            background-image:
+                linear-gradient(rgba(26, 159, 92, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(26, 159, 92, 0.06) 1px, transparent 1px);
+        }
+        body.hacker-theme::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9998;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.04) 2px,
+                rgba(0, 0, 0, 0.04) 4px
+            );
+            opacity: 0.35;
+        }
+        .hacker-title {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            letter-spacing: 0.04em;
+            line-height: 1.25;
+        }
+        html.dark .hacker-title {
+            color: var(--hack-green);
+            text-shadow: 0 0 24px var(--hack-glow);
+        }
+        html:not(.dark) .hacker-title {
+            color: #14532d;
+        }
+        .hacker-subtitle {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        html.dark .hacker-subtitle {
+            color: rgba(110, 231, 183, 0.85);
+        }
+        html:not(.dark) .hacker-subtitle {
+            color: #166534;
+        }
+        .hacker-panel {
+            border: 1px solid var(--hack-border);
+            border-radius: 2px;
+            box-shadow: inset 0 1px 0 rgba(51, 255, 153, 0.06);
+        }
+        html:not(.dark) .hacker-panel {
+            border-color: #a7c4b5;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
         .event-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            border-radius: 2px;
+        }
+        body.hacker-theme .event-card {
+            border: 1px solid var(--hack-border);
+        }
+        html:not(.dark) body.hacker-theme .event-card {
+            border-color: #b8cfc2;
         }
         .event-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        html.dark body.hacker-theme .event-card:hover {
+            border-color: var(--hack-green-dim);
+            box-shadow: 0 0 14px var(--hack-glow);
+        }
+        html.dark body.hacker-theme .event-card.bg-white {
+            background-color: var(--hack-surface-raised) !important;
+        }
+        html.dark body.hacker-theme .event-card h3,
+        html.dark body.hacker-theme .event-card .text-gray-900 {
+            color: #d1fae5 !important;
+        }
+        html.dark body.hacker-theme .event-card .text-gray-600,
+        html.dark body.hacker-theme .event-card .text-gray-700 {
+            color: var(--hack-green-muted) !important;
+            opacity: 0.9;
+        }
+        html.dark body.hacker-theme .event-card svg {
+            stroke: var(--hack-green-muted) !important;
+        }
+        html:not(.dark) body.hacker-theme .event-card.bg-white {
+            background-color: var(--hack-paper) !important;
         }
         /* Styles for active tab */
         .tab-active {
@@ -133,17 +230,49 @@
             color: #4f46e5;
             background-color: #eef2ff;
         }
+        body.hacker-theme .tab-active {
+            border-color: var(--hack-green-dim);
+            color: var(--hack-green-dim);
+            background-color: rgba(51, 255, 153, 0.08);
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        html.dark body.hacker-theme .tab-active {
+            color: var(--hack-green);
+            background-color: rgba(51, 255, 153, 0.12);
+        }
         .tab-active-red {
-            border-color: #ef4444; /* red-500 */
-            color: #ef4444; /* red-500 */
-            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444;
+            color: #ef4444;
+            background-color: #fee2e2;
+        }
+        body.hacker-theme .tab-active-red {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        body.hacker-theme #viewTabsBar button {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.02em;
         }
         /* Agenda View Styles */
         .agenda-day-header {
             position: sticky;
             top: 0;
-            background-color: #f9fafb; /* bg-gray-50 */
+            background-color: #f9fafb;
             z-index: 10;
+        }
+        html.dark body.hacker-theme .agenda-day-header {
+            background-color: var(--hack-surface);
+            color: var(--hack-green-muted);
+            border-color: var(--hack-border) !important;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        html.dark body.hacker-theme #agendaViewContainer {
+            background-color: var(--hack-surface-raised) !important;
+            border: 1px solid var(--hack-border);
+            border-radius: 2px;
+        }
+        html.dark body.hacker-theme .agenda-event-row:hover {
+            background-color: rgba(51, 255, 153, 0.06) !important;
         }
         /* Event Status Styles */
         .my-approved-event {
@@ -244,6 +373,269 @@
             color: #FF1493 !important; /* Deep Pink for a slightly darker pink */
             font-weight: 700;
         }
+        .highlight-gold-event,
+        .highlight-neon-event,
+        .highlight-pink-event {
+            color: black !important;
+        }
+        .highlight-gold-event h3,
+        .highlight-gold-event p,
+        .highlight-gold-event span,
+        .highlight-gold-event .text-gray-600,
+        .highlight-neon-event h3,
+        .highlight-neon-event p,
+        .highlight-neon-event span,
+        .highlight-neon-event .text-gray-600,
+        .highlight-pink-event h3,
+        .highlight-pink-event p,
+        .highlight-pink-event span,
+        .highlight-pink-event .text-gray-600 {
+            color: black !important;
+        }
+        .highlight-gold-event svg,
+        .highlight-neon-event svg,
+        .highlight-pink-event svg {
+            stroke: black !important;
+        }
+        .highlight-gold-event {
+            background-color: #FFD700 !important;
+        }
+        .highlight-neon-event {
+            background-color: #ff5722 !important;
+        }
+        .highlight-pink-event {
+            background-color: #FF69B4 !important;
+        }
+        .highlight-gold-agenda-title {
+            color: #DAA520 !important;
+            font-weight: 700;
+        }
+        .highlight-neon-agenda-title {
+            color: #ff5722 !important;
+            font-weight: 700;
+        }
+        .highlight-pink-agenda-title {
+            color: #FF1493 !important;
+            font-weight: 700;
+        }
+
+        /* FX highlight presets */
+        @keyframes dcp-shake-burst {
+            0%, 88%, 100% { transform: translateX(0); }
+            90% { transform: translateX(-5px) rotate(-1deg); }
+            92% { transform: translateX(5px) rotate(1deg); }
+            94% { transform: translateX(-4px); }
+            96% { transform: translateX(4px); }
+            98% { transform: translateX(-2px); }
+        }
+        @keyframes dcp-pulse-glow {
+            0%, 100% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(51, 255, 153, 0.4); }
+            50% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 10px rgba(51, 255, 153, 0); }
+        }
+        @keyframes dcp-neon-glow {
+            0%, 100% { box-shadow: 0 0 8px 1px rgba(255, 87, 34, 0.55), 0 0 18px 3px rgba(255, 87, 34, 0.25); }
+            50% { box-shadow: 0 0 14px 3px rgba(255, 87, 34, 0.75), 0 0 28px 6px rgba(255, 87, 34, 0.35); }
+        }
+        @keyframes dcp-eyes-peek {
+            0%, 70%, 100% { transform: translateX(-50%) translateY(110%); opacity: 0; }
+            78%, 92% { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        .fx-shake-event {
+            animation: dcp-shake-burst 5s ease-in-out infinite;
+        }
+        .fx-pulse-event {
+            animation: dcp-pulse-glow 2.4s ease-in-out infinite;
+        }
+        .fx-glow-event {
+            border: 2px solid #ff5722 !important;
+            animation: dcp-neon-glow 2s ease-in-out infinite;
+        }
+        .fx-shake-agenda-title,
+        .fx-pulse-agenda-title,
+        .fx-glow-agenda-title,
+        .fx-eyes-agenda-title {
+            font-weight: 700;
+        }
+        .fx-shake-agenda-title { color: #dc2626 !important; }
+        .fx-pulse-agenda-title { color: #10b981 !important; }
+        .fx-glow-agenda-title { color: #ff5722 !important; }
+        .fx-eyes-agenda-title { color: #059669 !important; }
+        .has-card-eyes {
+            position: relative;
+            overflow: visible !important;
+        }
+        .dcp-card-eyes {
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 14px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .dcp-card-eyes span {
+            display: block;
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            border: 2.5px solid #1f2937;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+        .dcp-card-eyes span::after {
+            content: '';
+            position: absolute;
+            width: 11px;
+            height: 11px;
+            background: #1f2937;
+            border-radius: 50%;
+            top: 9px;
+            left: 11px;
+        }
+        .dcp-card-eyes--hover {
+            opacity: 0;
+            transform: translateX(-50%) translateY(8px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .has-card-eyes:hover .dcp-card-eyes--hover {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .dcp-card-eyes--peek {
+            animation: dcp-eyes-peek 6s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .fx-shake-event,
+            .fx-pulse-event,
+            .fx-glow-event,
+            .dcp-card-eyes--peek {
+                animation: none !important;
+            }
+            .dcp-card-eyes--hover {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Modal sponsor banner */
+        .modal-sponsor-banner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 1rem;
+            background: linear-gradient(90deg, #ecfdf5 0%, #f0fdf4 100%);
+            border-bottom: 1px solid #a7f3d0;
+            text-decoration: none;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        .modal-sponsor-banner:hover {
+            background: linear-gradient(90deg, #d1fae5 0%, #dcfce7 100%);
+            border-bottom-color: #34d399;
+        }
+        .modal-sponsor-banner .sponsor-eyebrow {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #047857;
+            flex-shrink: 0;
+        }
+        .modal-sponsor-banner .sponsor-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #065f46;
+            flex: 1;
+            min-width: 0;
+        }
+        .modal-sponsor-banner .sponsor-image {
+            height: 28px;
+            width: auto;
+            max-width: 72px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .modal-sponsor-banner .sponsor-arrow {
+            color: #059669;
+            flex-shrink: 0;
+        }
+        html.dark .modal-sponsor-banner {
+            background: linear-gradient(90deg, #0a1510 0%, #0f1f18 100%);
+            border-bottom-color: var(--hack-border);
+        }
+        html.dark .modal-sponsor-banner:hover {
+            background: linear-gradient(90deg, #0f1f18 0%, #142820 100%);
+            border-bottom-color: var(--hack-green-dim);
+        }
+        html.dark .modal-sponsor-banner .sponsor-eyebrow { color: var(--hack-green-dim); }
+        html.dark .modal-sponsor-banner .sponsor-label { color: var(--hack-green); }
+        html.dark .modal-sponsor-banner .sponsor-arrow { color: var(--hack-green-muted); }
+        html.dark body.hacker-theme #modalContent {
+            background-color: var(--hack-surface) !important;
+            border: 1px solid var(--hack-border);
+            border-radius: 2px;
+            box-shadow: 0 0 28px var(--hack-glow);
+        }
+        html.dark body.hacker-theme #modalContent .border-b,
+        html.dark body.hacker-theme #modalContent .border-t,
+        html.dark body.hacker-theme #modalContent .border-gray-200 {
+            border-color: var(--hack-border) !important;
+        }
+        html.dark body.hacker-theme #modalSignUpBtn {
+            background-color: #166534 !important;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            border-radius: 2px;
+            letter-spacing: 0.03em;
+        }
+        html.dark body.hacker-theme #modalSignUpBtn:hover {
+            background-color: #15803d !important;
+        }
+        body.hacker-theme .bg-indigo-600 {
+            background-color: #166534 !important;
+        }
+        body.hacker-theme .bg-indigo-600:hover,
+        body.hacker-theme .hover\:bg-indigo-700:hover {
+            background-color: #15803d !important;
+        }
+        body.hacker-theme #searchInput {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 0.8rem;
+            border-radius: 2px;
+        }
+        html.dark body.hacker-theme #searchInput {
+            background-color: var(--hack-surface-raised);
+            border-color: var(--hack-border);
+            color: var(--hack-green-muted);
+        }
+        html.dark body.hacker-theme #searchInput::placeholder {
+            color: rgba(110, 231, 183, 0.45);
+        }
+        html.dark body.hacker-theme #searchInput:focus {
+            border-color: var(--hack-green-dim);
+            --tw-ring-color: var(--hack-green-dim);
+        }
+        html.dark body.hacker-theme #swagBanner {
+            background: linear-gradient(90deg, #0a1510, #0f2419) !important;
+            border-bottom: 1px solid var(--hack-border);
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 0.75rem;
+        }
+        html.dark body.hacker-theme #swagBanner a {
+            color: var(--hack-green);
+        }
+        html.dark body.hacker-theme #appVersionText {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            color: var(--hack-green-dim);
+        }
+        html.dark body.hacker-theme #onboardingCard {
+            border-color: var(--hack-border);
+            border-radius: 2px;
+        }
+        html.dark body.hacker-theme #onboardingSpotlight {
+            border-color: var(--hack-green);
+        }
 
         /* Dark mode */
         html.dark {
@@ -252,6 +644,10 @@
         html.dark body {
             background-color: #111827;
             color: #e5e7eb;
+        }
+        html.dark body.hacker-theme {
+            background-color: #0a0f0d;
+            color: #d1fae5;
         }
         html.dark .bg-white {
             background-color: #1f2937 !important;
@@ -486,6 +882,43 @@
         html.dark .floridaman-agenda-title {
             color: #FF1493 !important;
         }
+        html.dark .highlight-gold-event,
+        html.dark .highlight-neon-event,
+        html.dark .highlight-pink-event {
+            color: black !important;
+        }
+        html.dark .highlight-gold-event h3,
+        html.dark .highlight-gold-event p,
+        html.dark .highlight-gold-event span,
+        html.dark .highlight-gold-event div,
+        html.dark .highlight-gold-event .text-gray-600,
+        html.dark .highlight-gold-event .text-gray-700,
+        html.dark .highlight-gold-event .text-gray-900,
+        html.dark .highlight-neon-event h3,
+        html.dark .highlight-neon-event p,
+        html.dark .highlight-neon-event span,
+        html.dark .highlight-neon-event div,
+        html.dark .highlight-neon-event .text-gray-600,
+        html.dark .highlight-neon-event .text-gray-700,
+        html.dark .highlight-neon-event .text-gray-900,
+        html.dark .highlight-pink-event h3,
+        html.dark .highlight-pink-event p,
+        html.dark .highlight-pink-event span,
+        html.dark .highlight-pink-event div,
+        html.dark .highlight-pink-event .text-gray-600,
+        html.dark .highlight-pink-event .text-gray-700,
+        html.dark .highlight-pink-event .text-gray-900 {
+            color: black !important;
+        }
+        html.dark .highlight-gold-agenda-title {
+            color: #FFD700 !important;
+        }
+        html.dark .highlight-neon-agenda-title {
+            color: #ff5722 !important;
+        }
+        html.dark .highlight-pink-agenda-title {
+            color: #FF1493 !important;
+        }
 
         /* First-visit onboarding tour */
         #onboardingTour:not(.hidden) {
@@ -528,6 +961,22 @@
         body.onboarding-active {
             overflow: hidden;
         }
+        /* Keep tour above page; hide OneSignal slidedown until tour finishes */
+        body.onboarding-active #onboardingTour .onboarding-backdrop {
+            z-index: 2147483644;
+        }
+        body.onboarding-active #onboardingSpotlight {
+            z-index: 2147483645;
+        }
+        body.onboarding-active #onboardingCard {
+            z-index: 2147483646;
+        }
+        body.onboarding-active #onesignal-slidedown-container,
+        body.onboarding-active .onesignal-slidedown-container,
+        body.onboarding-active .onesignal-bell-container {
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
         .event-card.long-press-pending,
         .agenda-event-row.long-press-pending {
             transform: scale(0.98);
@@ -538,14 +987,14 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+<body class="hacker-theme bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
 
     <!-- Swag Banner -->
     <div id="swagBanner" class="bg-indigo-600 text-white text-center p-2 relative">
         <p class="text-sm font-medium">
-            Find this calendar helpful? Support our work and 
-            <a href="https://swag.defconparties.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-200">grab some swag!</a>
-            Your purchase helps sponsor the free stuff we give away at DEFCON.
+            <span class="opacity-70">//</span> Support recon ops — 
+            <a href="https://swag.defconparties.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-200">grab swag</a>
+            <span class="opacity-70"> · funds free DEFCON giveaways</span>
         </p>
         <button id="closeSwagBanner" class="absolute top-1/2 right-4 -translate-y-1/2 text-indigo-200 hover:text-white">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -558,16 +1007,18 @@
                 <svg id="lightModeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 <svg id="darkModeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
             </button>
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">DEFCON PARTIES CALENDAR BETA</h1>
-            <p class="text-md text-gray-600 dark:text-gray-300 mt-2">A searchable interface for your events.</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">All event times are displayed in Pacific Time (PST/PDT).</p>
+            <h1 class="hacker-title text-2xl sm:text-3xl font-bold">
+                <span class="opacity-50">[</span> DEFCON_PARTIES<span class="opacity-50">::</span>CAL_BETA <span class="opacity-50">]</span>
+            </h1>
+            <p class="hacker-subtitle text-sm sm:text-base mt-3">&gt; NSA of Parties — party recon &amp; schedule interface</p>
+            <p class="text-xs text-gray-500 dark:text-green-900/70 mt-2 font-mono">TZ=Pacific/Los_Angeles · read-only feed · click card for intel</p>
         </header>
 
         <!-- Party-O-Meter -->
         <div id="partyOMeterSection" class="max-w-5xl mx-auto mb-6">
-            <label for="party-o-meter" class="block text-sm font-medium text-gray-700 mb-1">Party-O-Meter™</label>
-            <div class="w-full bg-gray-200 rounded-full h-4">
-                <div id="partyOMeterFill" class="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+            <label for="party-o-meter" class="block text-sm font-medium text-gray-700 dark:text-green-400/90 mb-1 font-mono">&gt; PARTY-O-METER</label>
+            <div class="w-full bg-gray-200 dark:bg-gray-800 rounded-sm h-4 border border-gray-300 dark:border-green-900/50">
+                <div id="partyOMeterFill" class="bg-gradient-to-r from-green-500 to-emerald-400 h-4 rounded-sm transition-all duration-500 shadow-[0_0_10px_rgba(51,255,153,0.35)]" style="width: 0%"></div>
             </div>
             <p id="partyOMeterText" class="text-sm text-center mt-1 text-gray-600 font-medium"></p>
             <div class="text-center mt-2 flex justify-center items-center gap-2">
@@ -594,8 +1045,8 @@
         </div>
 
         <!-- Share/Sync Section -->
-        <details id="shareSyncDetails" class="max-w-5xl mx-auto mb-6 bg-white p-3 rounded-lg shadow-sm">
-            <summary class="font-medium text-indigo-600 cursor-pointer">Share/Sync Schedules</summary>
+        <details id="shareSyncDetails" class="hacker-panel max-w-5xl mx-auto mb-6 bg-white dark:bg-gray-900 p-3 rounded-sm shadow-sm">
+            <summary class="font-medium text-indigo-600 dark:text-green-400 cursor-pointer font-mono text-sm">&gt; share/sync_schedules</summary>
             <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h4 class="font-semibold text-gray-700 mb-2">Export My Schedule</h4>
@@ -623,8 +1074,8 @@
         </details>
 
         <!-- Keyword Filter Section -->
-        <details id="keywordFilterDetails" class="max-w-5xl mx-auto mb-6 bg-white p-3 rounded-lg shadow-sm">
-            <summary class="font-medium text-indigo-600 cursor-pointer">Keyword Filters (Hide Events)</summary>
+        <details id="keywordFilterDetails" class="hacker-panel max-w-5xl mx-auto mb-6 bg-white dark:bg-gray-900 p-3 rounded-sm shadow-sm">
+            <summary class="font-medium text-indigo-600 dark:text-green-400 cursor-pointer font-mono text-sm">&gt; keyword_filters --hide</summary>
             <div class="mt-4 pt-4 border-t">
                 <p class="text-sm text-gray-600 mb-2">Saved words stay hidden every visit until you remove them (chips below search). Add manually here, comma-separated — or use <strong>-word</strong> in search and click <strong>Always hide</strong>.</p>
                 <div class="flex flex-col gap-2">
@@ -656,7 +1107,7 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
                 </div>
-                <input type="text" id="searchInput" placeholder="Search title, location, date… Use -word to exclude (e.g. -microsoft)" class="block w-full bg-white border border-gray-300 rounded-md py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <input type="text" id="searchInput" placeholder="grep title|location|date …  -word to exclude" class="block w-full bg-white border border-gray-300 rounded-sm py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 <button id="clearSearchBtn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -994,10 +1445,10 @@
 
     <!-- Event Details Modal -->
     <div id="eventModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-        <div id="modalContent" class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0">
+        <div id="modalContent" class="bg-white rounded-sm shadow-xl w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0">
             <!-- Modal Header -->
             <div class="p-4 sm:p-5 border-b flex justify-between items-start gap-3">
-                <h3 id="modalTitle" class="text-xl font-bold text-gray-800 dark:text-gray-100 flex-1 min-w-0"></h3>
+                <h3 id="modalTitle" class="text-lg sm:text-xl font-bold text-gray-800 dark:text-green-100 flex-1 min-w-0 font-mono"></h3>
                 <div class="flex items-center gap-1 shrink-0">
                     <button type="button" id="modalShareBtn" class="p-1 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Share party link" aria-label="Share party link">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
@@ -1007,6 +1458,12 @@
                     </button>
                 </div>
             </div>
+            <a id="modalSponsorBanner" class="modal-sponsor-banner hidden" href="#" target="_blank" rel="noopener noreferrer sponsored">
+                <span class="sponsor-eyebrow">Sponsored</span>
+                <img id="modalSponsorImage" class="sponsor-image hidden" alt="" width="72" height="28">
+                <span id="modalSponsorLabel" class="sponsor-label"></span>
+                <svg class="sponsor-arrow w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            </a>
             <!-- Modal Body -->
             <div class="p-4 sm:p-5 space-y-4">
                 <div id="modalTime" class="flex items-center text-gray-600"></div>
@@ -1073,7 +1530,7 @@
         <div class="onboarding-backdrop" id="onboardingBackdrop"></div>
         <div id="onboardingSpotlight" class="hidden" aria-hidden="true"></div>
         <div id="onboardingCard" class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 p-5 sm:p-6">
-            <p id="onboardingStepLabel" class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400 mb-1">Step 1 of 12</p>
+            <p id="onboardingStepLabel" class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400 mb-1">Step 1 of 6</p>
             <h2 id="onboardingTitle" class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2"></h2>
             <p id="onboardingBody" class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4"></p>
             <div class="flex items-center justify-between gap-3">
@@ -1147,6 +1604,9 @@
         const modalApprovedCheckbox = document.getElementById('modalApprovedCheckbox');
         const modalRejectedCheckbox = document.getElementById('modalRejectedCheckbox');
         const modalPendingCheckbox = document.getElementById('modalPendingCheckbox');
+        const modalSponsorBanner = document.getElementById('modalSponsorBanner');
+        const modalSponsorLabel = document.getElementById('modalSponsorLabel');
+        const modalSponsorImage = document.getElementById('modalSponsorImage');
         const shareDetails = document.getElementById('shareSyncDetails');
         const shareCodeInput = document.getElementById('shareCodeInput');
         const exportBtn = document.getElementById('exportBtn');
@@ -1185,11 +1645,83 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.3-beta';
+        const APP_VERSION = '1.4.9-beta';
+        const HIGHLIGHT_MARKER_PATTERN = /\[dcp-highlight:([a-z0-9_]+)\]/i;
+        const SPONSOR_MARKER_PATTERN = /\[dcp-sponsor:([^|\]]*)\|([^|\]]*)(?:\|([^|\]]*))?\]/i;
+        const DEFAULT_MODAL_SPONSORS = [
+            {
+                url: 'https://swag.defconparties.com',
+                label: 'DEF CON Parties Swag Shop',
+            },
+            {
+                url: 'https://defconparties.com',
+                label: 'DEF CON Parties — NSA of Parties',
+            },
+        ];
+        const HIGHLIGHT_PRESETS = {
+            dc801: {
+                cardClass: 'dc801-event',
+                agendaClass: 'dc801-agenda-title',
+                image: 'https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium',
+                imageAlt: 'DC801 Event Image',
+            },
+            hacker_jeopardy: {
+                cardClass: 'hacker-jeopardy-event',
+                agendaClass: 'hacker-jeopardy-agenda-title',
+                image: 'https://hackerjeopardy.com/img/hj-title.png',
+                imageAlt: 'Hacker Jeopardy Image',
+            },
+            floridaman: {
+                cardClass: 'floridaman-event',
+                agendaClass: 'floridaman-agenda-title',
+                image: 'https://floridaman.party/Floyd-the-flamingo-badge-clear.svg',
+                imageAlt: 'Floridaman Party Image',
+            },
+            gold: {
+                cardClass: 'highlight-gold-event',
+                agendaClass: 'highlight-gold-agenda-title',
+            },
+            neon: {
+                cardClass: 'highlight-neon-event',
+                agendaClass: 'highlight-neon-agenda-title',
+            },
+            hot_pink: {
+                cardClass: 'highlight-pink-event',
+                agendaClass: 'highlight-pink-agenda-title',
+            },
+            pulse: {
+                cardClass: 'fx-pulse-event',
+                agendaClass: 'fx-pulse-agenda-title',
+                additive: true,
+            },
+            shake: {
+                cardClass: 'fx-shake-event',
+                agendaClass: 'fx-shake-agenda-title',
+                additive: true,
+            },
+            glow: {
+                cardClass: 'fx-glow-event',
+                agendaClass: 'fx-glow-agenda-title',
+                additive: true,
+            },
+            eyes_hover: {
+                cardClass: 'fx-eyes-event',
+                agendaClass: 'fx-eyes-agenda-title',
+                eyes: 'hover',
+                additive: true,
+            },
+            eyes_peek: {
+                cardClass: 'fx-eyes-event',
+                agendaClass: 'fx-eyes-agenda-title',
+                eyes: 'peek',
+                additive: true,
+            },
+        };
         const PARTY_SHARE_PARAM = 'event';
         const LONG_PRESS_SHARE_MS = 500;
         const CACHE_VERSION = '2026';
-        const ONBOARDING_KEY = `calendarOnboardingSeen_${CACHE_VERSION}`;
+        const ONBOARDING_TOUR_VERSION = 'v2';
+        const ONBOARDING_KEY = `calendarOnboardingSeen_${CACHE_VERSION}_${ONBOARDING_TOUR_VERSION}`;
         const SCHEDULES_KEY = `calendarSchedules_${CACHE_VERSION}`;
         const MY_SCHEDULE_KEY = '__ME__';
         const REJECTED_EVENTS_KEY = `calendarRejectedEvents_${CACHE_VERSION}`;
@@ -1288,7 +1820,67 @@
             });
             return template.innerHTML;
         }
+        function stripHighlightMarker(text) {
+            return String(text ?? '').replace(/\[dcp-highlight:[a-z0-9_]+\]/gi, '').trim();
+        }
+        function stripSponsorMarker(text) {
+            return String(text ?? '').replace(/\[dcp-sponsor:[^\]]+\]/gi, '').trim();
+        }
+        function stripCalendarMarkers(text) {
+            return stripSponsorMarker(stripHighlightMarker(text));
+        }
+        function parseEventSponsor(event) {
+            if (!event) return null;
+            const match = String(event.description || '').match(SPONSOR_MARKER_PATTERN);
+            if (!match) return null;
+            const url = sanitizeUrl(match[1]);
+            const label = (match[2] || '').trim();
+            const image = match[3] ? sanitizeUrl(match[3]) : null;
+            if (!url || !label) return null;
+            return { url, label, image };
+        }
+        function pickDefaultSponsor(eventId) {
+            const key = String(eventId || 'default');
+            const idx = [...key].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % DEFAULT_MODAL_SPONSORS.length;
+            return DEFAULT_MODAL_SPONSORS[idx];
+        }
+        function resolveEventSponsor(event) {
+            return parseEventSponsor(event) || pickDefaultSponsor(event?.id);
+        }
+        function parseEventHighlightStyle(event) {
+            if (!event) return null;
+            const markerSource = `${event.description || ''}`;
+            const markerMatch = markerSource.match(HIGHLIGHT_MARKER_PATTERN);
+            if (markerMatch) {
+                const slug = markerMatch[1].toLowerCase();
+                if (HIGHLIGHT_PRESETS[slug]) return slug;
+            }
+            const title = (event.summary || '').toLowerCase();
+            if (title.includes('dc801')) return 'dc801';
+            if (title.includes('hacker jeopardy')) return 'hacker_jeopardy';
+            if (title.includes('floridaman')) return 'floridaman';
+            return null;
+        }
+        function getHighlightPreset(event) {
+            const style = parseEventHighlightStyle(event);
+            return style ? HIGHLIGHT_PRESETS[style] : null;
+        }
+        function getDescriptionWithoutSignup(text) {
+            const cleaned = stripCalendarMarkers(text || '');
+            return cleaned.replace(/<a[^>]*>.*?<\/a>/i, '').trim();
+        }
+        function extractSignupUrl(text) {
+            const cleaned = stripCalendarMarkers(text || '');
+            const signupLinkMatch = cleaned.match(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"/i);
+            return signupLinkMatch ? sanitizeUrl(signupLinkMatch[1]) : null;
+        }
+        function getCardDescriptionHtml(event) {
+            const stripped = getDescriptionWithoutSignup(event?.description || '');
+            if (!stripped) return '';
+            return sanitizeDescriptionHtml(stripped);
+        }
         function sanitizeDescriptionHtml(html) {
+            html = stripCalendarMarkers(html);
             if (!html || typeof html !== 'string') return '';
             if (typeof DOMPurify !== 'undefined') {
                 const clean = DOMPurify.sanitize(html, {
@@ -1986,123 +2578,48 @@
         let onboardingActive = false;
         let onboardingViewBeforeTour = 'card';
         let onboardingResizeHandler = null;
+        let onboardingForcedReplay = false;
 
         function getOnboardingSteps() {
-            const steps = [
+            return [
                 {
                     title: 'Welcome to DEFCON Parties 2026',
-                    body: 'We\'re the NSA of Parties. We track the full stack — Black Hat, BSides Las Vegas, DEFCON, and every vendor list in between — because everybody knows DEFCON Parties is how Vegas actually works. Quick tour: views, filters, your schedule, and how to get on the list.',
+                    body: 'We\'re the NSA of Parties — Black Hat, BSides, DEFCON, and every vendor list in between. Six quick steps: browse, search, plan, and get on the list.',
                     placement: 'center',
                 },
                 {
-                    title: 'Card View',
-                    body: 'Browse parties as a grid. Click any card for full details, signup links, and to mark Approved, Pending, or Rejected.',
+                    title: 'Browse parties',
+                    body: 'Card view is your grid. Click any party for signup, sponsors, reminders, and to mark Approved, Pending, or Rejected. Share from the modal or long-press a card on mobile.',
                     view: 'card',
-                    target: '#cardViewContainer',
-                    placement: 'bottom',
+                    target: () => document.querySelector('.event-card') || '#cardViewContainer',
+                    placement: 'top',
                 },
                 {
-                    title: 'Search',
-                    body: 'Search by title, location, date, or URL. Use -word to exclude for now (e.g. -microsoft), or click Always hide to keep that exclusion every visit. Remove saved words with the × chips below search.',
+                    title: 'Search & filters',
+                    body: 'Search title, location, or date. Use -word to exclude (e.g. -microsoft), or Always hide to save it. Status filters sit right below — Hide Past, Approved, Friends, New/Updated, and more.',
                     view: 'card',
                     target: '#searchInput',
                     placement: 'bottom',
                 },
                 {
-                    title: 'Filters',
-                    body: 'Right below the search box in Card or Agenda view. Toggle Hide Past, Hide Rejected, Show Pending Only, Show My Approved, Show Friends, and Show New / Updated.',
-                    view: 'card',
-                    target: '#statusFilters',
-                    placement: 'bottom',
-                },
-                {
-                    title: 'Agenda View',
-                    body: 'Switch to a day-by-day timeline with time ranges — great for planning your Drunk Camp week. Weekday checkboxes appear below the status filters here only.',
+                    title: 'Agenda view',
+                    body: 'Switch to Agenda for a day-by-day timeline. Weekday filters appear below the status row here only — handy for planning Drunk Camp week.',
                     view: 'agenda',
-                    target: '#agendaViewContainer',
-                    placement: 'top',
-                },
-                {
-                    title: 'Filter by day',
-                    body: 'In Agenda view only — below the status filters — pick Mon–Sun to focus on specific days. Select All / Clear All speeds it up.',
-                    view: 'agenda',
-                    target: '#dayFilters',
-                    placement: 'bottom',
-                },
-                {
-                    title: 'Party-O-Meter™',
-                    body: 'Tracks how many parties you have approved. Flex on your friends with the share buttons when you are ready.',
-                    view: 'card',
-                    target: '#partyOMeterSection',
-                    placement: 'bottom',
-                },
-                {
-                    title: 'Stay current',
-                    body: 'See when data was last refreshed. Refresh Now pulls the latest list (5-minute cooldown). New and Updated counts appear here — use Mark all seen when you are caught up.',
-                    view: 'card',
-                    target: '#refreshContainer',
-                    placement: 'bottom',
-                },
-                {
-                    title: 'Share / Sync schedules',
-                    body: 'Export your Approved, Pending, and Rejected choices as a code — import on another device or share a friend\'s schedule (shown in orange).',
-                    view: 'card',
-                    target: '#shareSyncDetails',
-                    placement: 'bottom',
-                    beforeShow: () => { if (shareDetails) shareDetails.open = true; },
-                },
-                {
-                    title: 'Event details',
-                    body: 'Open any party to sign up, set reminders, and update your status. Tap the share icon to send a link, or hold a card (long-press on mobile) to share without opening details first.',
-                    view: 'card',
-                    target: () => document.querySelector('.event-card') || document.querySelector('.agenda-event-row') || '#cardViewContainer',
-                    placement: 'top',
-                },
-                {
-                    title: 'Cut & Paste',
-                    body: 'Store your name, work email, title, company, shirt size, and more — then copy each field into vendor signup forms with one click. Handy for Lu.ma, Google Forms, HubSpot, and similar pages.',
-                    view: 'cutPaste',
-                    target: '#cutPasteViewTab',
+                    target: '#agendaViewTab',
                     placement: 'bottom',
                 },
                 {
                     title: 'Getting invited',
-                    body: 'Tip: use a work email, not a free provider like Gmail — vendors often prioritize corporate addresses. When you register on a vendor site, they get your info and may email you about approval or updates, so use an inbox you check during Drunk Camp. Mark parties Pending while you wait.',
-                    view: 'card',
+                    body: 'Use a work email when vendors ask — corporate domains often beat free inboxes. Register on their site, watch that inbox during Drunk Camp, and mark parties Pending while you wait.',
                     placement: 'center',
                 },
                 {
-                    title: 'Submit a party',
-                    body: 'Know a listing we missed? Use Submit a Party to send us the URL, or paste a link in Search.',
-                    view: 'submit',
-                    target: '#submitViewTab',
-                    placement: 'bottom',
-                },
-                {
-                    title: 'Help & About',
-                    body: 'Full reference for badges, refresh rules, privacy, and tools. You can replay this tour anytime from Help.',
-                    view: 'help',
-                    target: '#helpViewContainer',
-                    placement: 'center',
-                },
-                {
-                    title: 'You are all set!',
-                    body: 'Go approve your can\'t-miss parties and check back for New and Updated badges. The NSA of Parties has your six — have a legendary DEFCON week.',
+                    title: 'You\'re all set',
+                    body: 'Approve your can\'t-miss parties and watch for New and Updated badges. Share/Sync, Cut & Paste, Party-O-Meter, Submit a Party, and the full rulebook live in Help / About — replay this tour there anytime.',
                     view: 'card',
                     placement: 'center',
                 },
             ];
-            const pushTab = document.getElementById('pushSubscribeTab');
-            if (pushTab && !pushTab.classList.contains('hidden')) {
-                steps.splice(steps.length - 1, 0, {
-                    title: 'Subscribe for alerts',
-                    body: 'Optional push notifications when the DCP team sends site-wide party updates. Per-party reminders are separate — set those inside each event.',
-                    view: 'card',
-                    target: '#pushSubscribeTab',
-                    placement: 'bottom',
-                });
-            }
-            return steps;
         }
 
         function resolveOnboardingTarget(target) {
@@ -2211,6 +2728,30 @@
             });
         }
 
+        function scheduleOneSignalPromptAfterTour() {
+            const host = window.location.hostname;
+            const isProdHost = host === 'info.defconparties.com';
+            const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+            if (!isProdHost && !isLocalHost) return;
+            const delayMs = isProdHost ? 2000 : 800;
+            setTimeout(() => {
+                if (onboardingActive) return;
+                const showPrompt = (OneSignal) => {
+                    if (OneSignal.Notifications.permission) return;
+                    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') return;
+                    if (OneSignal.Slidedown?.promptPush) {
+                        OneSignal.Slidedown.promptPush(isLocalHost ? { force: true } : undefined);
+                    }
+                };
+                if (window.dcpOneSignal) {
+                    showPrompt(window.dcpOneSignal);
+                    return;
+                }
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                OneSignalDeferred.push(showPrompt);
+            }, delayMs);
+        }
+
         function finishOnboarding(markSeen = true) {
             if (!onboardingActive) return;
             onboardingActive = false;
@@ -2227,12 +2768,17 @@
                 window.removeEventListener('scroll', onboardingResizeHandler, true);
                 onboardingResizeHandler = null;
             }
+            if (markSeen && !onboardingForcedReplay) {
+                scheduleOneSignalPromptAfterTour();
+            }
+            onboardingForcedReplay = false;
         }
 
         function startOnboarding(force = false) {
             if (!onboardingTour) return;
             if (!force && localStorage.getItem(ONBOARDING_KEY) === 'true') return;
 
+            onboardingForcedReplay = force;
             onboardingActive = true;
             onboardingViewBeforeTour = currentView;
             onboardingStepIndex = 0;
@@ -2647,6 +3193,30 @@
         }
 
         // --- MODAL LOGIC & RENDER FUNCTIONS ---
+        function updateModalSponsorBanner(event) {
+            if (!modalSponsorBanner) return;
+            const sponsor = resolveEventSponsor(event);
+            if (!sponsor?.url || !sponsor?.label) {
+                modalSponsorBanner.classList.add('hidden');
+                modalSponsorBanner.onclick = null;
+                return;
+            }
+            modalSponsorBanner.href = sponsor.url;
+            modalSponsorLabel.textContent = sponsor.label;
+            if (sponsor.image && modalSponsorImage) {
+                modalSponsorImage.src = sponsor.image;
+                modalSponsorImage.alt = sponsor.label;
+                modalSponsorImage.classList.remove('hidden');
+                modalSponsorImage.addEventListener('error', () => {
+                    modalSponsorImage.classList.add('hidden');
+                }, { once: true });
+            } else if (modalSponsorImage) {
+                modalSponsorImage.removeAttribute('src');
+                modalSponsorImage.classList.add('hidden');
+            }
+            modalSponsorBanner.classList.remove('hidden');
+        }
+
         function showModal(event) {
             modalContent.dataset.eventId = event.id;
             modalTitle.replaceChildren(document.createTextNode(event.summary || 'No Title'));
@@ -2662,14 +3232,15 @@
                 modalTitle.appendChild(badge);
             }
             
-            const descriptionText = event.description || '';
-            const signupLinkMatch = descriptionText.match(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"/i);
-            const signupUrl = signupLinkMatch ? sanitizeUrl(signupLinkMatch[1]) : null;
+            updateModalSponsorBanner(event);
+
+            const descriptionText = getDescriptionWithoutSignup(event.description || '');
+            const signupUrl = extractSignupUrl(event.description || '');
 
             if (signupUrl) {
                 modalSignUpBtn.href = signupUrl;
                 modalSignUpBtn.classList.remove('hidden');
-                modalDescription.innerHTML = sanitizeDescriptionHtml(descriptionText.replace(/<a[^>]*>.*?<\/a>/i, ''));
+                modalDescription.innerHTML = sanitizeDescriptionHtml(descriptionText);
                 
                 modalSignUpBtn.onclick = () => {
                     trackEventAction(signUpEntryId, event.summary, 'signup');
@@ -2778,9 +3349,7 @@
                 dayEvents.forEach(event => {
                     const eventRow = document.createElement('div');
                     eventRow.className = 'agenda-event-row flex flex-col sm:flex-row sm:items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors gap-1 sm:gap-0';
-                    const isDC801 = (event.summary || '').toLowerCase().includes('dc801');
-                    const isHackerJeopardy = (event.summary || '').toLowerCase().includes('hacker jeopardy');
-                    const isFloridaman = (event.summary || '').toLowerCase().includes('floridaman');
+                    const highlightPreset = getHighlightPreset(event);
 
                     applyApprovalStyles(eventRow, event.id);
                     eventRow.dataset.eventId = event.id;
@@ -2799,14 +3368,7 @@
                         }
                     }
                     const changeBadge = getChangeBadgeHtml(event.id);
-                    let titleClass = '';
-                    if (isDC801) {
-                        titleClass = 'dc801-agenda-title';
-                    } else if (isHackerJeopardy) {
-                        titleClass = 'hacker-jeopardy-agenda-title';
-                    } else if (isFloridaman) {
-                        titleClass = 'floridaman-agenda-title';
-                    }
+                    const titleClass = highlightPreset?.agendaClass || '';
                     eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-indigo-600 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p><p class="text-gray-500 break-words">${escapeHtml(event.location || '')}</p></div>`;
                     agendaViewContainer.appendChild(eventRow);
                 });
@@ -2817,19 +3379,19 @@
             cardViewContainer.innerHTML = ''; 
             events.forEach(event => {
                 const eventCard = document.createElement('div');
-                eventCard.className = 'event-card bg-white rounded-lg shadow-md overflow-hidden p-6 flex flex-col cursor-pointer';
-                const isDC801 = (event.summary || '').toLowerCase().includes('dc801');
-                const isHackerJeopardy = (event.summary || '').toLowerCase().includes('hacker jeopardy');
-                const isFloridaman = (event.summary || '').toLowerCase().includes('floridaman');
+                eventCard.className = 'event-card bg-white rounded-sm shadow-md overflow-hidden p-6 flex flex-col cursor-pointer';
+                const highlightPreset = getHighlightPreset(event);
 
-                if (isDC801) {
-                    eventCard.classList.add('dc801-event');
-                } else if (isHackerJeopardy) {
-                    eventCard.classList.add('hacker-jeopardy-event');
-                } else if (isFloridaman) {
-                    eventCard.classList.add('floridaman-event');
+                if (highlightPreset?.cardClass && !highlightPreset.additive) {
+                    eventCard.classList.add(highlightPreset.cardClass);
                 } else {
                     applyApprovalStyles(eventCard, event.id);
+                    if (highlightPreset?.cardClass) {
+                        eventCard.classList.add(highlightPreset.cardClass);
+                    }
+                }
+                if (highlightPreset?.eyes) {
+                    eventCard.classList.add('has-card-eyes');
                 }
                 eventCard.dataset.eventId = event.id;
                 attachLongPressShare(eventCard, event);
@@ -2865,18 +3427,23 @@
                 }
                 const changeBadge = getChangeBadgeHtml(event.id);
                 let imageHTML = '';
-                if (isDC801) {
-                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium" alt="DC801 Event Image" class="max-h-full w-auto object-contain"></div>`;
-                } else if (isHackerJeopardy) {
-                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://hackerjeopardy.com/img/hj-title.png" alt="Hacker Jeopardy Image" class="max-h-full w-auto object-contain"></div>`;
-                } else if (isFloridaman) {
-                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="https://floridaman.party/Floyd-the-flamingo-badge-clear.svg" alt="Floridaman Party Image" class="max-h-full w-auto object-contain"></div>`;
+                if (highlightPreset?.image) {
+                    imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="${escapeHtml(highlightPreset.image)}" alt="${escapeHtml(highlightPreset.imageAlt || 'Event highlight')}" class="max-h-full w-auto object-contain"></div>`;
+                }
+                let eyesHTML = '';
+                if (highlightPreset?.eyes) {
+                    eyesHTML = `<div class="dcp-card-eyes dcp-card-eyes--${escapeHtml(highlightPreset.eyes)}" aria-hidden="true"><span></span><span></span></div>`;
                 }
                 
                 const dateDisplay = formattedTime !== 'All-day'
                     ? `${formattedDate} at ${formattedTime}`
                     : `${formattedDate} (${formattedTime || ''})`;
+                const cardDescriptionHtml = getCardDescriptionHtml(event);
+                const cardDescriptionBlock = cardDescriptionHtml
+                    ? `<div class="text-gray-700 text-sm">${cardDescriptionHtml}</div>`
+                    : '';
                 eventCard.innerHTML = `
+                    ${eyesHTML}
                     ${imageHTML}
                     <div class="flex-grow">
                         <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</h3>
@@ -2888,7 +3455,7 @@
                             <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             <span>${escapeHtml(event.location || 'Not specified')}</span>
                         </div>
-                        <div class="text-gray-700 text-sm">${sanitizeDescriptionHtml(event.description || '')}</div>
+                        ${cardDescriptionBlock}
                     </div>`;
                 hideBrokenImages(eventCard);
                 cardViewContainer.appendChild(eventCard);
