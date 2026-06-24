@@ -358,6 +358,65 @@
         html.dark #helpViewContainer a {
             color: #818cf8 !important;
         }
+        .help-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+        .help-section h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .help-section ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .help-section li {
+            position: relative;
+            padding-left: 1.1rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #4b5563;
+        }
+        .help-section li:last-child {
+            margin-bottom: 0;
+        }
+        .help-section li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.55rem;
+            width: 0.35rem;
+            height: 0.35rem;
+            border-radius: 9999px;
+            background: #818cf8;
+        }
+        .help-section li ul {
+            margin-top: 0.35rem;
+            padding-left: 0.25rem;
+        }
+        .help-section li ul li::before {
+            background: #c7d2fe;
+        }
+        html.dark .help-section {
+            background: #1f2937;
+            border-color: #374151;
+        }
+        html.dark .help-section h3 {
+            color: #f3f4f6;
+            border-bottom-color: #374151;
+        }
+        html.dark .help-section li {
+            color: #d1d5db;
+        }
         html.dark #themeToggle {
             background-color: #374151;
             color: #e5e7eb;
@@ -615,89 +674,96 @@
         </div>
         
         <!-- Help View Container -->
-        <div id="helpViewContainer" class="hidden max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md prose prose-indigo">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Help &amp; About</h2>
-            <p class="text-sm text-gray-500 mb-6 not-prose">Release: <span id="helpAppVersion"></span></p>
+        <div id="helpViewContainer" class="hidden max-w-4xl mx-auto space-y-5">
+            <div class="bg-white rounded-lg shadow-md p-6 sm:p-8">
+                <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 m-0">Help &amp; About</h2>
+                    <span id="helpAppVersion" class="inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200 px-3 py-1 text-xs font-semibold tracking-wide"></span>
+                </div>
+                <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-3">
+                    The longest-running unofficial party list for <strong>Black Hat</strong>, <strong>BSides Las Vegas</strong>,
+                    and <strong>DEF CON</strong> in Las Vegas. Plan your Hacker Summer Camp week, track applications, and spot new listings as vendors publish them.
+                </p>
+                <p class="text-gray-500 dark:text-gray-400 text-sm m-0">
+                    All times are <strong>Pacific (PT)</strong>. Signup links open the vendor&apos;s page — we do not run registrations here.
+                </p>
+            </div>
 
-            <h3>About DEFCON Parties Calendar</h3>
-            <p>
-                The longest-running unofficial party list for <strong>Black Hat</strong>, <strong>BSides Las Vegas</strong>,
-                and <strong>DEF CON</strong> in Las Vegas. This beta is a searchable front-end for the live party feed —
-                built for planning your Hacker Summer Camp week, tracking what you have applied to, and spotting new listings
-                as vendors publish them.
-            </p>
-            <p>
-                All times are shown in <strong>Pacific Time (PT)</strong>. Event signup links open the vendor&apos;s registration page;
-                we do not run registrations on this site.
-            </p>
-
-            <h3>What&apos;s New</h3>
-            <ul>
-                <li><strong>New since your last visit:</strong> Parties added since you last closed the calendar get a <strong>New</strong> badge.</li>
-                <li><strong>Updated since your last visit:</strong> Existing parties with changed title, time, location, or description get an <strong>Updated</strong> badge (amber).</li>
-                <li><strong>Party reminders:</strong> In an event&apos;s details, choose <strong>15 min</strong>, <strong>30 min</strong>, or <strong>1 hour</strong> before start, or <strong>Off</strong> to cancel. Personal alerts only — not a site-wide subscriber push. On <strong>localhost</strong> you can allow system notifications; on a LAN IP (e.g. <code>192.168.x.x</code>) reminders alert while this tab stays open.</li>
-                <li><strong>Mark all seen:</strong> Clears <strong>New</strong> and <strong>Updated</strong> badges and updates your baseline when you have caught up.</li>
-                <li><strong>Smarter refresh during HSC:</strong> Auto-sync every <strong>6 hours</strong> Aug 1–11 (every 48 hours off-season). <strong>Refresh Now</strong> forces a sync (5-minute cooldown).</li>
-                <li><strong>Show New / Updated filter:</strong> In Card or Agenda view, focus on unseen or freshly synced parties only.</li>
-            </ul>
-
-            <h3>Viewing Events</h3>
-            <ul>
-                <li><strong>Card View:</strong> A visual grid of all events. Click a card for details and signup.</li>
-                <li><strong>Agenda View:</strong> Events grouped by day with time ranges. Good for building a day-by-day plan.</li>
-                <li><strong>New / Updated badges:</strong> Shown on cards, agenda rows, and the event modal when a party is new to you, newly added on the last sync, or edited since your last visit.</li>
-            </ul>
-
-            <h3>Personalizing Your Schedule</h3>
-            <ul>
-                <li><strong>Approved (Green):</strong> Mark events you plan to attend. These count toward your Party-O-Meter™.</li>
-                <li><strong>Pending (Blue):</strong> Mark events you have applied to but have not heard back on yet.</li>
-                <li><strong>Rejected (Red):</strong> Mark events you were turned down from so they stay out of your way.</li>
-                <li>Your choices are saved automatically in this browser — no account required.</li>
-            </ul>
-            
-            <h3>Filtering &amp; Finding Parties</h3>
-            <ul>
-                <li><strong>Search Bar:</strong> Search by title, location, date, or description. Paste a URL to submit a missing party.</li>
-                <li><strong>Show New / Updated:</strong> Show only events with a <strong>New</strong> or <strong>Updated</strong> badge.</li>
-                <li><strong>Show My Approved / Pending / Friends:</strong> Focus on your schedule or imported friend schedules.</li>
-                <li><strong>Agenda day filters:</strong> In Agenda View, filter by weekday (Mon–Sun).</li>
-                <li><strong>Hide Past / Rejected:</strong> Trim noise from events that already happened or you ruled out.</li>
-                <li><strong>Keyword Filters:</strong> Permanently hide events matching words you choose (e.g. breakfast, brunch) under Share/Sync → Keyword Filters.</li>
-            </ul>
-
-            <h3>Staying Up to Date</h3>
-            <ul>
-                <li><strong>Last refreshed:</strong> Shown above the event list with the current auto-refresh interval.</li>
-                <li><strong>New / updated counts:</strong> Above the list — e.g. <strong>2 new · 1 updated since your last visit</strong>. Use <strong>Mark all seen</strong> when you are caught up.</li>
-                <li><strong>Refresh Now:</strong> Pulls the latest calendar from the server. Use after you hear about new parties or before planning your day.</li>
-                <li><strong>Leaving the site:</strong> When you close or hide this tab, we save a snapshot of event IDs (and edit fingerprints) so the next visit can highlight what changed.</li>
-                <li><strong>First visit:</strong> Existing parties are not marked New — only additions after your baseline appear.</li>
-                <li><strong>Subscriber push alerts</strong> (optional, site-wide): Not the same as per-party reminders. When enabled, the DCP team can send a manual or scheduled broadcast from the staging pipeline — opt in with the <strong>Subscribe</strong> tab between Cut &amp; Paste and Help / About (<strong>Enable party push alerts</strong> on localhost). Calendar edits alone do not ping subscribers.</li>
-            </ul>
-
-            <h3>Sharing &amp; Collaboration</h3>
-            <ul>
-                <li><strong>Export My Schedule:</strong> Copy a code with your Approved / Rejected / Pending choices.</li>
-                <li><strong>Import a Schedule:</strong>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <section class="help-section">
+                    <h3>What&apos;s new</h3>
                     <ul>
-                        <li>Paste your own code to sync across devices.</li>
-                        <li>Add a nickname to import a friend&apos;s approved list (shown in orange).</li>
+                        <li><strong>New</strong> badge — parties added since your last visit.</li>
+                        <li><strong>Updated</strong> badge (amber) — title, time, location, or description changed.</li>
+                        <li><strong>Party reminders</strong> — in event details, pick 15 min, 30 min, or 1 hour before start, or Off. Personal alerts only; not the site-wide Subscribe push.</li>
+                        <li><strong>Mark all seen</strong> — clears New/Updated when you are caught up.</li>
+                        <li><strong>Smarter refresh</strong> — every 6 hours Aug 1–11; 48 hours off-season. <strong>Refresh Now</strong> forces a sync (5-minute cooldown).</li>
                     </ul>
-                </li>
-                <li><strong>Manage Friends:</strong> Remove imported friend schedules from the Share/Sync panel.</li>
-                <li><strong>Flex on &apos;em:</strong> Share your approved party count on X or email from the Party-O-Meter area.</li>
-            </ul>
+                </section>
 
-            <h3>Other Features</h3>
-            <ul>
-                <li><strong>Party-O-Meter™:</strong> Progress bar for how full your approved schedule is.</li>
-                <li><strong>Submit a Party:</strong> Use the Submit tab or paste a URL in search when an event is missing.</li>
-                <li><strong>Cut &amp; Paste:</strong> Store registration fields (name, email, title, shirt size, etc.) for fast form fill on Lu.ma, Google Forms, HubSpot, and similar signups.</li>
-                <li><strong>Dark Mode:</strong> Toggle with the sun/moon button in the header.</li>
-                <li><strong>Analytics:</strong> Sign Up, Approved, and Rejected clicks are tracked anonymously to see which events are popular.</li>
-                <li><strong>Privacy:</strong> Schedules, filters, profiles, and &quot;seen&quot; baselines live in your browser only. Share codes are encoded, not encrypted — share only with people you trust.</li>
-            </ul>
+                <section class="help-section">
+                    <h3>Views &amp; badges</h3>
+                    <ul>
+                        <li><strong>Card view</strong> — grid of events; click for details and signup.</li>
+                        <li><strong>Agenda view</strong> — events by day with time ranges.</li>
+                        <li><strong>New / Updated</strong> — shown on cards, agenda rows, and the event modal.</li>
+                        <li><strong>Show New / Updated</strong> filter — focus on unseen or freshly synced parties.</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>Your schedule</h3>
+                    <ul>
+                        <li><strong>Approved</strong> (green) — plan to attend; counts toward Party-O-Meter™.</li>
+                        <li><strong>Pending</strong> (blue) — applied, waiting to hear back.</li>
+                        <li><strong>Rejected</strong> (red) — ruled out; hide with <strong>Hide Rejected</strong>.</li>
+                        <li>Saved automatically in this browser — no account required.</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>Find &amp; filter</h3>
+                    <ul>
+                        <li><strong>Search</strong> — title, location, date, or description. Paste a URL to submit a missing party.</li>
+                        <li><strong>My Approved / Pending / Friends</strong> — focus on your list or imported friend schedules.</li>
+                        <li><strong>Agenda day filters</strong> — weekday checkboxes in Agenda view.</li>
+                        <li><strong>Hide Past</strong> — trim events that already started.</li>
+                        <li><strong>Keyword filters</strong> — Share/Sync → permanently hide matching words (e.g. breakfast).</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>Staying current</h3>
+                    <ul>
+                        <li><strong>Last refreshed</strong> — timestamp and auto-refresh interval above the list.</li>
+                        <li><strong>New / updated counts</strong> — e.g. <em>2 new · 1 updated</em>; use <strong>Mark all seen</strong> when done.</li>
+                        <li><strong>Refresh Now</strong> — pull the latest feed before planning your day.</li>
+                        <li><strong>First visit</strong> — existing parties are not marked New; only additions after your baseline.</li>
+                        <li><strong>Subscribe tab</strong> — optional site-wide push alerts when the DCP team sends an update. Not the same as per-party reminders.</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>Share &amp; tools</h3>
+                    <ul>
+                        <li><strong>Export / import</strong> — Share/Sync encodes Approved, Pending, and Rejected choices.</li>
+                        <li><strong>Friends</strong> — import a nickname + code; friend approvals show in orange.</li>
+                        <li><strong>Flex on &apos;em</strong> — share your approved count from Party-O-Meter™.</li>
+                        <li><strong>Cut &amp; Paste</strong> — store name, email, title, shirt size, etc. for fast signup forms.</li>
+                        <li><strong>Submit a party</strong> — Submit tab or paste a URL in search.</li>
+                        <li><strong>Dark mode</strong> — sun/moon toggle in the header.</li>
+                    </ul>
+                </section>
+            </div>
+
+            <section class="help-section">
+                <h3>Privacy</h3>
+                <ul>
+                    <li>Schedules, filters, profiles, and &quot;seen&quot; baselines stay in your browser only.</li>
+                    <li>Share codes are encoded, not encrypted — share only with people you trust.</li>
+                    <li>Sign Up, Approved, and Rejected clicks are tracked anonymously for popularity stats.</li>
+                </ul>
+            </section>
         </div>
         
         <!-- Cut & Paste View Container -->
