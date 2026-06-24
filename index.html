@@ -486,6 +486,56 @@
         html.dark .floridaman-agenda-title {
             color: #FF1493 !important;
         }
+
+        /* First-visit onboarding tour */
+        #onboardingTour:not(.hidden) {
+            display: block;
+        }
+        #onboardingTour .onboarding-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.72);
+            z-index: 90;
+        }
+        #onboardingSpotlight {
+            position: fixed;
+            z-index: 91;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72);
+            border: 2px solid #818cf8;
+            pointer-events: none;
+            transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+        }
+        #onboardingSpotlight.hidden {
+            display: none;
+        }
+        #onboardingCard {
+            position: fixed;
+            z-index: 92;
+            max-width: 22rem;
+            width: calc(100% - 2rem);
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transition: top 0.2s ease, left 0.2s ease, transform 0.2s ease;
+        }
+        #onboardingCard.onboarding-card-centered {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 26rem;
+        }
+        body.onboarding-active {
+            overflow: hidden;
+        }
+        .event-card.long-press-pending,
+        .agenda-event-row.long-press-pending {
+            transform: scale(0.98);
+            opacity: 0.92;
+        }
+        #shareToast:not(.hidden) {
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
@@ -514,7 +564,7 @@
         </header>
 
         <!-- Party-O-Meter -->
-        <div class="max-w-5xl mx-auto mb-6">
+        <div id="partyOMeterSection" class="max-w-5xl mx-auto mb-6">
             <label for="party-o-meter" class="block text-sm font-medium text-gray-700 mb-1">Party-O-Meter™</label>
             <div class="w-full bg-gray-200 rounded-full h-4">
                 <div id="partyOMeterFill" class="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
@@ -544,7 +594,7 @@
         </div>
 
         <!-- Share/Sync Section -->
-        <details class="max-w-5xl mx-auto mb-6 bg-white p-3 rounded-lg shadow-sm">
+        <details id="shareSyncDetails" class="max-w-5xl mx-auto mb-6 bg-white p-3 rounded-lg shadow-sm">
             <summary class="font-medium text-indigo-600 cursor-pointer">Share/Sync Schedules</summary>
             <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -576,7 +626,7 @@
         <details id="keywordFilterDetails" class="max-w-5xl mx-auto mb-6 bg-white p-3 rounded-lg shadow-sm">
             <summary class="font-medium text-indigo-600 cursor-pointer">Keyword Filters (Hide Events)</summary>
             <div class="mt-4 pt-4 border-t">
-                <p class="text-sm text-gray-600 mb-2">Enter keywords to hide events. Separate each word or phrase with a comma (e.g., breakfast, ice bar, brunch).</p>
+                <p class="text-sm text-gray-600 mb-2">Saved words stay hidden every visit until you remove them (chips below search). Add manually here, comma-separated — or use <strong>-word</strong> in search and click <strong>Always hide</strong>.</p>
                 <div class="flex flex-col gap-2">
                     <textarea id="hiddenKeywordsTextarea" rows="3" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="ice bar, breakfast, brunch..."></textarea>
                     <button id="saveHiddenKeywordsBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 self-end">Save & Apply Filters</button>
@@ -585,14 +635,14 @@
         </details>
 
         <!-- View Toggles & Event Count -->
-        <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-200">
-            <div class="flex justify-center sm:justify-start">
-                <button id="cardViewTab" class="px-4 py-2 font-medium text-sm border-b-2 tab-active">Card View</button>
-                <button id="agendaViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Agenda View</button>
-                <button id="submitViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-red-600 hover:text-red-700 hover:border-red-300">Submit a Party</button>
-                <button id="cutPasteViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Cut & Paste</button>
-                <button id="pushSubscribeTab" type="button" class="hidden px-4 py-2 font-medium text-sm border-b-2 border-transparent text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:border-indigo-300 disabled:opacity-60 disabled:cursor-not-allowed">Subscribe</button>
-                <button id="helpViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Help / About</button>
+        <div id="viewTabsBar" class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-200">
+            <div class="flex flex-wrap justify-center sm:justify-start gap-x-1 gap-y-1">
+                <button id="cardViewTab" class="px-3 sm:px-4 py-2 font-medium text-sm border-b-2 tab-active">Card View</button>
+                <button id="agendaViewTab" class="px-3 sm:px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Agenda View</button>
+                <button id="submitViewTab" class="px-3 sm:px-4 py-2 font-medium text-sm border-b-2 border-transparent text-red-600 hover:text-red-700 hover:border-red-300">Submit a Party</button>
+                <button id="cutPasteViewTab" class="px-3 sm:px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Cut & Paste</button>
+                <button id="pushSubscribeTab" type="button" class="hidden px-3 sm:px-4 py-2 font-medium text-sm border-b-2 border-transparent text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:border-indigo-300 disabled:opacity-60 disabled:cursor-not-allowed">Subscribe</button>
+                <button id="helpViewTab" class="px-3 sm:px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Help / About</button>
             </div>
             <div id="eventCountContainer" class="text-sm font-medium text-gray-600 text-center py-2 sm:text-right sm:py-0 sm:pr-2">
                 Showing <span id="visibleEventCount">0</span> of <span id="totalEventCount">0</span> events
@@ -606,13 +656,20 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
                 </div>
-                <input type="text" id="searchInput" placeholder="Search by title, date, location, URL..." class="block w-full bg-white border border-gray-300 rounded-md py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <input type="text" id="searchInput" placeholder="Search title, location, date… Use -word to exclude (e.g. -microsoft)" class="block w-full bg-white border border-gray-300 rounded-md py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 <button id="clearSearchBtn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <!-- Day Filters (for Agenda View) -->
-            <div id="dayFilters" class="hidden justify-center items-center flex-wrap gap-x-4 gap-y-2 text-sm p-2 border-t border-b border-gray-200">
+            <div id="saveSearchExclusionsRow" class="hidden mb-2 text-center sm:text-left">
+                <button type="button" id="saveSearchExclusionsBtn" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"></button>
+            </div>
+            <div id="hiddenKeywordsChips" class="hidden mb-3 flex flex-wrap items-center gap-2">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Always hidden:</span>
+                <div id="hiddenKeywordsChipList" class="flex flex-wrap gap-2"></div>
+            </div>
+            <!-- Status filters (Card + Agenda views) -->
+            <div id="statusFilters" class="hidden justify-center items-center flex-wrap gap-x-4 gap-y-2 text-sm p-2 border-t border-b border-gray-200">
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-gray-700 pr-4">
                     <input type="checkbox" id="hidePastEvents" class="h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500" checked>
                     <span>Hide Past</span>
@@ -637,6 +694,9 @@
                     <input type="checkbox" id="showNewOnly" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                     <span>Show New / Updated</span>
                 </label>
+            </div>
+            <!-- Weekday filters (Agenda view only) -->
+            <div id="dayFilters" class="hidden justify-center items-center flex-wrap gap-x-4 gap-y-2 text-sm p-2 border-b border-gray-200">
                 <span class="font-medium text-gray-700">Filter by day:</span>
                 <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="1" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Mon</span></label>
                 <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" value="2" class="day-filter h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked><span>Tue</span></label>
@@ -687,12 +747,17 @@
                 <p class="text-gray-500 dark:text-gray-400 text-sm m-0">
                     All times are <strong>Pacific (PT)</strong>. Signup links open the vendor&apos;s page — we do not run registrations here.
                 </p>
+                <button type="button" id="replayOnboardingBtn" class="mt-4 inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Take the feature tour again
+                </button>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <section class="help-section">
                     <h3>What&apos;s new</h3>
                     <ul>
+                        <li><strong>Feature tour</strong> — first-time visitors get a guided walkthrough; replay anytime with the button at the top of Help.</li>
                         <li><strong>New</strong> badge — parties added since your last visit.</li>
                         <li><strong>Updated</strong> badge (amber) — title, time, location, or description changed.</li>
                         <li><strong>Party reminders</strong> — in event details, pick 15 min, 30 min, or 1 hour before start, or Off. Personal alerts only; not the site-wide Subscribe push.</li>
@@ -722,13 +787,23 @@
                 </section>
 
                 <section class="help-section">
+                    <h3>Getting invited</h3>
+                    <ul>
+                        <li><strong>Use a work email</strong> — vendors often prioritize corporate addresses over free providers (Gmail, Yahoo, Outlook.com, etc.). A company domain signals you are industry, not a random signup.</li>
+                        <li><strong>Fill forms accurately</strong> — title, company, and LinkedIn matter on many invite-only lists. Use <strong>Cut &amp; Paste</strong> to keep your details consistent across signups.</li>
+                        <li><strong>Vendors will contact you</strong> — when you submit a registration, the host gets your info and may email you about approval, waitlists, or event updates. Use an inbox you actually check during Drunk Camp.</li>
+                        <li><strong>Expect follow-up</strong> — approval is not instant on most parties. Mark events <strong>Pending</strong> here so you remember what you applied for while you wait.</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
                     <h3>Find &amp; filter</h3>
                     <ul>
-                        <li><strong>Search</strong> — title, location, date, or description. Paste a URL to submit a missing party.</li>
+                        <li><strong>Search</strong> — title, location, date, or description. Prefix with <strong>-</strong> to exclude temporarily (e.g. <strong>-microsoft</strong>). Click <strong>Always hide</strong> to save an exclusion permanently; remove saved words with the <strong>×</strong> chips below search.</li>
                         <li><strong>My Approved / Pending / Friends</strong> — focus on your list or imported friend schedules.</li>
-                        <li><strong>Agenda day filters</strong> — weekday checkboxes in Agenda view.</li>
-                        <li><strong>Hide Past</strong> — trim events that already started.</li>
-                        <li><strong>Keyword filters</strong> — Share/Sync → permanently hide matching words (e.g. breakfast).</li>
+                        <li><strong>Status filters</strong> — below search in Card or Agenda view: Hide Past, Approved, Pending, Friends, New/Updated, etc.</li>
+                        <li><strong>Agenda day filters</strong> — weekday checkboxes below status filters, Agenda view only.</li>
+                        <li><strong>Keyword filters</strong> — collapsible panel above the view tabs for bulk edit; same list as the removable chips below search.</li>
                     </ul>
                 </section>
 
@@ -746,6 +821,7 @@
                 <section class="help-section">
                     <h3>Share &amp; tools</h3>
                     <ul>
+                        <li><strong>Share a party</strong> — link icon in event details, or <strong>hold</strong> a card/agenda row (mobile) / right-click (desktop). Opens that party for anyone with the link, even if your filters would hide it.</li>
                         <li><strong>Export / import</strong> — Share/Sync encodes Approved, Pending, and Rejected choices.</li>
                         <li><strong>Friends</strong> — import a nickname + code; friend approvals show in orange.</li>
                         <li><strong>Flex on &apos;em</strong> — share your approved count from Party-O-Meter™.</li>
@@ -920,11 +996,16 @@
     <div id="eventModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
         <div id="modalContent" class="bg-white rounded-lg shadow-xl w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0">
             <!-- Modal Header -->
-            <div class="p-4 sm:p-5 border-b flex justify-between items-start">
-                <h3 id="modalTitle" class="text-xl font-bold text-gray-800"></h3>
-                <button id="closeModal" class="text-gray-400 hover:text-gray-800 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+            <div class="p-4 sm:p-5 border-b flex justify-between items-start gap-3">
+                <h3 id="modalTitle" class="text-xl font-bold text-gray-800 dark:text-gray-100 flex-1 min-w-0"></h3>
+                <div class="flex items-center gap-1 shrink-0">
+                    <button type="button" id="modalShareBtn" class="p-1 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Share party link" aria-label="Share party link">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                    </button>
+                    <button type="button" id="closeModal" class="p-1 text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors" aria-label="Close">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
             </div>
             <!-- Modal Body -->
             <div class="p-4 sm:p-5 space-y-4">
@@ -987,6 +1068,26 @@
         </div>
     </div>
 
+    <!-- First-visit onboarding tour -->
+    <div id="onboardingTour" class="hidden" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+        <div class="onboarding-backdrop" id="onboardingBackdrop"></div>
+        <div id="onboardingSpotlight" class="hidden" aria-hidden="true"></div>
+        <div id="onboardingCard" class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 p-5 sm:p-6">
+            <p id="onboardingStepLabel" class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400 mb-1">Step 1 of 12</p>
+            <h2 id="onboardingTitle" class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2"></h2>
+            <p id="onboardingBody" class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4"></p>
+            <div class="flex items-center justify-between gap-3">
+                <button type="button" id="onboardingSkipBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Skip tour</button>
+                <div class="flex gap-2">
+                    <button type="button" id="onboardingBackBtn" class="hidden px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">Back</button>
+                    <button type="button" id="onboardingNextBtn" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="shareToast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] max-w-xs sm:max-w-sm px-4 py-2 rounded-lg shadow-lg bg-gray-900 dark:bg-gray-800 text-white text-sm text-center pointer-events-none" role="status" aria-live="polite"></div>
+
     <!-- Scroll To Top/Bottom -->
     <div id="scrollNav" class="hidden fixed bottom-4 right-4 z-50 flex-col gap-2">
         <button id="scrollTopBtn" class="bg-indigo-600 text-white rounded-full p-3 shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -1020,6 +1121,7 @@
         const submitViewTab = document.getElementById('submitViewTab');
         const helpViewTab = document.getElementById('helpViewTab');
         const cutPasteViewTab = document.getElementById('cutPasteViewTab');
+        const statusFilters = document.getElementById('statusFilters');
         const dayFilters = document.getElementById('dayFilters');
         const filtersAndSearch = document.getElementById('filtersAndSearch');
         const showApprovedOnlyCheckbox = document.getElementById('showApprovedOnly');
@@ -1033,6 +1135,8 @@
         const eventModal = document.getElementById('eventModal');
         const modalContent = document.getElementById('modalContent');
         const closeModal = document.getElementById('closeModal');
+        const modalShareBtn = document.getElementById('modalShareBtn');
+        const shareToast = document.getElementById('shareToast');
         const modalTitle = document.getElementById('modalTitle');
         const modalTime = document.getElementById('modalTime');
         const modalLocation = document.getElementById('modalLocation');
@@ -1043,7 +1147,7 @@
         const modalApprovedCheckbox = document.getElementById('modalApprovedCheckbox');
         const modalRejectedCheckbox = document.getElementById('modalRejectedCheckbox');
         const modalPendingCheckbox = document.getElementById('modalPendingCheckbox');
-        const shareDetails = document.querySelector('details');
+        const shareDetails = document.getElementById('shareSyncDetails');
         const shareCodeInput = document.getElementById('shareCodeInput');
         const exportBtn = document.getElementById('exportBtn');
         const importNicknameInput = document.getElementById('importNicknameInput');
@@ -1081,8 +1185,11 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.1-beta';
+        const APP_VERSION = '1.4.3-beta';
+        const PARTY_SHARE_PARAM = 'event';
+        const LONG_PRESS_SHARE_MS = 500;
         const CACHE_VERSION = '2026';
+        const ONBOARDING_KEY = `calendarOnboardingSeen_${CACHE_VERSION}`;
         const SCHEDULES_KEY = `calendarSchedules_${CACHE_VERSION}`;
         const MY_SCHEDULE_KEY = '__ME__';
         const REJECTED_EVENTS_KEY = `calendarRejectedEvents_${CACHE_VERSION}`;
@@ -1226,6 +1333,136 @@
                 && event.id.length <= 256
             ));
         }
+        function isValidEventId(eventId) {
+            return typeof eventId === 'string'
+                && eventId.length > 0
+                && eventId.length <= 256
+                && EVENT_ID_PATTERN.test(eventId);
+        }
+        function getDeepLinkEventId() {
+            const id = new URLSearchParams(window.location.search).get(PARTY_SHARE_PARAM);
+            return isValidEventId(id) ? id : null;
+        }
+        function buildPartyShareUrl(eventId) {
+            const url = new URL(window.location.href);
+            url.search = '';
+            url.hash = '';
+            url.searchParams.set(PARTY_SHARE_PARAM, eventId);
+            return url.toString();
+        }
+        function clearPartyShareUrl() {
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has(PARTY_SHARE_PARAM)) return;
+            url.searchParams.delete(PARTY_SHARE_PARAM);
+            const query = url.searchParams.toString();
+            history.replaceState(null, '', query ? `${url.pathname}?${query}` : url.pathname);
+        }
+        let shareToastTimer = null;
+        let lastPartyShareAt = 0;
+        function showShareStatus(message) {
+            if (!shareToast || !message) return;
+            shareToast.textContent = message;
+            shareToast.classList.remove('hidden');
+            if (shareToastTimer) clearTimeout(shareToastTimer);
+            shareToastTimer = setTimeout(() => {
+                shareToast.classList.add('hidden');
+            }, 2800);
+        }
+        async function shareParty(event) {
+            if (!event?.id) return false;
+            const now = Date.now();
+            if (now - lastPartyShareAt < 800) return false;
+            lastPartyShareAt = now;
+            const url = buildPartyShareUrl(event.id);
+            const title = event.summary || 'DEF CON Party';
+            const text = `Check out this party: ${title}`;
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title, text, url });
+                    showShareStatus('Shared!');
+                    return true;
+                } catch (error) {
+                    if (error?.name === 'AbortError') return false;
+                }
+            }
+            const copied = await copyToClipboard(url);
+            showShareStatus(copied ? 'Party link copied!' : 'Could not copy link');
+            return copied;
+        }
+        function findPartyListElement(eventId) {
+            if (!eventId) return null;
+            const selector = typeof CSS !== 'undefined' && CSS.escape
+                ? `[data-event-id="${CSS.escape(eventId)}"]`
+                : `[data-event-id="${eventId.replace(/"/g, '\\"')}"]`;
+            return document.querySelector(selector);
+        }
+        function handlePartyDeepLink() {
+            const eventId = getDeepLinkEventId();
+            if (!eventId) return;
+            const event = allEvents.find((item) => item.id === eventId);
+            if (!event) {
+                showShareStatus('Party not found — it may have been removed. Try Refresh Now.');
+                clearPartyShareUrl();
+                return;
+            }
+            switchView('card');
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const listEl = findPartyListElement(eventId);
+                    if (listEl) {
+                        listEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }
+                    showModal(event);
+                    clearPartyShareUrl();
+                });
+            });
+        }
+        function attachLongPressShare(element, event) {
+            let pressTimer = null;
+            let longPressed = false;
+
+            const clearPress = () => {
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+                element.classList.remove('long-press-pending');
+            };
+
+            const startPress = () => {
+                clearPress();
+                longPressed = false;
+                element.classList.add('long-press-pending');
+                pressTimer = setTimeout(async () => {
+                    longPressed = true;
+                    element.classList.remove('long-press-pending');
+                    await shareParty(event);
+                    if (navigator.vibrate) navigator.vibrate(40);
+                }, LONG_PRESS_SHARE_MS);
+            };
+
+            element.addEventListener('touchstart', startPress, { passive: true });
+            element.addEventListener('mousedown', startPress);
+            element.addEventListener('touchend', clearPress);
+            element.addEventListener('mouseup', clearPress);
+            element.addEventListener('touchmove', clearPress);
+            element.addEventListener('mouseleave', clearPress);
+            element.addEventListener('touchcancel', clearPress);
+            if (!('ontouchstart' in window)) {
+                element.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    shareParty(event);
+                });
+            }
+            element.addEventListener('click', (e) => {
+                if (longPressed) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    longPressed = false;
+                }
+            }, true);
+        }
+
         async function copyToClipboard(text) {
             try {
                 if (navigator.clipboard?.writeText) {
@@ -1527,7 +1764,86 @@
             return keywords ? JSON.parse(keywords) : [];
         }
         function saveHiddenKeywords(keywordsArray) {
-            localStorage.setItem(HIDDEN_KEYWORDS_KEY, JSON.stringify(keywordsArray));
+            const cleaned = keywordsArray.map((k) => k.trim()).filter(Boolean);
+            localStorage.setItem(HIDDEN_KEYWORDS_KEY, JSON.stringify(cleaned));
+        }
+        function addHiddenKeywords(newTerms) {
+            const existing = getHiddenKeywords();
+            const seen = new Set(existing.map((k) => k.toLowerCase()));
+            const merged = [...existing];
+            newTerms.forEach((term) => {
+                const trimmed = term.trim();
+                if (!trimmed) return;
+                const key = trimmed.toLowerCase();
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    merged.push(trimmed);
+                }
+            });
+            saveHiddenKeywords(merged);
+            hiddenKeywordsTextarea.value = merged.join(', ');
+            renderHiddenKeywordsUi();
+            renderCurrentView();
+        }
+        function removeHiddenKeyword(term) {
+            const lower = term.toLowerCase();
+            const merged = getHiddenKeywords().filter((k) => k.toLowerCase() !== lower);
+            saveHiddenKeywords(merged);
+            hiddenKeywordsTextarea.value = merged.join(', ');
+            renderHiddenKeywordsUi();
+            renderCurrentView();
+        }
+        function stripNegativeTermsFromSearch(termsToRemove) {
+            const removeSet = new Set(termsToRemove.map((t) => t.toLowerCase()));
+            const remaining = searchInput.value.trim().split(/\s+/).filter((token) => {
+                const lower = token.toLowerCase();
+                if (lower.startsWith('-') && lower.length > 1) {
+                    return !removeSet.has(lower.slice(1));
+                }
+                return true;
+            });
+            searchInput.value = remaining.join(' ');
+            if (searchInput.value.trim().length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+        }
+        function renderHiddenKeywordsUi() {
+            const chipsBar = document.getElementById('hiddenKeywordsChips');
+            const chipsList = document.getElementById('hiddenKeywordsChipList');
+            const saveRow = document.getElementById('saveSearchExclusionsRow');
+            const saveBtn = document.getElementById('saveSearchExclusionsBtn');
+            if (!chipsBar || !chipsList || !saveRow || !saveBtn) return;
+
+            const keywords = getHiddenKeywords();
+            const inListView = currentView === 'card' || currentView === 'agenda';
+
+            if (keywords.length > 0 && inListView) {
+                chipsBar.classList.remove('hidden');
+                chipsList.innerHTML = keywords.map((keyword, index) => (
+                    `<span class="inline-flex items-center gap-1 rounded-full bg-gray-200 dark:bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:text-gray-200">`
+                    + `${escapeHtml(keyword)}`
+                    + `<button type="button" class="hidden-keyword-remove inline-flex items-center justify-center min-w-[1.75rem] min-h-[1.75rem] -mr-1 rounded-full leading-none text-gray-500 hover:text-red-600 dark:hover:text-red-400" data-index="${index}" aria-label="Stop hiding ${escapeHtml(keyword)}">×</button>`
+                    + `</span>`
+                )).join('');
+            } else {
+                chipsBar.classList.add('hidden');
+                chipsList.innerHTML = '';
+            }
+
+            const query = parseSearchQuery(searchInput.value);
+            const unsaved = query.negative.filter((term) => !keywords.some((k) => k.toLowerCase() === term));
+            if (unsaved.length > 0 && inListView) {
+                saveRow.classList.remove('hidden');
+                saveBtn.textContent = unsaved.length === 1
+                    ? `Always hide “${unsaved[0]}”`
+                    : `Always hide ${unsaved.length} words`;
+                saveBtn.dataset.unsaved = JSON.stringify(unsaved);
+            } else {
+                saveRow.classList.add('hidden');
+                delete saveBtn.dataset.unsaved;
+            }
         }
 
         // --- DATA FETCHING & PARSING ---
@@ -1574,6 +1890,7 @@
                 initializeSessionBaselineIfNeeded();
                 updateRefreshTimestamp();
                 renderCurrentView();
+                handlePartyDeepLink();
             } catch (error) {
                 console.error("Could not fetch data from URL:", error);
                 lastRefreshedText.textContent = 'Refresh failed. Using cached data.';
@@ -1594,6 +1911,7 @@
                     initializeSessionBaselineIfNeeded();
                     updateRefreshTimestamp();
                     renderCurrentView();
+                    handlePartyDeepLink();
                 } catch (error) {
                     console.warn('Cached calendar data was invalid; fetching fresh data.', error);
                     fetchAndCacheEvents();
@@ -1622,11 +1940,15 @@
                 cardViewTab.classList.add('tab-active');
                 cardViewContainer.classList.remove('hidden');
                 filtersAndSearch.classList.remove('hidden');
+                statusFilters.classList.remove('hidden');
+                statusFilters.classList.add('flex');
             } else if (view === 'agenda') {
                 agendaViewTab.classList.add('tab-active');
                 agendaViewContainer.classList.remove('hidden');
                 filtersAndSearch.classList.remove('hidden');
-                dayFilters.classList.remove('hidden'); 
+                statusFilters.classList.remove('hidden');
+                statusFilters.classList.add('flex');
+                dayFilters.classList.remove('hidden');
                 dayFilters.classList.add('flex');
             } else if (view === 'submit') {
                 submitViewTab.classList.add('tab-active-red');
@@ -1640,15 +1962,351 @@
                 loadProfiles();
             }
             
+            if (view !== 'card' && view !== 'agenda') {
+                statusFilters.classList.add('hidden');
+            }
             if (view !== 'agenda') {
-                 dayFilters.classList.add('hidden');
+                dayFilters.classList.add('hidden');
             }
 
             renderCurrentView();
         }
 
+        // --- FIRST-VISIT ONBOARDING TOUR ---
+        const onboardingTour = document.getElementById('onboardingTour');
+        const onboardingSpotlight = document.getElementById('onboardingSpotlight');
+        const onboardingCard = document.getElementById('onboardingCard');
+        const onboardingTitle = document.getElementById('onboardingTitle');
+        const onboardingBody = document.getElementById('onboardingBody');
+        const onboardingStepLabel = document.getElementById('onboardingStepLabel');
+        const onboardingSkipBtn = document.getElementById('onboardingSkipBtn');
+        const onboardingBackBtn = document.getElementById('onboardingBackBtn');
+        const onboardingNextBtn = document.getElementById('onboardingNextBtn');
+        let onboardingStepIndex = 0;
+        let onboardingActive = false;
+        let onboardingViewBeforeTour = 'card';
+        let onboardingResizeHandler = null;
+
+        function getOnboardingSteps() {
+            const steps = [
+                {
+                    title: 'Welcome to DEFCON Parties 2026',
+                    body: 'We\'re the NSA of Parties. We track the full stack — Black Hat, BSides Las Vegas, DEFCON, and every vendor list in between — because everybody knows DEFCON Parties is how Vegas actually works. Quick tour: views, filters, your schedule, and how to get on the list.',
+                    placement: 'center',
+                },
+                {
+                    title: 'Card View',
+                    body: 'Browse parties as a grid. Click any card for full details, signup links, and to mark Approved, Pending, or Rejected.',
+                    view: 'card',
+                    target: '#cardViewContainer',
+                    placement: 'bottom',
+                },
+                {
+                    title: 'Search',
+                    body: 'Search by title, location, date, or URL. Use -word to exclude for now (e.g. -microsoft), or click Always hide to keep that exclusion every visit. Remove saved words with the × chips below search.',
+                    view: 'card',
+                    target: '#searchInput',
+                    placement: 'bottom',
+                },
+                {
+                    title: 'Filters',
+                    body: 'Right below the search box in Card or Agenda view. Toggle Hide Past, Hide Rejected, Show Pending Only, Show My Approved, Show Friends, and Show New / Updated.',
+                    view: 'card',
+                    target: '#statusFilters',
+                    placement: 'bottom',
+                },
+                {
+                    title: 'Agenda View',
+                    body: 'Switch to a day-by-day timeline with time ranges — great for planning your Drunk Camp week. Weekday checkboxes appear below the status filters here only.',
+                    view: 'agenda',
+                    target: '#agendaViewContainer',
+                    placement: 'top',
+                },
+                {
+                    title: 'Filter by day',
+                    body: 'In Agenda view only — below the status filters — pick Mon–Sun to focus on specific days. Select All / Clear All speeds it up.',
+                    view: 'agenda',
+                    target: '#dayFilters',
+                    placement: 'bottom',
+                },
+                {
+                    title: 'Party-O-Meter™',
+                    body: 'Tracks how many parties you have approved. Flex on your friends with the share buttons when you are ready.',
+                    view: 'card',
+                    target: '#partyOMeterSection',
+                    placement: 'bottom',
+                },
+                {
+                    title: 'Stay current',
+                    body: 'See when data was last refreshed. Refresh Now pulls the latest list (5-minute cooldown). New and Updated counts appear here — use Mark all seen when you are caught up.',
+                    view: 'card',
+                    target: '#refreshContainer',
+                    placement: 'bottom',
+                },
+                {
+                    title: 'Share / Sync schedules',
+                    body: 'Export your Approved, Pending, and Rejected choices as a code — import on another device or share a friend\'s schedule (shown in orange).',
+                    view: 'card',
+                    target: '#shareSyncDetails',
+                    placement: 'bottom',
+                    beforeShow: () => { if (shareDetails) shareDetails.open = true; },
+                },
+                {
+                    title: 'Event details',
+                    body: 'Open any party to sign up, set reminders, and update your status. Tap the share icon to send a link, or hold a card (long-press on mobile) to share without opening details first.',
+                    view: 'card',
+                    target: () => document.querySelector('.event-card') || document.querySelector('.agenda-event-row') || '#cardViewContainer',
+                    placement: 'top',
+                },
+                {
+                    title: 'Cut & Paste',
+                    body: 'Store your name, work email, title, company, shirt size, and more — then copy each field into vendor signup forms with one click. Handy for Lu.ma, Google Forms, HubSpot, and similar pages.',
+                    view: 'cutPaste',
+                    target: '#cutPasteViewTab',
+                    placement: 'bottom',
+                },
+                {
+                    title: 'Getting invited',
+                    body: 'Tip: use a work email, not a free provider like Gmail — vendors often prioritize corporate addresses. When you register on a vendor site, they get your info and may email you about approval or updates, so use an inbox you check during Drunk Camp. Mark parties Pending while you wait.',
+                    view: 'card',
+                    placement: 'center',
+                },
+                {
+                    title: 'Submit a party',
+                    body: 'Know a listing we missed? Use Submit a Party to send us the URL, or paste a link in Search.',
+                    view: 'submit',
+                    target: '#submitViewTab',
+                    placement: 'bottom',
+                },
+                {
+                    title: 'Help & About',
+                    body: 'Full reference for badges, refresh rules, privacy, and tools. You can replay this tour anytime from Help.',
+                    view: 'help',
+                    target: '#helpViewContainer',
+                    placement: 'center',
+                },
+                {
+                    title: 'You are all set!',
+                    body: 'Go approve your can\'t-miss parties and check back for New and Updated badges. The NSA of Parties has your six — have a legendary DEFCON week.',
+                    view: 'card',
+                    placement: 'center',
+                },
+            ];
+            const pushTab = document.getElementById('pushSubscribeTab');
+            if (pushTab && !pushTab.classList.contains('hidden')) {
+                steps.splice(steps.length - 1, 0, {
+                    title: 'Subscribe for alerts',
+                    body: 'Optional push notifications when the DCP team sends site-wide party updates. Per-party reminders are separate — set those inside each event.',
+                    view: 'card',
+                    target: '#pushSubscribeTab',
+                    placement: 'bottom',
+                });
+            }
+            return steps;
+        }
+
+        function resolveOnboardingTarget(target) {
+            if (!target) return null;
+            if (typeof target === 'function') {
+                target = target();
+            }
+            if (typeof target === 'string') {
+                return document.querySelector(target);
+            }
+            return target instanceof Element ? target : null;
+        }
+
+        function getElementViewportRect(el) {
+            const rect = el.getBoundingClientRect();
+            const pad = 8;
+            return {
+                top: Math.max(8, rect.top - pad),
+                left: Math.max(8, rect.left - pad),
+                width: Math.min(window.innerWidth - 16, rect.width + pad * 2),
+                height: Math.min(window.innerHeight - 16, rect.height + pad * 2),
+            };
+        }
+
+        function positionOnboardingCard(rect, placement) {
+            onboardingCard.classList.remove('onboarding-card-centered');
+            const margin = 12;
+            const cardRect = onboardingCard.getBoundingClientRect();
+            const cardHeight = cardRect.height || onboardingCard.offsetHeight || 200;
+            const cardWidth = cardRect.width || onboardingCard.offsetWidth || 320;
+            const maxTop = Math.max(16, window.innerHeight - cardHeight - 16);
+            const maxLeft = Math.max(16, window.innerWidth - cardWidth - 16);
+
+            if (placement === 'center' || !rect) {
+                onboardingCard.classList.add('onboarding-card-centered');
+                onboardingCard.style.top = '';
+                onboardingCard.style.left = '';
+                onboardingCard.style.transform = '';
+                return;
+            }
+
+            let top;
+            let left = Math.min(Math.max(16, rect.left), maxLeft);
+
+            if (placement === 'top') {
+                top = rect.top - cardHeight - margin;
+                if (top < 16) {
+                    top = rect.top + rect.height + margin;
+                }
+            } else {
+                top = rect.top + rect.height + margin;
+                if (top > maxTop) {
+                    top = rect.top - cardHeight - margin;
+                }
+            }
+
+            top = Math.min(Math.max(16, top), maxTop);
+
+            onboardingCard.style.top = `${top}px`;
+            onboardingCard.style.left = `${left}px`;
+            onboardingCard.style.transform = 'none';
+        }
+
+        function showOnboardingStep(index) {
+            const steps = getOnboardingSteps();
+            if (!onboardingActive || index < 0 || index >= steps.length) return;
+
+            onboardingStepIndex = index;
+            const step = steps[index];
+
+            if (step.view) {
+                switchView(step.view);
+            }
+            if (typeof step.beforeShow === 'function') {
+                step.beforeShow();
+            }
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const targetEl = resolveOnboardingTarget(step.target);
+                    onboardingStepLabel.textContent = `Step ${index + 1} of ${steps.length}`;
+                    onboardingTitle.textContent = step.title;
+                    onboardingBody.textContent = step.body;
+                    onboardingBackBtn.classList.toggle('hidden', index === 0);
+                    onboardingNextBtn.textContent = index === steps.length - 1 ? 'Done' : 'Next';
+
+                    if (step.placement === 'center' || !targetEl) {
+                        onboardingSpotlight.classList.add('hidden');
+                        positionOnboardingCard(null, 'center');
+                    } else {
+                        targetEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        setTimeout(() => {
+                            const rect = getElementViewportRect(targetEl);
+                            onboardingSpotlight.classList.remove('hidden');
+                            onboardingSpotlight.style.top = `${rect.top}px`;
+                            onboardingSpotlight.style.left = `${rect.left}px`;
+                            onboardingSpotlight.style.width = `${rect.width}px`;
+                            onboardingSpotlight.style.height = `${rect.height}px`;
+                            positionOnboardingCard(rect, step.placement || 'bottom');
+                            requestAnimationFrame(() => {
+                                positionOnboardingCard(rect, step.placement || 'bottom');
+                            });
+                        }, 280);
+                    }
+                });
+            });
+        }
+
+        function finishOnboarding(markSeen = true) {
+            if (!onboardingActive) return;
+            onboardingActive = false;
+            if (markSeen) {
+                localStorage.setItem(ONBOARDING_KEY, 'true');
+            }
+            onboardingTour.classList.add('hidden');
+            onboardingSpotlight.classList.add('hidden');
+            document.body.classList.remove('onboarding-active');
+            if (shareDetails) shareDetails.open = false;
+            switchView(onboardingViewBeforeTour);
+            if (onboardingResizeHandler) {
+                window.removeEventListener('resize', onboardingResizeHandler);
+                window.removeEventListener('scroll', onboardingResizeHandler, true);
+                onboardingResizeHandler = null;
+            }
+        }
+
+        function startOnboarding(force = false) {
+            if (!onboardingTour) return;
+            if (!force && localStorage.getItem(ONBOARDING_KEY) === 'true') return;
+
+            onboardingActive = true;
+            onboardingViewBeforeTour = currentView;
+            onboardingStepIndex = 0;
+            onboardingTour.classList.remove('hidden');
+            document.body.classList.add('onboarding-active');
+            hideModal();
+
+            onboardingResizeHandler = () => showOnboardingStep(onboardingStepIndex);
+            window.addEventListener('resize', onboardingResizeHandler);
+            window.addEventListener('scroll', onboardingResizeHandler, true);
+
+            showOnboardingStep(0);
+        }
+
+        function maybeStartOnboardingTour() {
+            if (getDeepLinkEventId()) return;
+            if (localStorage.getItem(ONBOARDING_KEY) !== 'true') {
+                setTimeout(() => startOnboarding(false), 600);
+            }
+        }
+
+        function parseSearchQuery(raw) {
+            const trimmed = (raw || '').trim();
+            if (!trimmed) {
+                return { positive: [], negative: [], raw: '', isUrl: false };
+            }
+            if (/^(https?:\/\/)/i.test(trimmed)) {
+                return { positive: [trimmed.toLowerCase()], negative: [], raw: trimmed, isUrl: true };
+            }
+            const positive = [];
+            const negative = [];
+            trimmed.split(/\s+/).forEach((token) => {
+                const lower = token.toLowerCase();
+                if (lower.startsWith('-') && lower.length > 1) {
+                    negative.push(lower.slice(1));
+                } else if (!lower.startsWith('-')) {
+                    positive.push(lower);
+                }
+            });
+            return { positive, negative, raw: trimmed, isUrl: false };
+        }
+
+        function getEventSearchHaystack(event) {
+            const title = (event.summary || '').toLowerCase();
+            const location = (event.location || '').toLowerCase();
+            const description = (event.description || '').toLowerCase();
+            const url = (event.htmlLink || '').toLowerCase();
+            const startDateString = getStartDateString(event);
+            const endDateString = getEndDateString(event);
+            return `${title} ${location} ${description} ${url} ${(startDateString || '').toLowerCase()} ${(endDateString || '').toLowerCase()}`;
+        }
+
+        function eventMatchesSearchQuery(event, query) {
+            if (!query.raw) return true;
+
+            const haystack = getEventSearchHaystack(event);
+
+            if (query.negative.some((term) => haystack.includes(term))) {
+                return false;
+            }
+
+            if (query.positive.length === 0) {
+                return true;
+            }
+
+            if (query.isUrl) {
+                return haystack.includes(query.positive[0]);
+            }
+
+            return query.positive.every((term) => haystack.includes(term));
+        }
+
         function getFilteredEvents() {
-            const searchTerm = searchInput.value.toLowerCase();
+            const searchQuery = parseSearchQuery(searchInput.value);
             const selectedDays = new Set(Array.from(document.querySelectorAll('.day-filter:checked')).map(cb => parseInt(cb.value)));
             const showApprovedOnly = showApprovedOnlyCheckbox.checked;
             const showNewOnly = showNewOnlyCheckbox.checked;
@@ -1690,19 +2348,14 @@
                     if (!selectedDays.has(pacificDate.getUTCDay())) return false;
                 }
 
-                const title = (event.summary || '').toLowerCase();
-                const location = (event.location || '').toLowerCase();
-                const description = (event.description || '').toLowerCase();
-                const url = (event.htmlLink || '').toLowerCase();
-                
                 if (hiddenKeywords.length > 0) {
-                    const eventText = `${title} ${location} ${description}`;
+                    const eventText = getEventSearchHaystack(event);
                     if (hiddenKeywords.some(keyword => eventText.includes(keyword))) {
-                        return false; 
+                        return false;
                     }
                 }
 
-                return (title.includes(searchTerm) || (startDateString && startDateString.toLowerCase().includes(searchTerm)) || (endDateString && endDateString.toLowerCase().includes(searchTerm)) || location.includes(searchTerm) || description.includes(searchTerm) || url.includes(searchTerm));
+                return eventMatchesSearchQuery(event, searchQuery);
             });
         }
         
@@ -1720,6 +2373,8 @@
             
             const searchTerm = searchInput.value.trim();
             const isUrl = /^(https?:\/\/)/.test(searchTerm);
+
+            renderHiddenKeywordsUi();
 
             if (filteredEvents.length === 0 && (currentView === 'card' || currentView === 'agenda')) { 
                 noResults.classList.remove('hidden');
@@ -2122,12 +2777,14 @@
                 agendaViewContainer.appendChild(dayHeader);
                 dayEvents.forEach(event => {
                     const eventRow = document.createElement('div');
-                    eventRow.className = 'agenda-event-row flex items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors';
+                    eventRow.className = 'agenda-event-row flex flex-col sm:flex-row sm:items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors gap-1 sm:gap-0';
                     const isDC801 = (event.summary || '').toLowerCase().includes('dc801');
                     const isHackerJeopardy = (event.summary || '').toLowerCase().includes('hacker jeopardy');
                     const isFloridaman = (event.summary || '').toLowerCase().includes('floridaman');
 
                     applyApprovalStyles(eventRow, event.id);
+                    eventRow.dataset.eventId = event.id;
+                    attachLongPressShare(eventRow, event);
                     eventRow.addEventListener('click', () => showModal(event));
                     const startDateString = getStartDateString(event);
                     const isAllDay = startDateString && !startDateString.includes('T');
@@ -2150,7 +2807,7 @@
                     } else if (isFloridaman) {
                         titleClass = 'floridaman-agenda-title';
                     }
-                    eventRow.innerHTML = `<div class="w-48 text-right pr-4 text-indigo-600 font-medium">${escapeHtml(timeRange)}</div><div class="flex-grow"><p class="font-semibold text-gray-800 flex items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p><p class="text-gray-500">${escapeHtml(event.location || '')}</p></div>`;
+                    eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-indigo-600 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p><p class="text-gray-500 break-words">${escapeHtml(event.location || '')}</p></div>`;
                     agendaViewContainer.appendChild(eventRow);
                 });
             });
@@ -2174,8 +2831,10 @@
                 } else {
                     applyApprovalStyles(eventCard, event.id);
                 }
+                eventCard.dataset.eventId = event.id;
+                attachLongPressShare(eventCard, event);
                 eventCard.addEventListener('click', () => showModal(event));
-                
+
                 let formattedDate, formattedTime;
                 const startDateString = getStartDateString(event);
                 const isAllDay = startDateString && !startDateString.includes('T');
@@ -2642,6 +3301,14 @@
             hideRejectedCheckbox.addEventListener('change', renderCurrentView);
             showPendingOnlyCheckbox.addEventListener('change', renderCurrentView);
             closeModal.addEventListener('click', hideModal);
+            if (modalShareBtn) {
+                modalShareBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const eventId = modalContent.dataset.eventId;
+                    const event = allEvents.find((item) => item.id === eventId);
+                    if (event) await shareParty(event);
+                });
+            }
             eventModal.addEventListener('click', (e) => { if (e.target === eventModal) hideModal(); });
             window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !eventModal.classList.contains('hidden')) hideModal(); });
             selectAllDaysBtn.addEventListener('click', () => {
@@ -2703,11 +3370,40 @@
                 const keywordsText = hiddenKeywordsTextarea.value;
                 const keywordsArray = keywordsText.split(',').map(k => k.trim()).filter(k => k);
                 saveHiddenKeywords(keywordsArray);
+                renderHiddenKeywordsUi();
                 renderCurrentView();
                 shareStatus.textContent = 'Hidden keyword filter saved!';
                 shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
                 setTimeout(() => { shareStatus.textContent = ''; }, 3000);
             });
+            const saveSearchExclusionsBtn = document.getElementById('saveSearchExclusionsBtn');
+            if (saveSearchExclusionsBtn) {
+                saveSearchExclusionsBtn.addEventListener('click', () => {
+                    const raw = saveSearchExclusionsBtn.dataset.unsaved;
+                    if (!raw) return;
+                    let terms = [];
+                    try {
+                        terms = JSON.parse(raw);
+                    } catch (error) {
+                        return;
+                    }
+                    if (!terms.length) return;
+                    addHiddenKeywords(terms);
+                    stripNegativeTermsFromSearch(terms);
+                    renderCurrentView();
+                });
+            }
+            const hiddenKeywordsChipList = document.getElementById('hiddenKeywordsChipList');
+            if (hiddenKeywordsChipList) {
+                hiddenKeywordsChipList.addEventListener('click', (event) => {
+                    const button = event.target.closest('.hidden-keyword-remove');
+                    if (!button) return;
+                    const index = parseInt(button.dataset.index, 10);
+                    const keywords = getHiddenKeywords();
+                    if (Number.isNaN(index) || index < 0 || index >= keywords.length) return;
+                    removeHiddenKeyword(keywords[index]);
+                });
+            }
             keywordFilterDetails.addEventListener('toggle', (event) => {
                 if (event.target.open) {
                     hiddenKeywordsTextarea.value = getHiddenKeywords().join(', ');
@@ -2877,6 +3573,34 @@
                 restoreReminderTimers();
             }
             loadInitialData();
+            maybeStartOnboardingTour();
+
+            const replayOnboardingBtn = document.getElementById('replayOnboardingBtn');
+            if (replayOnboardingBtn) {
+                replayOnboardingBtn.addEventListener('click', () => startOnboarding(true));
+            }
+            if (onboardingSkipBtn) {
+                onboardingSkipBtn.addEventListener('click', () => finishOnboarding(true));
+            }
+            if (onboardingBackBtn) {
+                onboardingBackBtn.addEventListener('click', () => {
+                    if (onboardingStepIndex > 0) showOnboardingStep(onboardingStepIndex - 1);
+                });
+            }
+            if (onboardingNextBtn) {
+                onboardingNextBtn.addEventListener('click', () => {
+                    const steps = getOnboardingSteps();
+                    if (onboardingStepIndex >= steps.length - 1) {
+                        finishOnboarding(true);
+                    } else {
+                        showOnboardingStep(onboardingStepIndex + 1);
+                    }
+                });
+            }
+            window.addEventListener('keydown', (e) => {
+                if (!onboardingActive) return;
+                if (e.key === 'Escape') finishOnboarding(true);
+            });
         });
         
     </script>
