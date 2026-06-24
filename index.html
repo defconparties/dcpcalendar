@@ -27,17 +27,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-        // Edit subscribe copy here. Dashboard Permission Prompt text is ignored with custom init().
+        // Footer subscribe button copy. Slide prompt text is configured in OneSignal dashboard.
         window.DCP_PUSH_COPY = {
             label: 'Get alerts for can\'t-miss parties and site updates. You can turn this off anytime.',
             button: 'Subscribe',
             buttonLocal: 'Enable party push alerts',
             compact: 'Subscribe',
-            slidedown: {
-                actionMessage: 'Get alerts for can\'t-miss parties and site updates. You can turn this off anytime.',
-                acceptButton: 'Subscribe',
-                cancelButton: 'I Hate Parties',
-            },
             subscribed: 'Subscribed — you\'ll get alerts when we send party updates.',
             subscribedLocal: 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.',
         };
@@ -53,18 +48,25 @@
             const copy = window.DCP_PUSH_COPY || {};
             const setPushSubscribeStatus = (message) => {
                 const statusEl = document.getElementById('pushSubscribeStatus');
-                if (statusEl) statusEl.textContent = message;
+                if (!statusEl) return;
+                if (message) {
+                    statusEl.textContent = message;
+                    statusEl.classList.remove('hidden');
+                } else {
+                    statusEl.textContent = '';
+                    statusEl.classList.add('hidden');
+                }
             };
             const updatePushSubscribeUi = (os) => {
-                const btn = document.getElementById('pushSubscribeBtn');
+                const tab = document.getElementById('pushSubscribeTab');
                 if (os.Notifications.permission) {
                     setPushSubscribeStatus(isLocal
                         ? (copy.subscribedLocal || 'Subscribed.')
                         : (copy.subscribed || 'Subscribed.'));
-                    if (btn) {
-                        btn.textContent = 'Notifications enabled';
-                        btn.disabled = true;
-                        btn.classList.add('opacity-60', 'cursor-not-allowed');
+                    if (tab) {
+                        tab.textContent = 'Alerts on';
+                        tab.disabled = true;
+                        tab.classList.add('opacity-60', 'cursor-not-allowed');
                     }
                     return;
                 }
@@ -86,20 +88,6 @@
                 serviceWorkerPath: 'push/onesignal/OneSignalSDKWorker.js',
                 serviceWorkerUpdaterPath: 'push/onesignal/OneSignalSDKUpdaterWorker.js',
                 serviceWorkerParam: { scope: '/push/onesignal/' },
-                promptOptions: {
-                    slidedown: {
-                        prompts: [{
-                            type: 'push',
-                            autoPrompt: true,
-                            delay: { pageViews: 1, timeDelay: 5 },
-                            text: {
-                                actionMessage: copy.slidedown?.actionMessage || copy.label || 'Get party alerts.',
-                                acceptButton: copy.slidedown?.acceptButton || 'Allow',
-                                cancelButton: copy.slidedown?.cancelButton || 'No thanks',
-                            },
-                        }],
-                    },
-                },
             };
             if (isLocal) {
                 initOptions.allowLocalhostAsSecureOrigin = true;
@@ -112,7 +100,7 @@
                     updatePushSubscribeUi(OneSignal);
                 });
                 if (isLocal) {
-                    setPushSubscribeStatus('OneSignal ready — click Enable party push alerts below.');
+                    setPushSubscribeStatus('OneSignal ready — use the Subscribe tab to test.');
                 } else if (isProd) {
                     updatePushSubscribeUi(OneSignal);
                 }
@@ -494,7 +482,6 @@
             <span id="unseenCountText" class="font-semibold text-indigo-700 dark:text-indigo-300 hidden"></span>
             <button id="refreshBtn" class="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50">Refresh Now</button>
             <button id="markAllSeenBtn" class="px-3 py-1 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 hidden">Mark all seen</button>
-            <button id="pushSubscribeCompactBtn" type="button" class="hidden px-3 py-1 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700">Subscribe to alerts</button>
         </div>
 
         <!-- Share/Sync Section -->
@@ -545,12 +532,14 @@
                 <button id="agendaViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Agenda View</button>
                 <button id="submitViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-red-600 hover:text-red-700 hover:border-red-300">Submit a Party</button>
                 <button id="cutPasteViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Cut & Paste</button>
+                <button id="pushSubscribeTab" type="button" class="hidden px-4 py-2 font-medium text-sm border-b-2 border-transparent text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:border-indigo-300 disabled:opacity-60 disabled:cursor-not-allowed">Subscribe</button>
                 <button id="helpViewTab" class="px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Help / About</button>
             </div>
             <div id="eventCountContainer" class="text-sm font-medium text-gray-600 text-center py-2 sm:text-right sm:py-0 sm:pr-2">
                 Showing <span id="visibleEventCount">0</span> of <span id="totalEventCount">0</span> events
             </div>
         </div>
+        <p id="pushSubscribeStatus" class="hidden text-xs text-center text-gray-500 dark:text-gray-400 mb-2 px-4"></p>
 
         <!-- Search and Filters -->
         <div id="filtersAndSearch" class="mb-8 max-w-5xl mx-auto">
@@ -684,7 +673,7 @@
                 <li><strong>Refresh Now:</strong> Pulls the latest calendar from the server. Use after you hear about new parties or before planning your day.</li>
                 <li><strong>Leaving the site:</strong> When you close or hide this tab, we save a snapshot of event IDs (and edit fingerprints) so the next visit can highlight what changed.</li>
                 <li><strong>First visit:</strong> Existing parties are not marked New — only additions after your baseline appear.</li>
-                <li><strong>Subscriber push alerts</strong> (optional, site-wide): Not the same as per-party reminders. When enabled, the DCP team can send a manual or scheduled broadcast from the staging pipeline — opt in with <strong>Subscribe to party alerts</strong> at the bottom of the page (<strong>Enable party push alerts</strong> on localhost). Calendar edits alone do not ping subscribers.</li>
+                <li><strong>Subscriber push alerts</strong> (optional, site-wide): Not the same as per-party reminders. When enabled, the DCP team can send a manual or scheduled broadcast from the staging pipeline — opt in with the <strong>Subscribe</strong> tab between Cut &amp; Paste and Help / About (<strong>Enable party push alerts</strong> on localhost). Calendar edits alone do not ping subscribers.</li>
             </ul>
 
             <h3>Sharing &amp; Collaboration</h3>
@@ -942,15 +931,7 @@
         </button>
     </div>
 
-    <footer class="text-center py-4 space-y-2">
-        <div id="pushSubscribePanel" class="hidden max-w-md mx-auto px-4">
-            <p id="pushSubscribeLabel" class="text-sm text-gray-600 dark:text-gray-300 mb-2"></p>
-            <button id="pushSubscribeBtn" type="button"
-                class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                Subscribe to party alerts
-            </button>
-            <p id="pushSubscribeStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-2"></p>
-        </div>
+    <footer class="text-center py-4">
         <p id="appVersionText" class="text-sm text-gray-500"></p>
     </footer>
 
@@ -1034,7 +1015,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.3.8-beta';
+        const APP_VERSION = '1.4.1-beta';
         const CACHE_VERSION = '2026';
         const SCHEDULES_KEY = `calendarSchedules_${CACHE_VERSION}`;
         const MY_SCHEDULE_KEY = '__ME__';
@@ -2728,26 +2709,27 @@
             }
             const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const isProdHost = window.location.hostname === 'info.defconparties.com';
-            const pushSubscribePanel = document.getElementById('pushSubscribePanel');
-            const pushSubscribeLabel = document.getElementById('pushSubscribeLabel');
-            const pushSubscribeBtn = document.getElementById('pushSubscribeBtn');
-            const pushSubscribeCompactBtn = document.getElementById('pushSubscribeCompactBtn');
+            const pushSubscribeTab = document.getElementById('pushSubscribeTab');
             const copy = window.DCP_PUSH_COPY || {};
             const setPushSubscribeStatus = (message) => {
                 const statusEl = document.getElementById('pushSubscribeStatus');
-                if (statusEl) statusEl.textContent = message;
+                if (!statusEl) return;
+                if (message) {
+                    statusEl.textContent = message;
+                    statusEl.classList.remove('hidden');
+                } else {
+                    statusEl.textContent = '';
+                    statusEl.classList.add('hidden');
+                }
             };
             const updatePushSubscribeUi = (OneSignal) => {
                 if (OneSignal.Notifications.permission) {
                     setPushSubscribeStatus(isLocalHost
                         ? (copy.subscribedLocal || 'Subscribed.')
                         : (copy.subscribed || 'Subscribed.'));
-                    if (pushSubscribeBtn) {
-                        pushSubscribeBtn.textContent = 'Notifications enabled';
-                        pushSubscribeBtn.disabled = true;
-                    }
-                    if (pushSubscribeCompactBtn) {
-                        pushSubscribeCompactBtn.classList.add('hidden');
+                    if (pushSubscribeTab) {
+                        pushSubscribeTab.textContent = 'Alerts on';
+                        pushSubscribeTab.disabled = true;
                     }
                     return;
                 }
@@ -2755,9 +2737,8 @@
                     setPushSubscribeStatus(isLocalHost
                         ? 'Notifications blocked — enable them in browser settings for localhost.'
                         : 'Notifications blocked — enable them in your browser settings for this site.');
-                }
-                if (pushSubscribeCompactBtn && isProdHost) {
-                    pushSubscribeCompactBtn.classList.remove('hidden');
+                } else {
+                    setPushSubscribeStatus('');
                 }
             };
             const requestPushSubscription = async (OneSignal) => {
@@ -2792,27 +2773,14 @@
                 window.OneSignalDeferred = window.OneSignalDeferred || [];
                 OneSignalDeferred.push(callback);
             };
-            if ((isLocalHost || isProdHost) && pushSubscribePanel) {
-                pushSubscribePanel.classList.remove('hidden');
-                if (pushSubscribeLabel) {
-                    pushSubscribeLabel.textContent = isLocalHost
-                        ? 'Subscriber push (local OneSignal test)'
-                        : (copy.label || 'Get party alerts.');
-                }
-                if (pushSubscribeBtn) {
-                    pushSubscribeBtn.textContent = isLocalHost
-                        ? (copy.buttonLocal || copy.button || 'Subscribe')
-                        : (copy.button || 'Subscribe to party alerts');
-                }
-                if (pushSubscribeCompactBtn && copy.compact) {
-                    pushSubscribeCompactBtn.textContent = copy.compact;
-                }
+            if ((isLocalHost || isProdHost) && pushSubscribeTab) {
+                pushSubscribeTab.classList.remove('hidden');
+                pushSubscribeTab.textContent = isLocalHost
+                    ? (copy.buttonLocal || copy.button || 'Subscribe')
+                    : (copy.compact || copy.button || 'Subscribe');
             }
-            if (pushSubscribeBtn) {
-                pushSubscribeBtn.addEventListener('click', () => withOneSignal(requestPushSubscription));
-            }
-            if (pushSubscribeCompactBtn) {
-                pushSubscribeCompactBtn.addEventListener('click', () => withOneSignal(requestPushSubscription));
+            if (pushSubscribeTab) {
+                pushSubscribeTab.addEventListener('click', () => withOneSignal(requestPushSubscription));
             }
             if (window.dcpOneSignal) {
                 updatePushSubscribeUi(window.dcpOneSignal);
