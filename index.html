@@ -29,14 +29,14 @@
     <script>
         // Edit subscribe copy here. Dashboard Permission Prompt text is ignored with custom init().
         window.DCP_PUSH_COPY = {
-            label: 'Get alerts for new Big Party events and site updates.',
-            button: 'Subscribe to party alerts',
+            label: 'Get alerts for can\'t-miss parties and site updates. You can turn this off anytime.',
+            button: 'Subscribe',
             buttonLocal: 'Enable party push alerts',
-            compact: 'Subscribe to alerts',
+            compact: 'Subscribe',
             slidedown: {
-                actionMessage: 'Get alerts when Big Party events are posted and site updates.',
-                acceptButton: 'Allow',
-                cancelButton: 'No thanks',
+                actionMessage: 'Get alerts for can\'t-miss parties and site updates. You can turn this off anytime.',
+                acceptButton: 'Subscribe',
+                cancelButton: 'I Hate Parties',
             },
             subscribed: 'Subscribed — you\'ll get alerts when we send party updates.',
             subscribedLocal: 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.',
@@ -90,7 +90,8 @@
                     slidedown: {
                         prompts: [{
                             type: 'push',
-                            autoPrompt: false,
+                            autoPrompt: true,
+                            delay: { pageViews: 1, timeDelay: 5 },
                             text: {
                                 actionMessage: copy.slidedown?.actionMessage || copy.label || 'Get party alerts.',
                                 acceptButton: copy.slidedown?.acceptButton || 'Allow',
@@ -1033,7 +1034,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.3.7-beta';
+        const APP_VERSION = '1.3.8-beta';
         const CACHE_VERSION = '2026';
         const SCHEDULES_KEY = `calendarSchedules_${CACHE_VERSION}`;
         const MY_SCHEDULE_KEY = '__ME__';
