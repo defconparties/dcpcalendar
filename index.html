@@ -36,15 +36,34 @@
                 ? '4f999ba9-c49e-4d23-8c58-be3586baeca1'
                 : (isProd ? '7caf4b95-8321-4b2f-9642-fe2c11af4a1e' : '');
             if (!appId) return;
-            const setLocalPushStatus = (message) => {
-                const statusEl = document.getElementById('localPushStatus');
+            const setPushSubscribeStatus = (message) => {
+                const statusEl = document.getElementById('pushSubscribeStatus');
                 if (statusEl) statusEl.textContent = message;
             };
+            const updatePushSubscribeUi = (os) => {
+                const btn = document.getElementById('pushSubscribeBtn');
+                if (os.Notifications.permission) {
+                    setPushSubscribeStatus(isLocal
+                        ? 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.'
+                        : 'Subscribed — you\'ll get alerts when we send party updates.');
+                    if (btn) {
+                        btn.textContent = 'Notifications enabled';
+                        btn.disabled = true;
+                        btn.classList.add('opacity-60', 'cursor-not-allowed');
+                    }
+                    return;
+                }
+                if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+                    setPushSubscribeStatus(isLocal
+                        ? 'Notifications blocked — enable them in browser settings for localhost.'
+                        : 'Notifications blocked — enable them in your browser settings for this site.');
+                }
+            };
             if (isLocal) {
-                setLocalPushStatus(`Starting OneSignal for ${window.location.origin}…`);
+                setPushSubscribeStatus(`Starting OneSignal for ${window.location.origin}…`);
             }
             if (host === '127.0.0.1') {
-                setLocalPushStatus('Use http://localhost:8080/ — OneSignal Site URL must match exactly (not 127.0.0.1).');
+                setPushSubscribeStatus('Use http://localhost:8080/ — OneSignal Site URL must match exactly (not 127.0.0.1).');
                 return;
             }
             const initOptions = {
@@ -61,16 +80,18 @@
                 await OneSignal.init(initOptions);
                 window.dcpOneSignal = OneSignal;
                 if (isLocal) {
-                    setLocalPushStatus('OneSignal ready — click Enable party push alerts above.');
+                    setPushSubscribeStatus('OneSignal ready — click Enable party push alerts below.');
+                } else if (isProd) {
+                    updatePushSubscribeUi(OneSignal);
                 }
             } catch (error) {
                 const detail = error && (error.message || String(error));
                 console.error('OneSignal init failed:', error);
-                if (!isLocal) return;
+                if (!isLocal && !isProd) return;
                 if (detail && detail.includes('Can only be used on')) {
-                    setLocalPushStatus(`Site URL mismatch. Set OneSignal Site URL to exactly: ${window.location.origin}`);
+                    setPushSubscribeStatus(`Site URL mismatch. Set OneSignal Site URL to exactly: ${window.location.origin}`);
                 } else {
-                    setLocalPushStatus(`OneSignal failed: ${detail || 'see browser console (F12)'}`);
+                    setPushSubscribeStatus(`OneSignal failed: ${detail || 'see browser console (F12)'}`);
                 }
             }
         });
@@ -441,6 +462,7 @@
             <span id="unseenCountText" class="font-semibold text-indigo-700 dark:text-indigo-300 hidden"></span>
             <button id="refreshBtn" class="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50">Refresh Now</button>
             <button id="markAllSeenBtn" class="px-3 py-1 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 hidden">Mark all seen</button>
+            <button id="pushSubscribeCompactBtn" type="button" class="hidden px-3 py-1 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700">Subscribe to alerts</button>
         </div>
 
         <!-- Share/Sync Section -->
@@ -630,7 +652,7 @@
                 <li><strong>Refresh Now:</strong> Pulls the latest calendar from the server. Use after you hear about new parties or before planning your day.</li>
                 <li><strong>Leaving the site:</strong> When you close or hide this tab, we save a snapshot of event IDs (and edit fingerprints) so the next visit can highlight what changed.</li>
                 <li><strong>First visit:</strong> Existing parties are not marked New — only additions after your baseline appear.</li>
-                <li><strong>Subscriber push alerts</strong> (optional, site-wide): Not the same as per-party reminders. When enabled, the DCP team can send a manual or scheduled broadcast from the staging pipeline — you would opt in with a <strong>Subscribe to party alerts</strong> button (coming soon on this page). Calendar edits alone do not ping subscribers.</li>
+                <li><strong>Subscriber push alerts</strong> (optional, site-wide): Not the same as per-party reminders. When enabled, the DCP team can send a manual or scheduled broadcast from the staging pipeline — opt in with <strong>Subscribe to party alerts</strong> at the bottom of the page (<strong>Enable party push alerts</strong> on localhost). Calendar edits alone do not ping subscribers.</li>
             </ul>
 
             <h3>Sharing &amp; Collaboration</h3>
@@ -889,13 +911,13 @@
     </div>
 
     <footer class="text-center py-4 space-y-2">
-        <div id="localPushPanel" class="hidden max-w-md mx-auto px-4">
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Subscriber push (local OneSignal test)</p>
-            <button id="localPushSubscribeBtn" type="button"
-                class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
-                Enable party push alerts
+        <div id="pushSubscribePanel" class="hidden max-w-md mx-auto px-4">
+            <p id="pushSubscribeLabel" class="text-sm text-gray-600 dark:text-gray-300 mb-2"></p>
+            <button id="pushSubscribeBtn" type="button"
+                class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                Subscribe to party alerts
             </button>
-            <p id="localPushStatus" class="text-xs text-gray-500 mt-2"></p>
+            <p id="pushSubscribeStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-2"></p>
         </div>
         <p id="appVersionText" class="text-sm text-gray-500"></p>
     </footer>
@@ -980,7 +1002,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.3.5-beta';
+        const APP_VERSION = '1.3.6-beta';
         const CACHE_VERSION = '2026';
         const SCHEDULES_KEY = `calendarSchedules_${CACHE_VERSION}`;
         const MY_SCHEDULE_KEY = '__ME__';
@@ -2673,34 +2695,88 @@
                 helpAppVersion.textContent = versionLabel;
             }
             const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const localPushPanel = document.getElementById('localPushPanel');
-            const localPushSubscribeBtn = document.getElementById('localPushSubscribeBtn');
-            const localPushStatus = document.getElementById('localPushStatus');
-            if (isLocalHost && localPushPanel) {
-                localPushPanel.classList.remove('hidden');
-            }
-            if (localPushSubscribeBtn) {
-                localPushSubscribeBtn.addEventListener('click', () => {
-                    const run = async (OneSignal) => {
-                        try {
-                            await OneSignal.Notifications.requestPermission();
-                            if (localPushStatus) {
-                                localPushStatus.textContent = OneSignal.Notifications.permission
-                                    ? 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.'
-                                    : 'Permission not granted. Check browser notification settings for localhost.';
-                            }
-                        } catch (error) {
-                            console.error('OneSignal permission request failed:', error);
-                            if (localPushStatus) localPushStatus.textContent = 'Request failed — see browser console (F12).';
-                        }
-                    };
-                    if (window.dcpOneSignal) {
-                        run(window.dcpOneSignal);
+            const isProdHost = window.location.hostname === 'info.defconparties.com';
+            const pushSubscribePanel = document.getElementById('pushSubscribePanel');
+            const pushSubscribeLabel = document.getElementById('pushSubscribeLabel');
+            const pushSubscribeBtn = document.getElementById('pushSubscribeBtn');
+            const pushSubscribeCompactBtn = document.getElementById('pushSubscribeCompactBtn');
+            const setPushSubscribeStatus = (message) => {
+                const statusEl = document.getElementById('pushSubscribeStatus');
+                if (statusEl) statusEl.textContent = message;
+            };
+            const updatePushSubscribeUi = (OneSignal) => {
+                if (OneSignal.Notifications.permission) {
+                    setPushSubscribeStatus(isLocalHost
+                        ? 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.'
+                        : 'Subscribed — you\'ll get alerts when we send party updates.');
+                    if (pushSubscribeBtn) {
+                        pushSubscribeBtn.textContent = 'Notifications enabled';
+                        pushSubscribeBtn.disabled = true;
+                    }
+                    if (pushSubscribeCompactBtn) {
+                        pushSubscribeCompactBtn.classList.add('hidden');
+                    }
+                    return;
+                }
+                if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+                    setPushSubscribeStatus(isLocalHost
+                        ? 'Notifications blocked — enable them in browser settings for localhost.'
+                        : 'Notifications blocked — enable them in your browser settings for this site.');
+                }
+                if (pushSubscribeCompactBtn && isProdHost) {
+                    pushSubscribeCompactBtn.classList.remove('hidden');
+                }
+            };
+            const requestPushSubscription = async (OneSignal) => {
+                try {
+                    await OneSignal.Notifications.requestPermission();
+                    if (OneSignal.Notifications.permission) {
+                        updatePushSubscribeUi(OneSignal);
                         return;
                     }
-                    window.OneSignalDeferred = window.OneSignalDeferred || [];
-                    OneSignalDeferred.push(run);
-                });
+                    const blocked = typeof Notification !== 'undefined' && Notification.permission === 'denied';
+                    setPushSubscribeStatus(blocked
+                        ? (isLocalHost
+                            ? 'Notifications blocked — enable them in browser settings for localhost.'
+                            : 'Notifications blocked — enable them in your browser settings for this site.')
+                        : (isLocalHost
+                            ? 'Permission not granted. Check browser notification settings for localhost.'
+                            : 'Permission not granted. Check your browser notification settings.'));
+                } catch (error) {
+                    console.error('OneSignal permission request failed:', error);
+                    setPushSubscribeStatus('Request failed — see browser console (F12).');
+                }
+            };
+            const withOneSignal = (callback) => {
+                if (window.dcpOneSignal) {
+                    callback(window.dcpOneSignal);
+                    return;
+                }
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                OneSignalDeferred.push(callback);
+            };
+            if ((isLocalHost || isProdHost) && pushSubscribePanel) {
+                pushSubscribePanel.classList.remove('hidden');
+                if (pushSubscribeLabel) {
+                    pushSubscribeLabel.textContent = isLocalHost
+                        ? 'Subscriber push (local OneSignal test)'
+                        : 'Get alerts when new parties are added or updated';
+                }
+                if (pushSubscribeBtn && isLocalHost) {
+                    pushSubscribeBtn.textContent = 'Enable party push alerts';
+                }
+            }
+            if (pushSubscribeBtn) {
+                pushSubscribeBtn.addEventListener('click', () => withOneSignal(requestPushSubscription));
+            }
+            if (pushSubscribeCompactBtn) {
+                pushSubscribeCompactBtn.addEventListener('click', () => withOneSignal(requestPushSubscription));
+            }
+            if (window.dcpOneSignal) {
+                updatePushSubscribeUi(window.dcpOneSignal);
+            } else if (isProdHost) {
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                OneSignalDeferred.push(updatePushSubscribeUi);
             }
             document.querySelectorAll('input[name="modalReminder"]').forEach((input) => {
                 input.addEventListener('change', () => {
