@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://api.onesignal.com https://onesignal.com https://*.onesignal.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com https://onesignal.com https://cdn.onesignal.com https://*.onesignal.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src https: data:; connect-src 'self' https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com https://docs.google.com https://cdn.jsdelivr.net https://api.onesignal.com https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action https://docs.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://api.onesignal.com https://onesignal.com https://*.onesignal.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com https://onesignal.com https://cdn.onesignal.com https://*.onesignal.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src https: data:; media-src https://fi.zophar.net; connect-src 'self' https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com https://docs.google.com https://cdn.jsdelivr.net https://api.onesignal.com https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action https://docs.google.com;">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -1007,6 +1007,27 @@
         #shareToast:not(.hidden) {
             display: block;
         }
+
+        /* SECKC Mode (Konami code easter egg) */
+        #seckcModeBanner:not(.hidden) {
+            display: block;
+        }
+        #seckcModeBanner {
+            border-bottom: 2px solid #fbbf24;
+            background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 35%, #1c1917 100%);
+            color: #fef3c7;
+            box-shadow: 0 4px 24px rgba(251, 191, 36, 0.25);
+        }
+        #seckcModeBanner .seckc-banner-title {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            letter-spacing: 0.06em;
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.45);
+        }
+        body.seckc-mode-active {
+            --hack-green: #fbbf24;
+            --hack-green-dim: #d97706;
+            --hack-green-muted: #fde68a;
+        }
     </style>
 </head>
 <body class="hacker-theme bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
@@ -1020,6 +1041,22 @@
         </p>
         <button id="closeSwagBanner" class="absolute top-1/2 right-4 -translate-y-1/2 text-indigo-200 hover:text-white">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
+
+    <!-- SECKC Mode — desktop: ↑↑↓↓←→←→BA · mobile: 23 screen taps (non-button areas) -->
+    <div id="seckcModeBanner" class="hidden relative p-3 sm:p-4" role="region" aria-label="SECKC Mode">
+        <div class="max-w-5xl mx-auto text-center space-y-2">
+            <p class="seckc-banner-title text-sm sm:text-base font-bold uppercase">
+                &gt; SECKC_MODE engaged — the whole wide world
+            </p>
+            <p class="text-xs sm:text-sm text-amber-100/90 font-mono">
+                Kansas City security fam · Friday DEF CON week ·
+                <a href="https://www.seckc.org/upcoming-events" target="_blank" rel="noopener noreferrer" class="underline text-amber-200 hover:text-white">seckc.org</a>
+            </p>
+        </div>
+        <button type="button" id="closeSeckcModeBtn" class="absolute top-2 right-2 sm:top-3 sm:right-4 p-1 text-amber-200/80 hover:text-white" title="Exit SECKC Mode" aria-label="Exit SECKC Mode">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
     </div>
 
@@ -1647,6 +1684,13 @@
         const visibleEventCount = document.getElementById('visibleEventCount');
         const totalEventCount = document.getElementById('totalEventCount');
         const swagBanner = document.getElementById('swagBanner');
+        const seckcModeBanner = document.getElementById('seckcModeBanner');
+        const closeSeckcModeBtn = document.getElementById('closeSeckcModeBtn');
+        let konamiProgress = 0;
+        let konamiResetTimer = null;
+        let seckcMobileTapProgress = 0;
+        let seckcMobileTapResetTimer = null;
+        let seckcAudio = null;
         const closeSwagBannerBtn = document.getElementById('closeSwagBanner');
         const partyOMeterFill = document.getElementById('partyOMeterFill');
         const partyOMeterText = document.getElementById('partyOMeterText');
@@ -1667,7 +1711,16 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.11-beta';
+        const APP_VERSION = '1.4.14-beta';
+        const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
+        const SECKC_MOBILE_TAP_COUNT = 23;
+        const SECKC_MOBILE_TAP_RESET_MS = 3500;
+        const SECKC_AUDIO_URL = 'https://fi.zophar.net/soundfiles/nintendo-nes-nsf/contra/1%20-%20Title%20Screen.mp3';
+        const KONAMI_SEQUENCE = [
+            'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+            'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+            'KeyB', 'KeyA',
+        ];
         const HIGHLIGHT_MARKER_PATTERN = /\[dcp-highlight:([a-z0-9_]+)\]/i;
         const SPONSOR_MARKER_PATTERN = /\[dcp-sponsor:([^|\]]*)\|([^|\]]*)(?:\|([^|\]]*))?\]/i;
         const DEFAULT_MODAL_SPONSORS = [
@@ -2510,6 +2563,115 @@
                 console.error("Could not fetch data from URL:", error);
                 lastRefreshedText.textContent = 'Refresh failed. Using cached data.';
             }
+        }
+
+        function isTypingInFormField() {
+            const active = document.activeElement;
+            if (!active) return false;
+            const tag = active.tagName;
+            return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || active.isContentEditable;
+        }
+
+        function stopSeckcAudio() {
+            if (!seckcAudio) return;
+            seckcAudio.pause();
+            seckcAudio.currentTime = 0;
+            seckcAudio = null;
+        }
+
+        function playSeckcAudioOnce() {
+            stopSeckcAudio();
+            seckcAudio = new Audio(SECKC_AUDIO_URL);
+            seckcAudio.loop = false;
+            seckcAudio.play().catch(() => {});
+        }
+
+        function activateSeckcMode(playAudio = true) {
+            if (!seckcModeBanner) return;
+            sessionStorage.setItem(SECKC_MODE_SESSION_KEY, 'true');
+            document.body.classList.add('seckc-mode-active');
+            seckcModeBanner.classList.remove('hidden');
+            if (playAudio) {
+                playSeckcAudioOnce();
+                showShareStatus('SECKC MODE — Contra title engaged');
+            }
+        }
+
+        function deactivateSeckcMode() {
+            if (!seckcModeBanner) return;
+            sessionStorage.removeItem(SECKC_MODE_SESSION_KEY);
+            document.body.classList.remove('seckc-mode-active');
+            seckcModeBanner.classList.add('hidden');
+            stopSeckcAudio();
+        }
+
+        function restoreSeckcModeFromSession() {
+            if (sessionStorage.getItem(SECKC_MODE_SESSION_KEY) === 'true') {
+                activateSeckcMode(false);
+            }
+        }
+
+        function handleKonamiKeydown(event) {
+            if (isTypingInFormField()) return;
+            if (konamiResetTimer) {
+                clearTimeout(konamiResetTimer);
+                konamiResetTimer = null;
+            }
+            const expected = KONAMI_SEQUENCE[konamiProgress];
+            if (event.code === expected) {
+                konamiProgress += 1;
+                if (konamiProgress >= KONAMI_SEQUENCE.length) {
+                    konamiProgress = 0;
+                    activateSeckcMode();
+                } else {
+                    konamiResetTimer = setTimeout(() => { konamiProgress = 0; }, 4000);
+                }
+                return;
+            }
+            konamiProgress = event.code === KONAMI_SEQUENCE[0] ? 1 : 0;
+            if (konamiProgress === 1) {
+                konamiResetTimer = setTimeout(() => { konamiProgress = 0; }, 4000);
+            }
+        }
+
+        function isMobileTouchDevice() {
+            return window.matchMedia('(pointer: coarse)').matches;
+        }
+
+        function isSeckcMobileTapEligible(target) {
+            if (!target || isTypingInFormField()) return false;
+            if (onboardingActive) return false;
+            const modal = document.getElementById('eventModal');
+            if (modal && !modal.classList.contains('hidden')) return false;
+            const blocked = target.closest(
+                'a, button, input, textarea, select, label, .event-card, .agenda-event-row, [role="button"], #seckcModeBanner'
+            );
+            return !blocked;
+        }
+
+        function resetSeckcMobileTapProgress() {
+            seckcMobileTapProgress = 0;
+            if (seckcMobileTapResetTimer) {
+                clearTimeout(seckcMobileTapResetTimer);
+                seckcMobileTapResetTimer = null;
+            }
+        }
+
+        function handleSeckcMobileTap(event) {
+            if (!isMobileTouchDevice()) return;
+            if (event.touches && event.touches.length > 1) return;
+            if (!isSeckcMobileTapEligible(event.target)) {
+                resetSeckcMobileTapProgress();
+                return;
+            }
+            if (seckcMobileTapResetTimer) clearTimeout(seckcMobileTapResetTimer);
+            seckcMobileTapProgress += 1;
+            if (seckcMobileTapProgress >= SECKC_MOBILE_TAP_COUNT) {
+                resetSeckcMobileTapProgress();
+                activateSeckcMode();
+                return;
+            }
+            seckcMobileTapResetTimer = setTimeout(resetSeckcMobileTapProgress, SECKC_MOBILE_TAP_RESET_MS);
         }
 
         function syncCacheWithAppVersion() {
@@ -4015,6 +4177,12 @@
                 swagBanner.style.display = 'none';
                 sessionStorage.setItem('swagBannerClosed', 'true');
             });
+            if (closeSeckcModeBtn) {
+                closeSeckcModeBtn.addEventListener('click', deactivateSeckcMode);
+            }
+            document.addEventListener('keydown', handleKonamiKeydown);
+            document.addEventListener('touchstart', handleSeckcMobileTap, { passive: true });
+            restoreSeckcModeFromSession();
             scrollTopBtn.addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
