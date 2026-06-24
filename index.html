@@ -27,6 +27,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
+        // Edit subscribe copy here. Dashboard Permission Prompt text is ignored with custom init().
+        window.DCP_PUSH_COPY = {
+            label: 'Get alerts for new Big Party events and site updates.',
+            button: 'Subscribe to party alerts',
+            buttonLocal: 'Enable party push alerts',
+            compact: 'Subscribe to alerts',
+            slidedown: {
+                actionMessage: 'Get alerts when Big Party events are posted and site updates.',
+                acceptButton: 'Allow',
+                cancelButton: 'No thanks',
+            },
+            subscribed: 'Subscribed — you\'ll get alerts when we send party updates.',
+            subscribedLocal: 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.',
+        };
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function (OneSignal) {
             const host = window.location.hostname;
@@ -36,6 +50,7 @@
                 ? '4f999ba9-c49e-4d23-8c58-be3586baeca1'
                 : (isProd ? '7caf4b95-8321-4b2f-9642-fe2c11af4a1e' : '');
             if (!appId) return;
+            const copy = window.DCP_PUSH_COPY || {};
             const setPushSubscribeStatus = (message) => {
                 const statusEl = document.getElementById('pushSubscribeStatus');
                 if (statusEl) statusEl.textContent = message;
@@ -44,8 +59,8 @@
                 const btn = document.getElementById('pushSubscribeBtn');
                 if (os.Notifications.permission) {
                     setPushSubscribeStatus(isLocal
-                        ? 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.'
-                        : 'Subscribed — you\'ll get alerts when we send party updates.');
+                        ? (copy.subscribedLocal || 'Subscribed.')
+                        : (copy.subscribed || 'Subscribed.'));
                     if (btn) {
                         btn.textContent = 'Notifications enabled';
                         btn.disabled = true;
@@ -71,6 +86,19 @@
                 serviceWorkerPath: 'push/onesignal/OneSignalSDKWorker.js',
                 serviceWorkerUpdaterPath: 'push/onesignal/OneSignalSDKUpdaterWorker.js',
                 serviceWorkerParam: { scope: '/push/onesignal/' },
+                promptOptions: {
+                    slidedown: {
+                        prompts: [{
+                            type: 'push',
+                            autoPrompt: false,
+                            text: {
+                                actionMessage: copy.slidedown?.actionMessage || copy.label || 'Get party alerts.',
+                                acceptButton: copy.slidedown?.acceptButton || 'Allow',
+                                cancelButton: copy.slidedown?.cancelButton || 'No thanks',
+                            },
+                        }],
+                    },
+                },
             };
             if (isLocal) {
                 initOptions.allowLocalhostAsSecureOrigin = true;
@@ -79,6 +107,9 @@
                 OneSignal.Debug.setLogLevel('warn');
                 await OneSignal.init(initOptions);
                 window.dcpOneSignal = OneSignal;
+                OneSignal.Notifications.addEventListener('permissionChange', () => {
+                    updatePushSubscribeUi(OneSignal);
+                });
                 if (isLocal) {
                     setPushSubscribeStatus('OneSignal ready — click Enable party push alerts below.');
                 } else if (isProd) {
@@ -1002,7 +1033,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.3.6-beta';
+        const APP_VERSION = '1.3.7-beta';
         const CACHE_VERSION = '2026';
         const SCHEDULES_KEY = `calendarSchedules_${CACHE_VERSION}`;
         const MY_SCHEDULE_KEY = '__ME__';
@@ -2700,6 +2731,7 @@
             const pushSubscribeLabel = document.getElementById('pushSubscribeLabel');
             const pushSubscribeBtn = document.getElementById('pushSubscribeBtn');
             const pushSubscribeCompactBtn = document.getElementById('pushSubscribeCompactBtn');
+            const copy = window.DCP_PUSH_COPY || {};
             const setPushSubscribeStatus = (message) => {
                 const statusEl = document.getElementById('pushSubscribeStatus');
                 if (statusEl) statusEl.textContent = message;
@@ -2707,8 +2739,8 @@
             const updatePushSubscribeUi = (OneSignal) => {
                 if (OneSignal.Notifications.permission) {
                     setPushSubscribeStatus(isLocalHost
-                        ? 'Subscribed — check OneSignal dashboard → Audience → Subscriptions.'
-                        : 'Subscribed — you\'ll get alerts when we send party updates.');
+                        ? (copy.subscribedLocal || 'Subscribed.')
+                        : (copy.subscribed || 'Subscribed.'));
                     if (pushSubscribeBtn) {
                         pushSubscribeBtn.textContent = 'Notifications enabled';
                         pushSubscribeBtn.disabled = true;
@@ -2729,7 +2761,11 @@
             };
             const requestPushSubscription = async (OneSignal) => {
                 try {
-                    await OneSignal.Notifications.requestPermission();
+                    if (OneSignal.Slidedown?.promptPush) {
+                        await OneSignal.Slidedown.promptPush(isLocalHost ? { force: true } : undefined);
+                    } else {
+                        await OneSignal.Notifications.requestPermission();
+                    }
                     if (OneSignal.Notifications.permission) {
                         updatePushSubscribeUi(OneSignal);
                         return;
@@ -2760,10 +2796,15 @@
                 if (pushSubscribeLabel) {
                     pushSubscribeLabel.textContent = isLocalHost
                         ? 'Subscriber push (local OneSignal test)'
-                        : 'Get alerts when new parties are added or updated';
+                        : (copy.label || 'Get party alerts.');
                 }
-                if (pushSubscribeBtn && isLocalHost) {
-                    pushSubscribeBtn.textContent = 'Enable party push alerts';
+                if (pushSubscribeBtn) {
+                    pushSubscribeBtn.textContent = isLocalHost
+                        ? (copy.buttonLocal || copy.button || 'Subscribe')
+                        : (copy.button || 'Subscribe to party alerts');
+                }
+                if (pushSubscribeCompactBtn && copy.compact) {
+                    pushSubscribeCompactBtn.textContent = copy.compact;
                 }
             }
             if (pushSubscribeBtn) {
