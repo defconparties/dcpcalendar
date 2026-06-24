@@ -429,8 +429,14 @@
             98% { transform: translateX(-2px); }
         }
         @keyframes dcp-pulse-glow {
-            0%, 100% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(51, 255, 153, 0.4); }
-            50% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 10px rgba(51, 255, 153, 0); }
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55), 0 0 14px rgba(16, 185, 129, 0.25);
+                border-color: rgba(16, 185, 129, 0.55) !important;
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0), 0 0 26px rgba(16, 185, 129, 0.55);
+                border-color: rgba(52, 211, 153, 1) !important;
+            }
         }
         @keyframes dcp-neon-glow {
             0%, 100% { box-shadow: 0 0 8px 1px rgba(255, 87, 34, 0.55), 0 0 18px 3px rgba(255, 87, 34, 0.25); }
@@ -445,6 +451,11 @@
         }
         .fx-pulse-event {
             animation: dcp-pulse-glow 2.4s ease-in-out infinite;
+            border-width: 2px !important;
+        }
+        @keyframes dcp-pulse-text {
+            0%, 100% { text-shadow: 0 0 0 transparent; }
+            50% { text-shadow: 0 0 10px rgba(16, 185, 129, 0.65); }
         }
         .fx-glow-event {
             border: 2px solid #ff5722 !important;
@@ -457,7 +468,10 @@
             font-weight: 700;
         }
         .fx-shake-agenda-title { color: #dc2626 !important; }
-        .fx-pulse-agenda-title { color: #10b981 !important; }
+        .fx-pulse-agenda-title {
+            color: #10b981 !important;
+            animation: dcp-pulse-text 2.4s ease-in-out infinite;
+        }
         .fx-glow-agenda-title { color: #ff5722 !important; }
         .fx-eyes-agenda-title { color: #059669 !important; }
         .has-card-eyes {
@@ -1645,7 +1659,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.9-beta';
+        const APP_VERSION = '1.4.10-beta';
         const HIGHLIGHT_MARKER_PATTERN = /\[dcp-highlight:([a-z0-9_]+)\]/i;
         const SPONSOR_MARKER_PATTERN = /\[dcp-sponsor:([^|\]]*)\|([^|\]]*)(?:\|([^|\]]*))?\]/i;
         const DEFAULT_MODAL_SPONSORS = [
