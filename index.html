@@ -205,8 +205,7 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         .event-card.fx-shake-event:hover {
-            transform: translateY(-3px);
-            animation: dcp-shake-burst 5s ease-in-out infinite;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         .card-day-section {
             display: flex;
@@ -583,7 +582,8 @@
             78%, 92% { transform: translateX(-50%) translateY(0); opacity: 1; }
         }
         .fx-shake-event {
-            animation: dcp-shake-burst 5s ease-in-out infinite;
+            animation: dcp-shake-burst 3s ease-in-out infinite;
+            will-change: transform;
         }
         .fx-pulse-event {
             animation: dcp-pulse-glow 2.4s ease-in-out infinite;
@@ -1861,7 +1861,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.20-beta';
+        const APP_VERSION = '1.4.21-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 23;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -1889,6 +1889,7 @@
                 agendaClass: 'dc801-agenda-title',
                 image: 'https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium',
                 imageAlt: 'DC801 Event Image',
+                bundledFx: ['shake'],
             },
             hacker_jeopardy: {
                 cardClass: 'hacker-jeopardy-event',
@@ -2111,6 +2112,12 @@
                 } else if (!base) {
                     base = { slug, preset };
                 }
+            });
+            (base?.preset.bundledFx || []).forEach((fxSlug) => {
+                const preset = HIGHLIGHT_PRESETS[fxSlug];
+                if (!preset?.additive || fx.some((entry) => entry.slug === fxSlug)) return;
+                fx.push({ slug: fxSlug, preset });
+                if (!styles.includes(fxSlug)) styles.push(fxSlug);
             });
             const eyesFx = fx.find((entry) => entry.preset.eyes);
             return {
