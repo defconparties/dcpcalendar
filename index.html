@@ -1713,7 +1713,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.15-beta';
+        const APP_VERSION = '1.4.17-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 23;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -1723,7 +1723,7 @@
             'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
             'KeyB', 'KeyA',
         ];
-        const HIGHLIGHT_MARKER_PATTERN = /\[dcp-highlight:([a-z0-9_]+)\]/i;
+        const HIGHLIGHT_MARKER_PATTERN = /\[dcp-highlight:([a-z0-9_+,]+)\]/gi;
         const SPONSOR_MARKER_PATTERN = /\[dcp-sponsor:([^|\]]*)\|([^|\]]*)(?:\|([^|\]]*))?\]/i;
         const DEFAULT_MODAL_SPONSORS = [
             {
@@ -1899,7 +1899,10 @@
             return template.innerHTML;
         }
         function stripHighlightMarker(text) {
-            return String(text ?? '').replace(/\[dcp-highlight:[a-z0-9_]+\]/gi, '').trim();
+            return String(text ?? '').replace(/\[dcp-highlight:[a-z0-9_+,]+\]/gi, '').trim();
+        }
+        function splitHighlightSlugTokens(raw) {
+            return String(raw ?? '').toLowerCase().split(/[+,]/).map((part) => part.trim()).filter(Boolean);
         }
         function stripSponsorMarker(text) {
             return String(text ?? '').replace(/\[dcp-sponsor:[^\]]+\]/gi, '').trim();
@@ -1925,23 +1928,62 @@
         function resolveEventSponsor(event) {
             return parseEventSponsor(event) || pickDefaultSponsor(event?.id);
         }
-        function parseEventHighlightStyle(event) {
-            if (!event) return null;
+        function parseEventHighlightStyles(event) {
+            if (!event) return [];
+            const slugs = [];
             const markerSource = `${event.description || ''}`;
-            const markerMatch = markerSource.match(HIGHLIGHT_MARKER_PATTERN);
-            if (markerMatch) {
-                const slug = markerMatch[1].toLowerCase();
-                if (HIGHLIGHT_PRESETS[slug]) return slug;
+            const markerPattern = new RegExp(HIGHLIGHT_MARKER_PATTERN.source, 'gi');
+            let markerMatch;
+            while ((markerMatch = markerPattern.exec(markerSource)) !== null) {
+                splitHighlightSlugTokens(markerMatch[1]).forEach((slug) => {
+                    if (HIGHLIGHT_PRESETS[slug] && !slugs.includes(slug)) slugs.push(slug);
+                });
             }
+            if (slugs.length) return slugs;
             const title = (event.summary || '').toLowerCase();
-            if (title.includes('dc801')) return 'dc801';
-            if (title.includes('hacker jeopardy')) return 'hacker_jeopardy';
-            if (title.includes('floridaman')) return 'floridaman';
-            return null;
+            if (title.includes('dc801')) return ['dc801'];
+            if (title.includes('hacker jeopardy')) return ['hacker_jeopardy'];
+            if (title.includes('floridaman')) return ['floridaman'];
+            return [];
+        }
+        function parseEventHighlightStyle(event) {
+            const styles = parseEventHighlightStyles(event);
+            return styles[0] || null;
+        }
+        function getMergedHighlight(event) {
+            const styles = parseEventHighlightStyles(event);
+            if (!styles.length) return null;
+            let base = null;
+            const fx = [];
+            styles.forEach((slug) => {
+                const preset = HIGHLIGHT_PRESETS[slug];
+                if (!preset) return;
+                if (preset.additive) {
+                    fx.push({ slug, preset });
+                } else if (!base) {
+                    base = { slug, preset };
+                }
+            });
+            const eyesFx = fx.find((entry) => entry.preset.eyes);
+            return {
+                slugs: styles,
+                base,
+                fx,
+                cardClasses: [
+                    ...(base?.preset.cardClass ? [base.preset.cardClass] : []),
+                    ...fx.map((entry) => entry.preset.cardClass).filter(Boolean),
+                ],
+                agendaClasses: [
+                    ...(base?.preset.agendaClass ? [base.preset.agendaClass] : []),
+                    ...fx.map((entry) => entry.preset.agendaClass).filter(Boolean),
+                ],
+                image: base?.preset.image || null,
+                imageAlt: base?.preset.imageAlt || null,
+                eyes: eyesFx?.preset.eyes || null,
+            };
         }
         function getHighlightPreset(event) {
-            const style = parseEventHighlightStyle(event);
-            return style ? HIGHLIGHT_PRESETS[style] : null;
+            return getMergedHighlight(event);
         }
         function getDescriptionWithoutSignup(text) {
             const cleaned = stripCalendarMarkers(text || '');
@@ -2520,6 +2562,32 @@
         function getStartDateString(event) { if (!event || !event.start) return null; if (typeof event.start === 'string') return event.start; if (typeof event.start === 'object') return event.start.dateTime || event.start.date; return null; }
         function getEndDateString(event) { if (!event || !event.end) return null; if (typeof event.end === 'string') return event.end; if (typeof event.end === 'object') return event.end.dateTime || event.end.date; return null; }
         function getPacificDateKey(dateString) { if (!dateString) return null; const eventDate = new Date(dateString); if (isNaN(eventDate.getTime())) return null; return eventDate.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); }
+        function parseDailyHoursFromDescription(event) {
+            const text = String(event?.description || '');
+            const match = text.match(/Daily hours:\s*([^\n]+)/i);
+            return match ? match[1].trim() : '';
+        }
+        function formatAllDayEventDisplay(event) {
+            const startDateString = getStartDateString(event);
+            const endDateString = getEndDateString(event);
+            if (!startDateString || startDateString.includes('T')) return null;
+            const startDate = new Date(`${startDateString}T00:00:00Z`);
+            let dateLabel = startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+            if (endDateString && !endDateString.includes('T')) {
+                const endExclusive = new Date(`${endDateString}T00:00:00Z`);
+                const lastDay = new Date(endExclusive);
+                lastDay.setUTCDate(lastDay.getUTCDate() - 1);
+                if (lastDay > startDate) {
+                    const endLabel = lastDay.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+                    dateLabel = `${dateLabel} – ${endLabel}`;
+                }
+            }
+            const dailyHours = parseDailyHoursFromDescription(event);
+            return {
+                dateLabel,
+                timeLabel: dailyHours || 'All-day',
+            };
+        }
 
         async function fetchAndCacheEvents(isManual = false) {
             if (isManual) {
@@ -3470,8 +3538,10 @@
             const isAllDay = startDateString && !startDateString.includes('T');
             let timeText = '';
             if (isAllDay) {
-                const eventDate = new Date(startDateString + 'T00:00:00Z');
-                timeText = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+                const allDayDisplay = formatAllDayEventDisplay(event);
+                timeText = allDayDisplay
+                    ? `${allDayDisplay.dateLabel}${allDayDisplay.timeLabel && allDayDisplay.timeLabel !== 'All-day' ? ` · ${allDayDisplay.timeLabel}` : ''}`
+                    : '';
             } else {
                 const startDate = new Date(startDateString);
                 const endDateString = getEndDateString(event);
@@ -3545,7 +3615,7 @@
                 dayEvents.forEach(event => {
                     const eventRow = document.createElement('div');
                     eventRow.className = 'agenda-event-row flex flex-col sm:flex-row sm:items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors gap-1 sm:gap-0';
-                    const highlightPreset = getHighlightPreset(event);
+                    const highlightPreset = getMergedHighlight(event);
 
                     applyApprovalStyles(eventRow, event.id);
                     eventRow.dataset.eventId = event.id;
@@ -3554,7 +3624,10 @@
                     const startDateString = getStartDateString(event);
                     const isAllDay = startDateString && !startDateString.includes('T');
                     let timeRange = 'All-day';
-                    if (!isAllDay) {
+                    if (isAllDay) {
+                        const allDayDisplay = formatAllDayEventDisplay(event);
+                        if (allDayDisplay) timeRange = allDayDisplay.timeLabel;
+                    } else if (!isAllDay) {
                         const startDate = new Date(startDateString);
                         const endDateString = getEndDateString(event);
                         timeRange = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
@@ -3564,7 +3637,7 @@
                         }
                     }
                     const changeBadge = getChangeBadgeHtml(event.id);
-                    const titleClass = highlightPreset?.agendaClass || '';
+                    const titleClass = (highlightPreset?.agendaClasses || []).join(' ');
                     eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-indigo-600 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p><p class="text-gray-500 break-words">${escapeHtml(event.location || '')}</p></div>`;
                     agendaViewContainer.appendChild(eventRow);
                 });
@@ -3576,21 +3649,21 @@
             events.forEach(event => {
                 const eventCard = document.createElement('div');
                 eventCard.className = 'event-card bg-white rounded-sm shadow-md overflow-hidden p-6 flex flex-col cursor-pointer';
-                const highlightPreset = getHighlightPreset(event);
+                const highlightPreset = getMergedHighlight(event);
 
-                if (highlightPreset?.cardClass && !highlightPreset.additive) {
-                    eventCard.classList.add(highlightPreset.cardClass);
+                if (highlightPreset?.base) {
+                    eventCard.classList.add(highlightPreset.base.preset.cardClass);
                 } else {
                     applyApprovalStyles(eventCard, event.id);
-                    if (highlightPreset?.cardClass) {
-                        eventCard.classList.add(highlightPreset.cardClass);
-                    }
                 }
+                (highlightPreset?.fx || []).forEach((entry) => {
+                    if (entry.preset.cardClass) eventCard.classList.add(entry.preset.cardClass);
+                });
                 if (highlightPreset?.eyes) {
                     eventCard.classList.add('has-card-eyes');
                 }
                 if (highlightPreset) {
-                    eventCard.dataset.highlight = parseEventHighlightStyle(event) || '';
+                    eventCard.dataset.highlight = highlightPreset.slugs.join('+');
                 }
                 eventCard.dataset.eventId = event.id;
                 attachLongPressShare(eventCard, event);
@@ -3607,8 +3680,9 @@
                         formattedDate = 'Invalid Date'; formattedTime = '';
                     } else {
                         if (isAllDay) {
-                            formattedDate = eventDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
-                            formattedTime = 'All-day';
+                            const allDayDisplay = formatAllDayEventDisplay(event);
+                            formattedDate = allDayDisplay?.dateLabel || eventDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+                            formattedTime = allDayDisplay?.timeLabel || 'All-day';
                         } else {
                             formattedDate = eventDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Los_Angeles' });
                             const formattedStartTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Los_Angeles' });
