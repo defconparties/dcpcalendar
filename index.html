@@ -1504,6 +1504,10 @@
                     <input type="checkbox" id="hideRejected" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
                     <span>Hide Rejected</span>
                 </label>
+                 <label class="flex items-center space-x-2 cursor-pointer font-bold text-green-700 pr-4">
+                    <input type="checkbox" id="hideApproved" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <span>Hide Approved</span>
+                </label>
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-blue-700 pr-4">
                     <input type="checkbox" id="showPendingOnly" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                     <span>Show Pending Only</span>
@@ -1627,7 +1631,7 @@
                     <ul>
                         <li><strong>Search</strong> — title, location, date, or description. Prefix with <strong>-</strong> to exclude temporarily (e.g. <strong>-microsoft</strong>). Click <strong>Always hide</strong> to save an exclusion permanently; remove saved words with the <strong>×</strong> chips below search.</li>
                         <li><strong>My Approved / Pending / Friends</strong> — focus on your list or imported friend schedules.</li>
-                        <li><strong>Status filters</strong> — below search in Card or Agenda view: Hide Past, Approved, Pending, Friends, New/Updated, etc.</li>
+                        <li><strong>Status filters</strong> — below search in Card or Agenda view: Hide Past, Hide Rejected, Hide Approved, Show Pending Only, Show My Approved, Friends, New/Updated, etc.</li>
                         <li><strong>Agenda day filters</strong> — weekday checkboxes below status filters, Agenda view only.</li>
                         <li><strong>Keyword filters</strong> — collapsible panel above the view tabs for bulk edit; same list as the removable chips below search.</li>
                     </ul>
@@ -1961,6 +1965,7 @@
         const showFriendSchedulesCheckbox = document.getElementById('showFriendSchedules');
         const hidePastEventsCheckbox = document.getElementById('hidePastEvents');
         const hideRejectedCheckbox = document.getElementById('hideRejected');
+        const hideApprovedCheckbox = document.getElementById('hideApproved');
         const showPendingOnlyCheckbox = document.getElementById('showPendingOnly');
         const selectAllDaysBtn = document.getElementById('selectAllDays');
         const clearAllDaysBtn = document.getElementById('clearAllDays');
@@ -2030,7 +2035,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.25-beta';
+        const APP_VERSION = '1.4.26-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -3296,7 +3301,7 @@
                 },
                 {
                     title: 'Search & filters',
-                    body: 'Search title, location, or date. Use -word to exclude (e.g. -microsoft), or Always hide to save it. Status filters sit right below — Hide Past, Approved, Friends, New/Updated, and more.',
+                    body: 'Search title, location, or date. Use -word to exclude (e.g. -microsoft), or Always hide to save it. Status filters sit right below — Hide Past, Hide Approved, Show My Approved, Friends, New/Updated, and more.',
                     view: 'card',
                     target: '#searchInput',
                     placement: 'bottom',
@@ -3559,6 +3564,7 @@
             const showFriendSchedules = showFriendSchedulesCheckbox.checked;
             const hidePast = hidePastEventsCheckbox.checked;
             const hideRejected = hideRejectedCheckbox.checked;
+            const hideApproved = hideApprovedCheckbox.checked;
             const showPendingOnly = document.getElementById('showPendingOnly').checked;
             const highlightedEventIds = getHighlightedEventIds();
             const hiddenKeywords = getHiddenKeywords().map(k => k.toLowerCase()).filter(k => k);
@@ -3584,6 +3590,7 @@
                 const isApprovedByFriend = getFriendApprovals(event.id).length > 0;
 
                 if (showApprovedOnly && !isApprovedByMe) return false;
+                if (hideApproved && isApprovedByMe) return false;
                 if (showNewOnly && !highlightedEventIds.has(event.id)) return false;
                 if (!showFriendSchedules && isApprovedByFriend && !isApprovedByMe) return false;
 
@@ -4612,7 +4619,14 @@
             helpViewTab.addEventListener('click', () => switchView('help'));
             cutPasteViewTab.addEventListener('click', () => switchView('cutPaste'));
             document.querySelectorAll('.day-filter').forEach(cb => cb.addEventListener('change', renderCurrentView));
-            showApprovedOnlyCheckbox.addEventListener('change', renderCurrentView);
+            showApprovedOnlyCheckbox.addEventListener('change', () => {
+                if (showApprovedOnlyCheckbox.checked) hideApprovedCheckbox.checked = false;
+                renderCurrentView();
+            });
+            hideApprovedCheckbox.addEventListener('change', () => {
+                if (hideApprovedCheckbox.checked) showApprovedOnlyCheckbox.checked = false;
+                renderCurrentView();
+            });
             showNewOnlyCheckbox.addEventListener('change', renderCurrentView);
             showFriendSchedulesCheckbox.addEventListener('change', renderCurrentView);
             hidePastEventsCheckbox.addEventListener('change', renderCurrentView);
