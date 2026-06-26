@@ -620,6 +620,10 @@
             0%, 100% { box-shadow: 0 0 8px 1px rgba(255, 87, 34, 0.55), 0 0 18px 3px rgba(255, 87, 34, 0.25); }
             50% { box-shadow: 0 0 14px 3px rgba(255, 87, 34, 0.75), 0 0 28px 6px rgba(255, 87, 34, 0.35); }
         }
+        @keyframes dcp-neon-glow-seckc {
+            0%, 100% { box-shadow: 0 0 8px 1px rgba(220, 38, 38, 0.55), 0 0 18px 3px rgba(220, 38, 38, 0.25); }
+            50% { box-shadow: 0 0 14px 3px rgba(220, 38, 38, 0.75), 0 0 28px 6px rgba(220, 38, 38, 0.35); }
+        }
         @keyframes dcp-eyes-peek {
             0%, 70%, 100% { transform: translateX(-50%) translateY(110%); opacity: 0; }
             78%, 92% { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -644,6 +648,43 @@
         .event-card.highlight-neon-event.fx-glow-event {
             border: 3px solid #1f2937 !important;
             animation: dcp-neon-glow-contrast 2s ease-in-out infinite;
+        }
+        /* Stacked FX — single `animation` on each class overrides the other; combine explicitly */
+        .event-card.fx-shake-event.fx-glow-event:not(.dc801-event):not(.highlight-neon-event):not(.seckc-event) {
+            animation: dcp-shake-burst 3s ease-in-out infinite, dcp-neon-glow 2s ease-in-out infinite;
+        }
+        .event-card.fx-shake-event.fx-pulse-event {
+            animation: dcp-shake-burst 3s ease-in-out infinite, dcp-pulse-glow 2.4s ease-in-out infinite;
+            border-width: 2px !important;
+        }
+        .event-card.fx-pulse-event.fx-glow-event:not(.dc801-event):not(.highlight-neon-event):not(.seckc-event) {
+            animation: dcp-pulse-glow 2.4s ease-in-out infinite, dcp-neon-glow 2s ease-in-out infinite;
+            border: 2px solid #ff5722 !important;
+        }
+        .event-card.fx-shake-event.fx-pulse-event.fx-glow-event:not(.dc801-event):not(.highlight-neon-event):not(.seckc-event) {
+            animation: dcp-shake-burst 3s ease-in-out infinite, dcp-pulse-glow 2.4s ease-in-out infinite, dcp-neon-glow 2s ease-in-out infinite;
+            border: 2px solid #ff5722 !important;
+        }
+        .event-card.dc801-event.fx-shake-event.fx-glow-event,
+        .event-card.highlight-neon-event.fx-shake-event.fx-glow-event {
+            animation: dcp-shake-burst 3s ease-in-out infinite, dcp-neon-glow-contrast 2s ease-in-out infinite;
+            border: 3px solid #1f2937 !important;
+        }
+        .event-card.seckc-event.fx-glow-event {
+            border: 2px solid #dc2626 !important;
+            animation: dcp-neon-glow-seckc 2s ease-in-out infinite;
+        }
+        .event-card.seckc-event.fx-shake-event.fx-glow-event {
+            border: 2px solid #dc2626 !important;
+            animation: dcp-shake-burst 3s ease-in-out infinite, dcp-neon-glow-seckc 2s ease-in-out infinite;
+        }
+        .event-card.seckc-event.fx-shake-event.fx-pulse-event {
+            animation: dcp-shake-burst 3s ease-in-out infinite, dcp-pulse-glow 2.4s ease-in-out infinite;
+            border: 2px solid #dc2626 !important;
+        }
+        .event-card.seckc-event.fx-pulse-event.fx-glow-event {
+            animation: dcp-pulse-glow 2.4s ease-in-out infinite, dcp-neon-glow-seckc 2s ease-in-out infinite;
+            border: 2px solid #dc2626 !important;
         }
         @keyframes dcp-neon-glow-contrast {
             0%, 100% {
@@ -721,11 +762,43 @@
         .dcp-card-eyes--peek {
             animation: dcp-eyes-peek 6s ease-in-out infinite;
         }
+        .dcp-card-ticker {
+            margin-top: 0.85rem;
+            padding-top: 0.55rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #374151;
+        }
+        .seckc-event .dcp-card-ticker {
+            border-top-color: rgba(255, 255, 255, 0.2);
+            color: #fca5a5;
+        }
+        .dc801-event .dcp-card-ticker,
+        .hacker-jeopardy-event .dcp-card-ticker,
+        .floridaman-event .dcp-card-ticker {
+            color: inherit;
+            opacity: 0.92;
+        }
+        .dcp-card-ticker-track {
+            display: inline-flex;
+            gap: 2.5rem;
+            white-space: nowrap;
+            min-width: max-content;
+            animation: dcp-card-ticker-scroll 22s linear infinite;
+        }
+        @keyframes dcp-card-ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
         @media (prefers-reduced-motion: reduce) {
             .fx-shake-event,
             .fx-pulse-event,
             .fx-glow-event,
-            .dcp-card-eyes--peek {
+            .dcp-card-eyes--peek,
+            .dcp-card-ticker-track {
                 animation: none !important;
             }
             .dcp-card-eyes--hover {
@@ -1923,7 +1996,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.22-beta';
+        const APP_VERSION = '1.4.24-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 23;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -1935,6 +2008,7 @@
         ];
         const HIGHLIGHT_MARKER_PATTERN = /\[dcp-highlight:([a-z0-9_+,]+)\]/gi;
         const SPONSOR_MARKER_PATTERN = /\[dcp-sponsor:([^|\]]*)\|([^|\]]*)(?:\|([^|\]]*))?\]/i;
+        const FEATURING_MARKER_PATTERN = /\[dcp-featuring:([^\]]+)\]/i;
         const DEFAULT_MODAL_SPONSORS = [
             {
                 url: 'https://swag.defconparties.com',
@@ -2124,8 +2198,24 @@
         function stripSponsorMarker(text) {
             return String(text ?? '').replace(/\[dcp-sponsor:[^\]]+\]/gi, '').trim();
         }
+        function stripFeaturingMarker(text) {
+            return String(text ?? '').replace(/\[dcp-featuring:[^\]]+\]/gi, '').trim();
+        }
         function stripCalendarMarkers(text) {
-            return stripSponsorMarker(stripHighlightMarker(text));
+            return stripFeaturingMarker(stripSponsorMarker(stripHighlightMarker(text)));
+        }
+        function parseEventFeaturing(event) {
+            if (!event) return null;
+            const match = String(event.description || '').match(FEATURING_MARKER_PATTERN);
+            if (!match) return null;
+            const label = (match[1] || '').trim();
+            return label || null;
+        }
+        function buildCardTickerHtml(text) {
+            const label = String(text || '').trim();
+            if (!label) return '';
+            const safe = escapeHtml(label);
+            return `<div class="dcp-card-ticker"><div class="dcp-card-ticker-track" aria-label="${safe}"><span class="dcp-card-ticker-text">${safe}</span><span class="dcp-card-ticker-text" aria-hidden="true">${safe}</span></div></div>`;
         }
         function parseEventSponsor(event) {
             if (!event) return null;
@@ -3940,6 +4030,8 @@
             const cardDescriptionBlock = cardDescriptionHtml
                 ? `<div class="text-gray-700 text-sm">${cardDescriptionHtml}</div>`
                 : '';
+            const featuringText = parseEventFeaturing(event);
+            const tickerHTML = buildCardTickerHtml(featuringText);
             eventCard.innerHTML = `
                 ${eyesHTML}
                 ${imageHTML}
@@ -3954,7 +4046,8 @@
                         <span>${escapeHtml(event.location || 'Not specified')}</span>
                     </div>
                     ${cardDescriptionBlock}
-                </div>`;
+                </div>
+                ${tickerHTML}`;
             hideBrokenImages(eventCard);
             return eventCard;
         }
