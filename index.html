@@ -267,6 +267,11 @@
         html:not(.dark) body.hacker-theme .event-card.highlight-pink-event {
             background-color: #FF69B4 !important;
         }
+        html.dark body.hacker-theme .event-card.seckc-event,
+        html:not(.dark) body.hacker-theme .event-card.seckc-event {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
         html.dark body.hacker-theme .event-card.dc801-event h3,
         html.dark body.hacker-theme .event-card.dc801-event .event-card-meta,
         html.dark body.hacker-theme .event-card.dc801-event .event-card-meta span,
@@ -342,6 +347,20 @@
             color: black !important;
             opacity: 1 !important;
         }
+        html.dark body.hacker-theme .event-card.seckc-event h3,
+        html.dark body.hacker-theme .event-card.seckc-event .event-card-meta,
+        html.dark body.hacker-theme .event-card.seckc-event .event-card-meta span,
+        html.dark body.hacker-theme .event-card.seckc-event .text-gray-600,
+        html.dark body.hacker-theme .event-card.seckc-event .text-gray-700,
+        html.dark body.hacker-theme .event-card.seckc-event .text-gray-900,
+        html:not(.dark) body.hacker-theme .event-card.seckc-event h3,
+        html:not(.dark) body.hacker-theme .event-card.seckc-event .event-card-meta,
+        html:not(.dark) body.hacker-theme .event-card.seckc-event .event-card-meta span,
+        html:not(.dark) body.hacker-theme .event-card.seckc-event .text-gray-600,
+        html:not(.dark) body.hacker-theme .event-card.seckc-event .text-gray-700,
+        html:not(.dark) body.hacker-theme .event-card.seckc-event .text-gray-900 {
+            color: #ffffff !important;
+        }
         html.dark body.hacker-theme .event-card.dc801-event svg,
         html:not(.dark) body.hacker-theme .event-card.dc801-event svg,
         html.dark body.hacker-theme .event-card.hacker-jeopardy-event svg,
@@ -355,6 +374,10 @@
         html.dark body.hacker-theme .event-card.highlight-pink-event svg,
         html:not(.dark) body.hacker-theme .event-card.highlight-pink-event svg {
             stroke: black !important;
+        }
+        html.dark body.hacker-theme .event-card.seckc-event svg,
+        html:not(.dark) body.hacker-theme .event-card.seckc-event svg {
+            stroke: #ffffff !important;
         }
         /* Styles for active tab */
         .tab-active {
@@ -503,6 +526,26 @@
         }
         .floridaman-agenda-title {
             color: #FF1493 !important; /* Deep Pink for a slightly darker pink */
+            font-weight: 700;
+        }
+        /* Custom SecKC Event Styles */
+        .seckc-event {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        .seckc-event h3,
+        .seckc-event p,
+        .seckc-event span,
+        .seckc-event .text-gray-600,
+        .seckc-event .text-gray-700,
+        .seckc-event .text-gray-900 {
+            color: #ffffff !important;
+        }
+        .seckc-event svg {
+            stroke: #ffffff !important;
+        }
+        .seckc-agenda-title {
+            color: #dc2626 !important;
             font-weight: 700;
         }
         .highlight-gold-event,
@@ -1053,6 +1096,25 @@
         }
         html.dark .floridaman-agenda-title {
             color: #FF1493 !important;
+        }
+        html.dark .seckc-event {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        html.dark .seckc-event h3,
+        html.dark .seckc-event p,
+        html.dark .seckc-event span,
+        html.dark .seckc-event div,
+        html.dark .seckc-event .text-gray-600,
+        html.dark .seckc-event .text-gray-700,
+        html.dark .seckc-event .text-gray-900 {
+            color: #ffffff !important;
+        }
+        html.dark .seckc-event svg {
+            stroke: #ffffff !important;
+        }
+        html.dark .seckc-agenda-title {
+            color: #dc2626 !important;
         }
         html.dark .highlight-gold-event,
         html.dark .highlight-neon-event,
@@ -1861,7 +1923,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.21-beta';
+        const APP_VERSION = '1.4.22-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 23;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -1887,21 +1949,27 @@
             dc801: {
                 cardClass: 'dc801-event',
                 agendaClass: 'dc801-agenda-title',
-                image: 'https://forum.defcon.org/filedata/fetch?channelid=231490&lastupdate=1622490962&type=medium',
+                image: 'icons/dc801.png',
                 imageAlt: 'DC801 Event Image',
                 bundledFx: ['shake'],
             },
             hacker_jeopardy: {
                 cardClass: 'hacker-jeopardy-event',
                 agendaClass: 'hacker-jeopardy-agenda-title',
-                image: 'https://hackerjeopardy.com/img/hj-title.png',
+                image: 'icons/hacker-jeopardy.png',
                 imageAlt: 'Hacker Jeopardy Image',
             },
             floridaman: {
                 cardClass: 'floridaman-event',
                 agendaClass: 'floridaman-agenda-title',
-                image: 'https://floridaman.party/Floyd-the-flamingo-badge-clear.svg',
+                image: 'icons/floridaman.png',
                 imageAlt: 'Floridaman Party Image',
+            },
+            seckc: {
+                cardClass: 'seckc-event',
+                agendaClass: 'seckc-agenda-title',
+                image: 'icons/seckc-logo.jpg',
+                imageAlt: 'SecKC',
             },
             gold: {
                 cardClass: 'highlight-gold-event',
@@ -2093,6 +2161,7 @@
             if (title.includes('dc801')) return ['dc801'];
             if (title.includes('hacker jeopardy')) return ['hacker_jeopardy'];
             if (title.includes('floridaman')) return ['floridaman'];
+            if (title.includes('seckc')) return ['seckc'];
             return [];
         }
         function parseEventHighlightStyle(event) {
