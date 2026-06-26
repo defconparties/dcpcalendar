@@ -1313,6 +1313,34 @@
             --hack-green-dim: #d97706;
             --hack-green-muted: #fde68a;
         }
+        #seckcDvdLogo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 45;
+            pointer-events: none;
+            width: clamp(72px, 14vw, 132px);
+            will-change: transform;
+            filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.55));
+            transition: opacity 0.35s ease;
+        }
+        #seckcDvdLogo.hidden {
+            display: none;
+        }
+        #seckcDvdLogo img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #seckcDvdLogo {
+                top: auto;
+                left: auto;
+                right: 1rem;
+                bottom: 1rem;
+                transform: none !important;
+            }
+        }
     </style>
 </head>
 <body class="hacker-theme bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
@@ -1329,7 +1357,10 @@
         </button>
     </div>
 
-    <!-- SECKC Mode — desktop: ↑↑↓↓←→←→BA · mobile: 23 screen taps (non-button areas) -->
+    <!-- SECKC Mode — desktop: ↑↑↓↓←→←→BA · mobile: 7 screen taps (non-button areas) -->
+    <div id="seckcDvdLogo" class="hidden" aria-hidden="true">
+        <img src="icons/SecKC_Hex_OnlyB.png" alt="" width="286" height="313" decoding="async">
+    </div>
     <div id="seckcModeBanner" class="hidden relative p-3 sm:p-4" role="region" aria-label="SECKC Mode">
         <div class="max-w-5xl mx-auto text-center space-y-2">
             <p class="seckc-banner-title text-sm sm:text-base font-bold uppercase">
@@ -1970,12 +2001,15 @@
         const totalEventCount = document.getElementById('totalEventCount');
         const swagBanner = document.getElementById('swagBanner');
         const seckcModeBanner = document.getElementById('seckcModeBanner');
+        const seckcDvdLogo = document.getElementById('seckcDvdLogo');
         const closeSeckcModeBtn = document.getElementById('closeSeckcModeBtn');
         let konamiProgress = 0;
         let konamiResetTimer = null;
         let seckcMobileTapProgress = 0;
         let seckcMobileTapResetTimer = null;
         let seckcAudio = null;
+        let seckcDvdRaf = null;
+        let seckcDvdState = null;
         const closeSwagBannerBtn = document.getElementById('closeSwagBanner');
         const partyOMeterFill = document.getElementById('partyOMeterFill');
         const partyOMeterText = document.getElementById('partyOMeterText');
@@ -1996,10 +2030,11 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.24-beta';
+        const APP_VERSION = '1.4.25-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
-        const SECKC_MOBILE_TAP_COUNT = 23;
+        const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
+        const SECKC_DVD_LOGO_URL = 'icons/SecKC_Hex_OnlyB.png';
         const SECKC_AUDIO_URL = 'https://fi.zophar.net/soundfiles/nintendo-nes-nsf/contra/1%20-%20Title%20Screen.mp3';
         const KONAMI_SEQUENCE = [
             'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
@@ -2970,11 +3005,97 @@
             seckcAudio.play().catch(() => {});
         }
 
+        function prefersReducedMotion() {
+            return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        }
+
+        function stopSeckcDvdSaver() {
+            if (seckcDvdRaf) {
+                cancelAnimationFrame(seckcDvdRaf);
+                seckcDvdRaf = null;
+            }
+            seckcDvdState = null;
+            if (seckcDvdLogo) {
+                seckcDvdLogo.classList.add('hidden');
+                seckcDvdLogo.style.transform = '';
+            }
+            window.removeEventListener('resize', clampSeckcDvdPosition);
+        }
+
+        function clampSeckcDvdPosition() {
+            if (!seckcDvdLogo || !seckcDvdState || prefersReducedMotion()) return;
+            const bounds = getSeckcDvdBounds();
+            seckcDvdState.x = Math.max(0, Math.min(bounds.maxX, seckcDvdState.x));
+            seckcDvdState.y = Math.max(0, Math.min(bounds.maxY, seckcDvdState.y));
+            seckcDvdLogo.style.transform = `translate3d(${seckcDvdState.x}px, ${seckcDvdState.y}px, 0)`;
+        }
+
+        function getSeckcDvdBounds() {
+            const width = seckcDvdLogo?.offsetWidth || 120;
+            const height = seckcDvdLogo?.offsetHeight || 130;
+            return {
+                maxX: Math.max(0, window.innerWidth - width),
+                maxY: Math.max(0, window.innerHeight - height),
+            };
+        }
+
+        function tickSeckcDvdSaver() {
+            if (!seckcDvdLogo || !seckcDvdState) return;
+            const bounds = getSeckcDvdBounds();
+            let { x, y, vx, vy } = seckcDvdState;
+            x += vx;
+            y += vy;
+            if (x <= 0) {
+                x = 0;
+                vx = Math.abs(vx);
+            } else if (x >= bounds.maxX) {
+                x = bounds.maxX;
+                vx = -Math.abs(vx);
+            }
+            if (y <= 0) {
+                y = 0;
+                vy = Math.abs(vy);
+            } else if (y >= bounds.maxY) {
+                y = bounds.maxY;
+                vy = -Math.abs(vy);
+            }
+            seckcDvdState = { x, y, vx, vy };
+            seckcDvdLogo.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+            seckcDvdRaf = requestAnimationFrame(tickSeckcDvdSaver);
+        }
+
+        function startSeckcDvdSaver() {
+            if (!seckcDvdLogo) return;
+            stopSeckcDvdSaver();
+            const img = seckcDvdLogo.querySelector('img');
+            if (img && img.getAttribute('src') !== SECKC_DVD_LOGO_URL) {
+                img.setAttribute('src', SECKC_DVD_LOGO_URL);
+            }
+            seckcDvdLogo.classList.remove('hidden');
+            if (prefersReducedMotion()) {
+                seckcDvdLogo.style.transform = '';
+                return;
+            }
+            const bounds = getSeckcDvdBounds();
+            const speed = 1.15 + Math.random() * 0.65;
+            const angle = Math.random() * Math.PI * 2;
+            seckcDvdState = {
+                x: Math.random() * Math.max(0, bounds.maxX),
+                y: Math.random() * Math.max(0, bounds.maxY),
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+            };
+            seckcDvdLogo.style.transform = `translate3d(${seckcDvdState.x}px, ${seckcDvdState.y}px, 0)`;
+            window.addEventListener('resize', clampSeckcDvdPosition);
+            seckcDvdRaf = requestAnimationFrame(tickSeckcDvdSaver);
+        }
+
         function activateSeckcMode(playAudio = true) {
             if (!seckcModeBanner) return;
             sessionStorage.setItem(SECKC_MODE_SESSION_KEY, 'true');
             document.body.classList.add('seckc-mode-active');
             seckcModeBanner.classList.remove('hidden');
+            startSeckcDvdSaver();
             if (playAudio) {
                 playSeckcAudioOnce();
                 showShareStatus('SECKC MODE — Contra title engaged');
@@ -2987,6 +3108,7 @@
             document.body.classList.remove('seckc-mode-active');
             seckcModeBanner.classList.add('hidden');
             stopSeckcAudio();
+            stopSeckcDvdSaver();
         }
 
         function restoreSeckcModeFromSession() {
