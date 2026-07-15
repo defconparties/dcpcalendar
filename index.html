@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://api.onesignal.com https://onesignal.com https://*.onesignal.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com https://onesignal.com https://cdn.onesignal.com https://*.onesignal.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src https: data:; media-src https://fi.zophar.net; connect-src 'self' https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com https://docs.google.com https://cdn.jsdelivr.net https://api.onesignal.com https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action https://docs.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://api.onesignal.com https://onesignal.com https://*.onesignal.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com https://onesignal.com https://cdn.onesignal.com https://*.onesignal.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src https: data:; media-src https://fi.zophar.net; connect-src 'self' https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com https://docs.google.com https://cdn.jsdelivr.net https://api.onesignal.com https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://docs.google.com;">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -457,6 +457,16 @@
         }
         .pending-event:hover {
             background-color: #bae6fd !important; /* light blue-200 */
+        }
+        .private-commitment-event {
+            background-color: #fef3c7 !important;
+            border-left: 4px solid #d97706;
+        }
+        .private-commitment-event:hover {
+            background-color: #fde68a !important;
+        }
+        .private-shared-event {
+            border-left-color: #7c3aed !important;
         }
         .new-event-badge,
         .updated-event-badge {
@@ -1006,6 +1016,16 @@
         html.dark .friend-approved-event:hover {
             background-color: #9a3412 !important;
         }
+        html.dark .private-commitment-event {
+            background-color: #422006 !important;
+            border-left-color: #fbbf24 !important;
+        }
+        html.dark .private-commitment-event:hover {
+            background-color: #78350f !important;
+        }
+        html.dark .private-shared-event {
+            border-left-color: #a78bfa !important;
+        }
         html.dark .rejected-event {
             background-color: #7f1d1d !important;
             border-left-color: #f87171 !important;
@@ -1425,7 +1445,7 @@
             <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h4 class="font-semibold text-gray-700 mb-2">Export My Schedule</h4>
-                    <p class="text-sm text-gray-600 mb-2">Copy this code to move your personal schedule (Approved/Rejected/Pending) to another browser or share it with a friend.</p>
+                    <p class="text-sm text-gray-600 mb-2">Copy this code to move your full schedule — party picks (Approved/Rejected/Pending) <strong>and</strong> private commitments — to another browser or share with a friend.</p>
                     <div class="flex gap-2">
                         <input type="text" id="shareCodeInput" readonly class="flex-grow bg-gray-100 border border-gray-300 rounded-md p-2 text-sm text-gray-700">
                         <button id="exportBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 flex-shrink-0">Copy Code</button>
@@ -1433,7 +1453,7 @@
                 </div>
                  <div>
                     <h4 class="font-semibold text-gray-700 mb-2">Import a Schedule</h4>
-                    <p class="text-sm text-gray-600 mb-2">Paste a code to sync your schedule. Add a nickname to import a friend's schedule (in orange).</p>
+                    <p class="text-sm text-gray-600 mb-2">Paste a code to sync your schedule (parties + private blocks). Add a nickname to import a friend's schedule — their parties show in orange, their private blocks in amber.</p>
                     <div class="flex flex-wrap gap-2">
                         <input type="text" id="importNicknameInput" placeholder="Friend's Nickname (optional)" class="flex-grow border border-gray-300 rounded-md p-2 text-sm min-w-[150px]">
                         <input type="text" id="importCodeInput" placeholder="Paste code here..." class="flex-grow border border-gray-300 rounded-md p-2 text-sm min-w-[150px]">
@@ -1446,6 +1466,88 @@
                 <div id="friendListContainer"></div>
             </div>
              <p id="shareStatus" class="text-sm mt-2 font-medium h-4 text-center"></p>
+        </details>
+
+        <!-- Private commitments (browser-only busy blocks) -->
+        <details id="privateBlocksDetails" class="hacker-panel max-w-5xl mx-auto mb-6 bg-white dark:bg-gray-900 p-3 rounded-sm shadow-sm">
+            <summary class="font-medium text-indigo-600 dark:text-green-400 cursor-pointer font-mono text-sm">&gt; private_commitments</summary>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">
+                Block off dinners, flights, meetings, and other fixed plans. Enter times in <strong>Pacific (Vegas)</strong> — same as the party calendar. Saved blocks appear in <strong>Your private blocks</strong> (right) and on the <strong>Agenda</strong> timeline as amber rows — not in Card view. Use <strong>Share private blocks only</strong> below to send just these blocks (not party picks), or include them in <strong>Export My Schedule</strong> above. Stored in <strong>this browser only</strong> until you export.
+            </p>
+            <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="privateDisplayName" class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Your name on shared blocks</label>
+                    <input type="text" id="privateDisplayName" placeholder="Paul" class="w-full border border-gray-300 rounded-md p-2 text-sm mb-2">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Teammates see &ldquo;<em>Your name — dinner</em>&rdquo; when they import your code.</p>
+                    <form id="privateEventForm" class="space-y-2">
+                        <input type="hidden" id="privateEventId" value="">
+                        <label for="privateTitle" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Title</label>
+                        <input type="text" id="privateTitle" required placeholder="Vendor dinner, flight, meeting…" class="w-full border border-gray-300 rounded-md p-2 text-sm">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label for="privateStart" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Start <span class="font-normal text-gray-500">(Pacific / Vegas)</span></label>
+                                <input type="datetime-local" id="privateStart" required class="w-full border border-gray-300 rounded-md p-2 text-sm" title="Enter wall-clock time in Pacific (Las Vegas)">
+                            </div>
+                            <div>
+                                <label for="privateEnd" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">End <span class="font-normal text-gray-500">(Pacific / Vegas, optional)</span></label>
+                                <input type="datetime-local" id="privateEnd" class="w-full border border-gray-300 rounded-md p-2 text-sm" title="Enter wall-clock time in Pacific (Las Vegas)">
+                            </div>
+                        </div>
+                        <label for="privateNotes" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Notes (optional)</label>
+                        <textarea id="privateNotes" rows="2" placeholder="Location, vendor…" class="w-full border border-gray-300 rounded-md p-2 text-sm"></textarea>
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            <button type="button" id="privateSaveBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Save</button>
+                            <button type="button" id="privateCancelEditBtn" class="hidden px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm font-medium hover:bg-gray-300">Cancel edit</button>
+                        </div>
+                    </form>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Your private blocks</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Use <strong>Share</strong> on a row to copy a one-block link (not your full list).</p>
+                    <div id="privateEventsList" class="space-y-2 text-sm text-gray-500">None yet.</div>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Share private blocks only</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Share <strong>only</strong> your private commitments — not Approved/Rejected/Pending party picks.
+                        Friends import with a nickname so blocks show in amber on Agenda (e.g. <em>Paul — vendor dinner</em>).
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-2">
+                        <input type="text" id="privateShareCodeInput" readonly
+                               class="flex-grow min-w-[12rem] bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm text-gray-700 dark:text-gray-200"
+                               placeholder="Add a block above to generate a code">
+                        <button type="button" id="privateShareCopyBtn"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 flex-shrink-0">
+                            Copy code
+                        </button>
+                        <button type="button" id="privateShareLinkBtn"
+                                class="px-4 py-2 bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100 rounded-md text-sm font-medium hover:bg-indigo-200 dark:hover:bg-indigo-800 flex-shrink-0">
+                            Copy link
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Link opens this site and imports your blocks automatically.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Import private blocks only</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Paste a <strong>private-only</strong> code or link. Your party picks stay unchanged.
+                        Add a nickname to overlay a friend&rsquo;s busy blocks on your Agenda.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <input type="text" id="privateImportNicknameInput" placeholder="Friend's nickname (optional)"
+                               class="flex-grow border border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm min-w-[150px]">
+                        <input type="text" id="privateImportCodeInput" placeholder="Paste private code or link…"
+                               class="flex-grow border border-gray-300 dark:border-gray-600 rounded-md p-2 text-sm min-w-[150px]">
+                        <button type="button" id="privateImportBtn"
+                                class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 flex-shrink-0">
+                            Import
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p id="privateStatus" class="text-sm mt-3 font-medium h-4 text-center"></p>
         </details>
 
         <!-- Keyword Filter Section -->
@@ -1475,6 +1577,7 @@
             </div>
         </div>
         <p id="pushSubscribeStatus" class="hidden text-xs text-center text-gray-500 dark:text-gray-400 mb-2 px-4"></p>
+        <p id="privateCardViewNotice" class="hidden max-w-5xl mx-auto mb-4 px-4 py-2 rounded-md border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100 text-sm text-center"></p>
 
         <!-- Search and Filters -->
         <div id="filtersAndSearch" class="mb-8 max-w-5xl mx-auto">
@@ -1493,6 +1596,12 @@
             <div id="hiddenKeywordsChips" class="hidden mb-3 flex flex-wrap items-center gap-2">
                 <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Always hidden:</span>
                 <div id="hiddenKeywordsChipList" class="flex flex-wrap gap-2"></div>
+            </div>
+            <div id="urlSearchSubmitHint" class="hidden mb-4 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 text-center text-sm text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-100">
+                <p class="font-medium">Event not found for this URL.</p>
+                <p class="mt-1 text-indigo-800/90 dark:text-indigo-200/90">Submit it to be added to the calendar?</p>
+                <button type="button" id="urlSearchSubmitHintBtn" class="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Submit URL</button>
+                <p id="urlSearchSubmitHintStatus" class="text-sm mt-2 font-medium h-4"></p>
             </div>
             <!-- Status filters (Card + Agenda views) -->
             <div id="statusFilters" class="hidden justify-center items-center flex-wrap gap-x-4 gap-y-2 text-sm p-2 border-t border-b border-gray-200">
@@ -1519,6 +1628,10 @@
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-orange-700 pr-4">
                     <input type="checkbox" id="showFriendSchedules" class="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500" checked>
                     <span>Show Friends</span>
+                </label>
+                 <label class="flex items-center space-x-2 cursor-pointer font-bold text-amber-700 pr-4">
+                    <input type="checkbox" id="showPrivateBlocks" class="h-4 w-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500" checked>
+                    <span>Show Private</span>
                 </label>
                  <label class="flex items-center space-x-2 cursor-pointer font-bold text-indigo-700 pr-4">
                     <input type="checkbox" id="showNewOnly" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
@@ -1612,6 +1725,7 @@
                         <li><strong>Approved</strong> (green) — plan to attend; counts toward Party-O-Meter™.</li>
                         <li><strong>Pending</strong> (blue) — applied, waiting to hear back.</li>
                         <li><strong>Rejected</strong> (red) — ruled out; hide with <strong>Hide Rejected</strong>.</li>
+                        <li><strong>Private commitments</strong> (amber in Agenda) — dinners, flights, and other fixed plans; included in Export My Schedule.</li>
                         <li>Saved automatically in this browser — no account required.</li>
                     </ul>
                 </section>
@@ -1652,7 +1766,7 @@
                     <h3>Share &amp; tools</h3>
                     <ul>
                         <li><strong>Share a party</strong> — link icon in event details, or <strong>hold</strong> a card/agenda row (mobile) / right-click (desktop). Opens that party for anyone with the link, even if your filters would hide it.</li>
-                        <li><strong>Export / import</strong> — Share/Sync encodes Approved, Pending, and Rejected choices.</li>
+                        <li><strong>Export / import</strong> — Share/Sync encodes Approved, Pending, Rejected, and your private commitments.</li>
                         <li><strong>Friends</strong> — import a nickname + code; friend approvals show in orange.</li>
                         <li><strong>Flex on &apos;em</strong> — share your approved count from Party-O-Meter™.</li>
                         <li><strong>Cut &amp; Paste</strong> — store name, email, title, shirt size, etc. for fast signup forms.</li>
@@ -1665,7 +1779,7 @@
             <section class="help-section">
                 <h3>Privacy</h3>
                 <ul>
-                    <li>Schedules, filters, profiles, and &quot;seen&quot; baselines stay in your browser only.</li>
+                    <li>Schedules, private commitments, filters, profiles, and &quot;seen&quot; baselines stay in your browser only.</li>
                     <li>Share codes are encoded, not encrypted — share only with people you trust.</li>
                     <li>Sign Up, Approved, and Rejected clicks are tracked anonymously for popularity stats.</li>
                 </ul>
@@ -1963,7 +2077,27 @@
         const showApprovedOnlyCheckbox = document.getElementById('showApprovedOnly');
         const showNewOnlyCheckbox = document.getElementById('showNewOnly');
         const showFriendSchedulesCheckbox = document.getElementById('showFriendSchedules');
+        const showPrivateBlocksCheckbox = document.getElementById('showPrivateBlocks');
         const hidePastEventsCheckbox = document.getElementById('hidePastEvents');
+        const privateBlocksDetails = document.getElementById('privateBlocksDetails');
+        const privateDisplayNameInput = document.getElementById('privateDisplayName');
+        const privateEventForm = document.getElementById('privateEventForm');
+        const privateEventIdInput = document.getElementById('privateEventId');
+        const privateTitleInput = document.getElementById('privateTitle');
+        const privateStartInput = document.getElementById('privateStart');
+        const privateEndInput = document.getElementById('privateEnd');
+        const privateNotesInput = document.getElementById('privateNotes');
+        const privateSaveBtn = document.getElementById('privateSaveBtn');
+        const privateCancelEditBtn = document.getElementById('privateCancelEditBtn');
+        const privateEventsList = document.getElementById('privateEventsList');
+        const privateShareCodeInput = document.getElementById('privateShareCodeInput');
+        const privateShareCopyBtn = document.getElementById('privateShareCopyBtn');
+        const privateShareLinkBtn = document.getElementById('privateShareLinkBtn');
+        const privateImportNicknameInput = document.getElementById('privateImportNicknameInput');
+        const privateImportCodeInput = document.getElementById('privateImportCodeInput');
+        const privateImportBtn = document.getElementById('privateImportBtn');
+        const privateStatus = document.getElementById('privateStatus');
+        const privateCardViewNotice = document.getElementById('privateCardViewNotice');
         const hideRejectedCheckbox = document.getElementById('hideRejected');
         const hideApprovedCheckbox = document.getElementById('hideApproved');
         const showPendingOnlyCheckbox = document.getElementById('showPendingOnly');
@@ -2035,7 +2169,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.26-beta';
+        const APP_VERSION = '1.4.30-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -2055,7 +2189,7 @@
                 label: 'DEF CON Parties Swag Shop',
             },
             {
-                url: 'https://defconparties.com',
+                url: 'https://swag.defconparties.com',
                 label: 'DEF CON Parties — NSA of Parties',
             },
         ];
@@ -2126,6 +2260,8 @@
             },
         };
         const PARTY_SHARE_PARAM = 'event';
+        const BUSY_SHARE_PARAM = 'busy';
+        const PRIVATE_SHARE_PARAM = 'private';
         const LONG_PRESS_SHARE_MS = 500;
         const CACHE_VERSION = '2026';
         const ONBOARDING_TOUR_VERSION = 'v2';
@@ -2146,6 +2282,10 @@
         let swRegistration = null;
         const HIDDEN_KEYWORDS_KEY = `calendarHiddenKeywords_${CACHE_VERSION}`;
         const PROFILES_KEY = `calendarProfiles_${CACHE_VERSION}`;
+        const PRIVATE_EVENTS_KEY = `calendarPrivateEvents_${CACHE_VERSION}`;
+        const PRIVATE_DISPLAY_NAME_KEY = `calendarPrivateDisplayName_${CACHE_VERSION}`;
+        const PRIVATE_SHARE_VERSION = 1;
+        const PRIVATE_LIST_SHARE_VERSION = 2;
         const THEME_KEY = `calendarTheme_${CACHE_VERSION}`;
         const MANUAL_REFRESH_COOLDOWN = 5 * 60 * 1000; // 5 minutes
         const AUTO_REFRESH_INTERVAL_HSC = 6 * 60 * 60 * 1000; // 6 hours during HSC season
@@ -2915,7 +3055,51 @@
         // --- DATA FETCHING & PARSING ---
         function getStartDateString(event) { if (!event || !event.start) return null; if (typeof event.start === 'string') return event.start; if (typeof event.start === 'object') return event.start.dateTime || event.start.date; return null; }
         function getEndDateString(event) { if (!event || !event.end) return null; if (typeof event.end === 'string') return event.end; if (typeof event.end === 'object') return event.end.dateTime || event.end.date; return null; }
-        function getPacificDateKey(dateString) { if (!dateString) return null; const eventDate = new Date(dateString); if (isNaN(eventDate.getTime())) return null; return eventDate.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }); }
+        const PACIFIC_TZ = 'America/Los_Angeles';
+        function getPacificDateKey(dateString) { if (!dateString) return null; const eventDate = new Date(dateString); if (isNaN(eventDate.getTime())) return null; return eventDate.toLocaleDateString('en-CA', { timeZone: PACIFIC_TZ }); }
+        function getPacificWallClockParts(instant) {
+            const fmt = new Intl.DateTimeFormat('en-US', {
+                timeZone: PACIFIC_TZ,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+            });
+            const parts = fmt.formatToParts(instant);
+            const pick = (type) => parts.find((p) => p.type === type)?.value || '';
+            return {
+                year: Number(pick('year')),
+                month: Number(pick('month')),
+                day: Number(pick('day')),
+                hour: Number(pick('hour')),
+                minute: Number(pick('minute')),
+            };
+        }
+        function pacificWallClockMatches(instant, y, mo, d, h, mi) {
+            const p = getPacificWallClockParts(instant);
+            return p.year === y && p.month === mo && p.day === d && p.hour === h && p.minute === mi;
+        }
+        function getPacificOffsetForInstant(instant) {
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone: PACIFIC_TZ,
+                timeZoneName: 'longOffset',
+            }).formatToParts(instant);
+            const raw = parts.find((p) => p.type === 'timeZoneName')?.value || 'GMT-08:00';
+            const m = /GMT([+-])(\d{1,2})(?::?(\d{2}))?/.exec(raw);
+            if (!m) return '-08:00';
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${m[1]}${pad(Number(m[2]))}:${pad(Number(m[3] || 0))}`;
+        }
+        function getPacificWeekdayIndex(dateString) {
+            if (!dateString) return null;
+            const eventDate = new Date(dateString);
+            if (Number.isNaN(eventDate.getTime())) return null;
+            const weekday = eventDate.toLocaleDateString('en-US', { timeZone: PACIFIC_TZ, weekday: 'short' });
+            const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+            return Object.prototype.hasOwnProperty.call(map, weekday) ? map[weekday] : null;
+        }
         function parseDailyHoursFromDescription(event) {
             const text = String(event?.description || '');
             const match = text.match(/Daily hours:\s*([^\n]+)/i);
@@ -3556,6 +3740,690 @@
             return query.positive.every((term) => haystack.includes(term));
         }
 
+        // --- PRIVATE COMMITMENTS (browser-only busy blocks) ---
+        function privateUuid() {
+            if (crypto.randomUUID) return crypto.randomUUID();
+            return 'pv-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        }
+        function loadPrivateEvents() {
+            try {
+                const raw = localStorage.getItem(PRIVATE_EVENTS_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        }
+        function savePrivateEvents(events) {
+            try {
+                localStorage.setItem(PRIVATE_EVENTS_KEY, JSON.stringify(events));
+            } catch (error) {
+                throw new Error('Could not save private block in this browser (storage blocked or full).');
+            }
+        }
+        function getPrivateDisplayName() {
+            return (localStorage.getItem(PRIVATE_DISPLAY_NAME_KEY) || '').trim();
+        }
+        function setPrivateDisplayName(name) {
+            const trimmed = (name || '').trim();
+            if (trimmed) localStorage.setItem(PRIVATE_DISPLAY_NAME_KEY, trimmed);
+            else localStorage.removeItem(PRIVATE_DISPLAY_NAME_KEY);
+            return trimmed;
+        }
+        function encodeShareCode(payload) {
+            return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+        }
+        function decodeShareCode(code) {
+            const trimmed = (code || '').trim();
+            if (!trimmed) throw new Error('Empty share code.');
+            const attempts = [trimmed];
+            let urlSafe = trimmed.replace(/-/g, '+').replace(/_/g, '/');
+            while (urlSafe.length % 4) urlSafe += '=';
+            if (urlSafe !== trimmed) attempts.push(urlSafe);
+            let lastError = null;
+            for (const candidate of attempts) {
+                try {
+                    return JSON.parse(decodeURIComponent(escape(atob(candidate))));
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+            throw lastError || new Error('Invalid share code.');
+        }
+        function extractShareCodeFromText(raw) {
+            const trimmed = (raw || '').trim();
+            if (!trimmed) return '';
+            try {
+                const url = new URL(trimmed);
+                return url.searchParams.get(PRIVATE_SHARE_PARAM)
+                    || url.searchParams.get(BUSY_SHARE_PARAM)
+                    || trimmed;
+            } catch (error) {
+                return trimmed;
+            }
+        }
+        function decodePrivateShare(code) {
+            const payload = decodeShareCode(code);
+            if (!payload || payload.v !== PRIVATE_SHARE_VERSION) throw new Error('Unsupported or invalid share code.');
+            if (!payload.title || !payload.start_at) throw new Error('Share code is missing title or start time.');
+            return payload;
+        }
+        function isPrivateSingleSharePayload(data) {
+            return Boolean(
+                data
+                && typeof data === 'object'
+                && data.v === PRIVATE_SHARE_VERSION
+                && data.kind !== 'private_commitments'
+                && typeof data.title === 'string'
+                && data.title.trim()
+                && typeof data.start_at === 'string'
+                && data.start_at.trim()
+                && !Object.prototype.hasOwnProperty.call(data, 'approved')
+            );
+        }
+        function privateSingleShareMatchKey(fields) {
+            const title = (fields.title || '').trim();
+            const startAt = (fields.start_at || '').trim();
+            const endAt = (fields.end_at || '').trim();
+            const notes = (fields.notes || '').trim();
+            const sharedBy = (fields.shared_by || '').trim();
+            return [title, startAt, endAt, notes, sharedBy].join('\0');
+        }
+        function privateSingleShareKeyFromPayload(payload) {
+            const title = payload.shared_by
+                ? `${String(payload.shared_by).trim()} — ${String(payload.title).trim()}`
+                : String(payload.title).trim();
+            return privateSingleShareMatchKey({
+                title,
+                start_at: payload.start_at,
+                end_at: payload.end_at || '',
+                notes: payload.notes || '',
+                shared_by: payload.shared_by || '',
+            });
+        }
+        function findImportedPrivateSingleDuplicate(payload) {
+            const key = privateSingleShareKeyFromPayload(payload);
+            return loadPrivateEvents().find((item) => {
+                if (!item.imported) return false;
+                return privateSingleShareMatchKey(item) === key;
+            }) || null;
+        }
+        function decodePrivateCommitmentsShare(code) {
+            const payload = decodeShareCode(code);
+            if (!payload || payload.v !== PRIVATE_LIST_SHARE_VERSION || payload.kind !== 'private_commitments') {
+                throw new Error('Not a private-commitments share code.');
+            }
+            if (!Array.isArray(payload.private)) throw new Error('Private share code is missing events.');
+            return payload;
+        }
+        function buildPrivateCommitmentsShareCode() {
+            const events = privateEventsForExport();
+            if (!events.length) return '';
+            return encodeShareCode({
+                v: PRIVATE_LIST_SHARE_VERSION,
+                kind: 'private_commitments',
+                private: events,
+                privateDisplayName: getPrivateDisplayName(),
+            });
+        }
+        function privateCommitmentsShareUrl(code) {
+            if (!code) return '';
+            const url = new URL(window.location.href);
+            url.search = '';
+            url.hash = '';
+            url.searchParams.set(PRIVATE_SHARE_PARAM, code);
+            return url.toString();
+        }
+        function importPrivateCommitmentsShare(rawCode, nickname) {
+            const code = extractShareCodeFromText(rawCode);
+            if (!code) throw new Error('Paste a private share code or link.');
+            if (code.length > MAX_IMPORT_CODE_LENGTH) throw new Error('Share code is too large.');
+            const payload = decodePrivateCommitmentsShare(code);
+            const privateEvents = sanitizePrivateEventsForImport(payload.private);
+            const friendDisplayName = typeof payload.privateDisplayName === 'string'
+                ? payload.privateDisplayName.trim().slice(0, MAX_NICKNAME_LENGTH)
+                : '';
+            const label = sanitizeNickname(nickname);
+            if (label) {
+                importFriendPrivateEvents(label, privateEvents, friendDisplayName);
+                return { mode: 'friend', nickname: label, count: privateEvents.length };
+            }
+            replaceOwnedPrivateEvents(privateEvents, friendDisplayName);
+            return { mode: 'self', count: privateEvents.length };
+        }
+        function refreshPrivateShareExportField() {
+            if (!privateShareCodeInput) return;
+            const code = buildPrivateCommitmentsShareCode();
+            privateShareCodeInput.value = code;
+            if (privateShareCopyBtn) privateShareCopyBtn.disabled = !code;
+            if (privateShareLinkBtn) privateShareLinkBtn.disabled = !code;
+        }
+        function normalizePrivateEvent(input, opts = {}) {
+            const title = (input.title || '').trim();
+            const startAt = (input.start_at || '').trim();
+            const endAt = (input.end_at || '').trim();
+            if (!title || !startAt) throw new Error('Title and start time are required.');
+            return {
+                id: input.id || privateUuid(),
+                title,
+                start_at: startAt,
+                end_at: endAt,
+                notes: (input.notes || '').trim(),
+                fixed: input.fixed !== false,
+                shared_by: (input.shared_by || opts.shared_by || '').trim(),
+                imported: Boolean(opts.imported || input.imported),
+                created_at: input.created_at || new Date().toISOString(),
+            };
+        }
+        function addPrivateEvent(data) {
+            const event = normalizePrivateEvent(data);
+            const events = loadPrivateEvents();
+            events.push(event);
+            savePrivateEvents(events);
+            return event;
+        }
+        function updatePrivateEvent(id, data) {
+            const events = loadPrivateEvents();
+            const index = events.findIndex((e) => e.id === id);
+            if (index < 0) throw new Error('Private event not found.');
+            const merged = normalizePrivateEvent(Object.assign({}, events[index], data, { id }));
+            events[index] = merged;
+            savePrivateEvents(events);
+            return merged;
+        }
+        function deletePrivateEvent(id) {
+            savePrivateEvents(loadPrivateEvents().filter((e) => e.id !== id));
+        }
+        function buildPrivateSingleShareCode(item) {
+            if (!item || !item.title || !item.start_at) return '';
+            return encodeShareCode({
+                v: PRIVATE_SHARE_VERSION,
+                title: item.title,
+                start_at: item.start_at,
+                end_at: item.end_at || '',
+                notes: item.notes || '',
+                shared_by: getPrivateDisplayName(),
+            });
+        }
+        function buildPrivateSingleShareUrl(item) {
+            const code = buildPrivateSingleShareCode(item);
+            if (!code) return '';
+            const url = new URL(window.location.href);
+            url.search = '';
+            url.hash = '';
+            url.searchParams.set(BUSY_SHARE_PARAM, code);
+            return url.toString();
+        }
+        async function sharePrivateBlockById(id) {
+            const item = loadPrivateEvents().find((entry) => entry.id === id);
+            if (!item || item.imported) {
+                setPrivateStatus('Only your own blocks can be shared.', true);
+                return;
+            }
+            const link = buildPrivateSingleShareUrl(item);
+            if (!link) {
+                setPrivateStatus('Could not build a share link for this block.', true);
+                return;
+            }
+            const copied = await copyToClipboard(link);
+            setPrivateStatus(
+                copied
+                    ? `Copied link for “${item.title}” — opens and imports this one block.`
+                    : 'Could not copy to clipboard.',
+                !copied
+            );
+        }
+        function importPrivateFromShareCode(code) {
+            const payload = decodePrivateShare(code);
+            const existing = findImportedPrivateSingleDuplicate(payload);
+            if (existing) return { event: existing, duplicate: true };
+            const title = payload.shared_by ? `${payload.shared_by} — ${payload.title}` : payload.title;
+            const event = addPrivateEvent({
+                title,
+                start_at: payload.start_at,
+                end_at: payload.end_at,
+                notes: payload.notes,
+                shared_by: payload.shared_by || '',
+                fixed: true,
+                imported: true,
+            });
+            return { event, duplicate: false };
+        }
+        function getOwnedPrivateEvents() {
+            return loadPrivateEvents().filter((item) => !item.imported);
+        }
+        function privateEventsForExport() {
+            return getOwnedPrivateEvents().map((item) => ({
+                title: item.title,
+                start_at: item.start_at,
+                end_at: item.end_at || '',
+                notes: item.notes || '',
+                fixed: item.fixed !== false,
+            }));
+        }
+        function sanitizePrivateEventsForImport(raw) {
+            if (!Array.isArray(raw)) return [];
+            const sanitized = [];
+            raw.forEach((item) => {
+                if (!item || typeof item !== 'object') return;
+                const title = String(item.title || '').trim().slice(0, 200);
+                const startAt = String(item.start_at || '').trim().slice(0, 40);
+                const endAt = String(item.end_at || '').trim().slice(0, 40);
+                const notes = String(item.notes || '').trim().slice(0, 500);
+                if (!title || !startAt) return;
+                sanitized.push({
+                    title,
+                    start_at: startAt,
+                    end_at: endAt,
+                    notes,
+                    fixed: item.fixed !== false,
+                });
+            });
+            return sanitized.slice(0, 100);
+        }
+        function replaceOwnedPrivateEvents(ownedEvents, displayName) {
+            const imported = loadPrivateEvents().filter((item) => item.imported);
+            const normalized = sanitizePrivateEventsForImport(ownedEvents).map((item) => normalizePrivateEvent(item));
+            savePrivateEvents(imported.concat(normalized));
+            if (typeof displayName === 'string' && displayName.trim()) {
+                setPrivateDisplayName(displayName.trim());
+                if (privateDisplayNameInput) privateDisplayNameInput.value = displayName.trim();
+            }
+        }
+        function importFriendPrivateEvents(nickname, rawEvents, friendDisplayName) {
+            if (!nickname) return;
+            const label = (friendDisplayName || nickname).trim();
+            const events = sanitizePrivateEventsForImport(rawEvents);
+            const kept = loadPrivateEvents().filter((item) => !(item.imported && item.shared_by === nickname));
+            const imported = events.map((item) => {
+                const title = label ? `${label} — ${item.title}` : item.title;
+                return normalizePrivateEvent(Object.assign({}, item, { title }), {
+                    imported: true,
+                    shared_by: nickname,
+                });
+            });
+            savePrivateEvents(kept.concat(imported));
+        }
+        function removeFriendPrivateEvents(nickname) {
+            savePrivateEvents(loadPrivateEvents().filter((item) => !(item.imported && item.shared_by === nickname)));
+        }
+        function scheduleHasExportableData() {
+            const schedules = getSchedules();
+            const myScheduleIds = schedules[MY_SCHEDULE_KEY] || [];
+            return myScheduleIds.length > 0
+                || getRejectedEvents().size > 0
+                || getPendingEvents().size > 0
+                || getOwnedPrivateEvents().length > 0;
+        }
+        function refreshScheduleExportField() {
+            if (shareCodeInput) updateExportField();
+            refreshPrivateShareExportField();
+        }
+        function toPacificDatetimeInputValue(iso) {
+            if (!iso) return '';
+            const instant = new Date(iso);
+            if (Number.isNaN(instant.getTime())) return '';
+            const p = getPacificWallClockParts(instant);
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${p.year}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}`;
+        }
+        function fromPacificDatetimeInputValue(value) {
+            const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec((value || '').trim());
+            if (!match) return '';
+            const y = Number(match[1]);
+            const mo = Number(match[2]);
+            const d = Number(match[3]);
+            const h = Number(match[4]);
+            const mi = Number(match[5]);
+            const pad = (n) => String(n).padStart(2, '0');
+            const base = `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:00`;
+            for (const offset of ['-07:00', '-08:00']) {
+                const instant = new Date(`${base}${offset}`);
+                if (!Number.isNaN(instant.getTime()) && pacificWallClockMatches(instant, y, mo, d, h, mi)) {
+                    return `${base}${offset}`;
+                }
+            }
+            let ms = Date.UTC(y, mo - 1, d, h + 8, mi);
+            for (let i = 0; i < 10; i++) {
+                const instant = new Date(ms);
+                if (pacificWallClockMatches(instant, y, mo, d, h, mi)) {
+                    return `${base}${getPacificOffsetForInstant(instant)}`;
+                }
+                const p = getPacificWallClockParts(instant);
+                ms += ((h - p.hour) * 60 + (mi - p.minute)) * 60000;
+                ms += (d - p.day) * 86400000;
+            }
+            return '';
+        }
+        function formatPrivateDateLabel(startAt) {
+            const start = new Date(startAt);
+            if (Number.isNaN(start.getTime())) return '';
+            return start.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                timeZone: PACIFIC_TZ,
+            });
+        }
+        function formatPrivateTimeRange(startAt, endAt) {
+            const start = new Date(startAt);
+            if (Number.isNaN(start.getTime())) return startAt || '';
+            let timeRange = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: PACIFIC_TZ });
+            if (endAt) {
+                const end = new Date(endAt);
+                if (!Number.isNaN(end.getTime())) {
+                    timeRange += ` - ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: PACIFIC_TZ })}`;
+                }
+            }
+            return `${timeRange} PT`;
+        }
+        function formatPrivateScheduleLabel(startAt, endAt) {
+            const dateLabel = formatPrivateDateLabel(startAt);
+            const timeLabel = formatPrivateTimeRange(startAt, endAt);
+            if (dateLabel && timeLabel) return `${dateLabel} · ${timeLabel}`;
+            return dateLabel || timeLabel;
+        }
+        function privateEventMatchesSearch(item, searchQuery) {
+            if (!searchQuery.raw) return true;
+            const haystack = `${item.title} ${item.notes || ''}`.toLowerCase();
+            if (searchQuery.negative.some((term) => haystack.includes(term))) return false;
+            if (searchQuery.isUrl) return false;
+            if (searchQuery.positive.length === 0) return true;
+            return searchQuery.positive.every((term) => haystack.includes(term));
+        }
+        function getFilteredPrivateEvents() {
+            if (!showPrivateBlocksCheckbox || !showPrivateBlocksCheckbox.checked) return [];
+            const searchQuery = parseSearchQuery(searchInput.value);
+            const selectedDays = new Set(Array.from(document.querySelectorAll('.day-filter:checked')).map((cb) => parseInt(cb.value, 10)));
+            const hidePast = hidePastEventsCheckbox.checked;
+            const now = new Date();
+            return loadPrivateEvents().filter((item) => {
+                if (!item.start_at) return false;
+                if (hidePast) {
+                    const end = item.end_at ? new Date(item.end_at) : new Date(item.start_at);
+                    if (!Number.isNaN(end.getTime()) && end < now) return false;
+                }
+                if (currentView === 'agenda') {
+                    const weekday = getPacificWeekdayIndex(item.start_at);
+                    if (weekday === null || !selectedDays.has(weekday)) return false;
+                }
+                return privateEventMatchesSearch(item, searchQuery);
+            });
+        }
+        function setPrivateStatus(message, isError) {
+            if (!privateStatus) return;
+            privateStatus.textContent = message || '';
+            privateStatus.className = isError
+                ? 'text-sm mt-3 font-medium h-4 text-center text-red-600'
+                : 'text-sm mt-3 font-medium h-4 text-center text-green-600';
+            if (message) setTimeout(() => { privateStatus.textContent = ''; }, 3200);
+        }
+        function updatePrivateBlocksSummary() {
+            if (!privateBlocksDetails) return;
+            const summary = privateBlocksDetails.querySelector('summary');
+            if (!summary) return;
+            const count = loadPrivateEvents().length;
+            summary.textContent = count
+                ? `> private_commitments (${count})`
+                : '> private_commitments';
+        }
+        function ensureAgendaDayVisible(startAt) {
+            const weekday = getPacificWeekdayIndex(startAt);
+            if (weekday === null) return;
+            const checkbox = document.querySelector(`.day-filter[value="${weekday}"]`);
+            if (checkbox) checkbox.checked = true;
+        }
+        function updatePrivateCardViewNotice() {
+            if (!privateCardViewNotice) return;
+            const count = getOwnedPrivateEvents().length;
+            if (currentView !== 'card' || count === 0) {
+                privateCardViewNotice.classList.add('hidden');
+                privateCardViewNotice.textContent = '';
+                return;
+            }
+            privateCardViewNotice.classList.remove('hidden');
+            privateCardViewNotice.innerHTML = `You have <strong>${count}</strong> private block${count === 1 ? '' : 's'} — switch to <button type="button" id="privateCardViewAgendaBtn" class="font-semibold underline text-amber-900 dark:text-amber-100">Agenda View</button> to see them on your timeline (amber rows).`;
+            const jumpBtn = document.getElementById('privateCardViewAgendaBtn');
+            if (jumpBtn) jumpBtn.addEventListener('click', () => switchView('agenda'));
+        }
+        function savePrivateEventFromForm() {
+            const startAt = fromPacificDatetimeInputValue(privateStartInput.value);
+            const endAt = fromPacificDatetimeInputValue(privateEndInput.value);
+            if (!startAt) {
+                throw new Error('Could not read the start time — pick the date and time again.');
+            }
+            const payload = {
+                title: privateTitleInput.value,
+                start_at: startAt,
+                end_at: endAt,
+                notes: privateNotesInput.value,
+                fixed: true,
+            };
+            const editId = privateEventIdInput.value;
+            let saved;
+            try {
+                saved = editId ? updatePrivateEvent(editId, payload) : addPrivateEvent(payload);
+                ensureAgendaDayVisible(saved.start_at);
+                if (showPrivateBlocksCheckbox) showPrivateBlocksCheckbox.checked = true;
+            } finally {
+                renderPrivateEventsList();
+            }
+            resetPrivateEventForm();
+            refreshScheduleExportField();
+            switchView('agenda');
+            if (privateBlocksDetails) privateBlocksDetails.open = true;
+            if (privateEventsList) privateEventsList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setPrivateStatus(editId ? 'Updated — shown in Agenda view (amber).' : 'Saved — shown in Agenda view (amber).');
+        }
+        function initPrivateCommitments() {
+            if (!privateEventForm) return;
+            if (privateEventForm.dataset.bound === '1') {
+                renderPrivateEventsList();
+                return;
+            }
+            privateEventForm.dataset.bound = '1';
+            if (privateDisplayNameInput) {
+                privateDisplayNameInput.value = getPrivateDisplayName();
+                privateDisplayNameInput.addEventListener('change', () => {
+                    setPrivateDisplayName(privateDisplayNameInput.value);
+                    refreshScheduleExportField();
+                });
+            }
+            privateEventForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                try {
+                    savePrivateEventFromForm();
+                } catch (error) {
+                    setPrivateStatus(error.message || String(error), true);
+                }
+            });
+            if (privateSaveBtn) {
+                privateSaveBtn.addEventListener('click', () => {
+                    try {
+                        if (!privateTitleInput.value.trim()) {
+                            privateTitleInput.reportValidity();
+                            return;
+                        }
+                        if (!privateStartInput.value) {
+                            privateStartInput.reportValidity();
+                            return;
+                        }
+                        savePrivateEventFromForm();
+                    } catch (error) {
+                        setPrivateStatus(error.message || String(error), true);
+                    }
+                });
+            }
+            if (privateCancelEditBtn) privateCancelEditBtn.addEventListener('click', resetPrivateEventForm);
+            if (privateShareCopyBtn) privateShareCopyBtn.addEventListener('click', copyPrivateCommitmentsShareCode);
+            if (privateShareLinkBtn) privateShareLinkBtn.addEventListener('click', copyPrivateCommitmentsShareLink);
+            if (privateImportBtn) privateImportBtn.addEventListener('click', importPrivateCommitmentsFromPanel);
+            renderPrivateEventsList();
+            refreshPrivateShareExportField();
+            maybeImportBusyFromQuery();
+        }
+        function resetPrivateEventForm() {
+            if (!privateEventForm) return;
+            if (privateEventIdInput) privateEventIdInput.value = '';
+            privateEventForm.reset();
+            if (privateSaveBtn) privateSaveBtn.textContent = 'Save';
+            if (privateCancelEditBtn) privateCancelEditBtn.classList.add('hidden');
+        }
+        function startPrivateEventEdit(item) {
+            privateEventIdInput.value = item.id;
+            privateTitleInput.value = item.title;
+            privateStartInput.value = toPacificDatetimeInputValue(item.start_at);
+            privateEndInput.value = toPacificDatetimeInputValue(item.end_at);
+            privateNotesInput.value = item.notes || '';
+            privateSaveBtn.textContent = 'Update';
+            privateCancelEditBtn.classList.remove('hidden');
+            if (privateBlocksDetails) privateBlocksDetails.open = true;
+        }
+        function renderPrivateEventsList() {
+            if (!privateEventsList) return;
+            const events = loadPrivateEvents().slice().sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
+            updatePrivateBlocksSummary();
+            if (!events.length) {
+                privateEventsList.innerHTML = '<p class="text-sm text-gray-500">None yet.</p>';
+                return;
+            }
+            privateEventsList.innerHTML = '';
+            events.forEach((item) => {
+                const row = document.createElement('div');
+                row.className = 'flex flex-col gap-1 bg-gray-50 dark:bg-gray-800 p-2 rounded-md border border-gray-200 dark:border-gray-700';
+                const badges = item.imported ? '<span class="text-xs font-semibold text-purple-700 dark:text-purple-300">Shared import</span>' : '';
+                const notes = item.notes ? `<p class="text-xs text-gray-500 break-words">${escapeHtml(item.notes)}</p>` : '';
+                const actions = item.imported
+                    ? `<button type="button" class="private-delete-btn text-xs text-red-600 font-semibold" data-id="${escapeHtml(item.id)}">Remove</button>`
+                    : `<button type="button" class="private-edit-btn text-xs text-gray-700 dark:text-gray-300 font-semibold" data-id="${escapeHtml(item.id)}">Edit</button>
+                       <button type="button" class="private-share-btn text-xs text-indigo-700 dark:text-indigo-300 font-semibold" data-id="${escapeHtml(item.id)}" title="Copy a link for this block only">Share</button>
+                       <button type="button" class="private-delete-btn text-xs text-red-600 font-semibold" data-id="${escapeHtml(item.id)}">Delete</button>`;
+                row.innerHTML = `<div class="flex justify-between gap-2 items-start"><div class="min-w-0"><p class="font-medium text-gray-800 dark:text-gray-200 break-words">${escapeHtml(item.title)}</p><p class="text-xs text-gray-500">${escapeHtml(formatPrivateScheduleLabel(item.start_at, item.end_at))}</p>${badges}${notes}</div><div class="flex flex-wrap gap-2 shrink-0">${actions}</div></div>`;
+                privateEventsList.appendChild(row);
+            });
+            privateEventsList.querySelectorAll('.private-delete-btn').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const item = loadPrivateEvents().find((e) => e.id === btn.dataset.id);
+                    const label = item ? item.title : 'this block';
+                    if (!confirm(`Remove "${label}" from this browser?`)) return;
+                    deletePrivateEvent(btn.dataset.id);
+                    renderPrivateEventsList();
+                    refreshScheduleExportField();
+                    renderCurrentView();
+                });
+            });
+            privateEventsList.querySelectorAll('.private-edit-btn').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const item = loadPrivateEvents().find((e) => e.id === btn.dataset.id);
+                    if (item) startPrivateEventEdit(item);
+                });
+            });
+            privateEventsList.querySelectorAll('.private-share-btn').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    sharePrivateBlockById(btn.dataset.id);
+                });
+            });
+        }
+        function clearPrivateShareUrl() {
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has(BUSY_SHARE_PARAM) && !url.searchParams.has(PRIVATE_SHARE_PARAM)) return;
+            url.searchParams.delete(BUSY_SHARE_PARAM);
+            url.searchParams.delete(PRIVATE_SHARE_PARAM);
+            const query = url.searchParams.toString();
+            history.replaceState(null, '', query ? `${url.pathname}?${query}` : url.pathname);
+        }
+        function maybeImportBusyFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const listCode = params.get(PRIVATE_SHARE_PARAM);
+            if (listCode) {
+                try {
+                    const result = importPrivateCommitmentsShare(listCode.trim(), '');
+                    clearPrivateShareUrl();
+                    renderPrivateEventsList();
+                    refreshScheduleExportField();
+                    renderCurrentView();
+                    const count = result.count || 0;
+                    setPrivateStatus(`Imported ${count} private block${count === 1 ? '' : 's'} from link.`, false);
+                    if (privateBlocksDetails) privateBlocksDetails.open = true;
+                    switchView('agenda');
+                } catch (error) {
+                    setPrivateStatus('Could not import private blocks from link.', true);
+                }
+                return;
+            }
+            const code = params.get(BUSY_SHARE_PARAM);
+            if (!code) return;
+            try {
+                const result = importPrivateFromShareCode(code.trim());
+                clearPrivateShareUrl();
+                renderPrivateEventsList();
+                refreshScheduleExportField();
+                renderCurrentView();
+                showShareStatus(result.duplicate
+                    ? 'That busy block is already on your Agenda.'
+                    : 'Imported busy block from link.');
+            } catch (error) {
+                showShareStatus('Could not import busy block from link.');
+            }
+        }
+        async function copyPrivateCommitmentsShareCode() {
+            refreshPrivateShareExportField();
+            const code = privateShareCodeInput ? privateShareCodeInput.value : '';
+            if (!code) {
+                setPrivateStatus('Add at least one private block to share.', true);
+                return;
+            }
+            const copied = await copyToClipboard(code);
+            setPrivateStatus(copied ? 'Private share code copied!' : 'Could not copy to clipboard.', !copied);
+        }
+        async function copyPrivateCommitmentsShareLink() {
+            refreshPrivateShareExportField();
+            const code = privateShareCodeInput ? privateShareCodeInput.value : '';
+            if (!code) {
+                setPrivateStatus('Add at least one private block to share.', true);
+                return;
+            }
+            const copied = await copyToClipboard(privateCommitmentsShareUrl(code));
+            setPrivateStatus(copied ? 'Private share link copied!' : 'Could not copy to clipboard.', !copied);
+        }
+        function importPrivateCommitmentsFromPanel() {
+            const nickname = privateImportNicknameInput ? privateImportNicknameInput.value : '';
+            const rawCode = privateImportCodeInput ? privateImportCodeInput.value : '';
+            const finishImport = (message) => {
+                renderPrivateEventsList();
+                refreshScheduleExportField();
+                renderCurrentView();
+                if (privateImportCodeInput) privateImportCodeInput.value = '';
+                if (privateImportNicknameInput) privateImportNicknameInput.value = '';
+                if (privateBlocksDetails) privateBlocksDetails.open = true;
+                switchView('agenda');
+                setPrivateStatus(message, false);
+            };
+            try {
+                const result = importPrivateCommitmentsShare(rawCode, nickname);
+                if (result.mode === 'friend') {
+                    finishImport(`Imported ${result.count} block${result.count === 1 ? '' : 's'} for ${result.nickname}.`);
+                } else {
+                    finishImport(`Imported ${result.count} private block${result.count === 1 ? '' : 's'} (party picks unchanged).`);
+                }
+            } catch (error) {
+                if (sanitizeNickname(nickname)) {
+                    setPrivateStatus(error.message || 'Invalid private share code.', true);
+                    return;
+                }
+                try {
+                    const result = importPrivateFromShareCode(extractShareCodeFromText(rawCode));
+                    finishImport(result.duplicate
+                        ? 'That busy block is already on your Agenda.'
+                        : 'Imported one private block (party picks unchanged).');
+                } catch (innerError) {
+                    setPrivateStatus(error.message || 'Invalid private share code.', true);
+                }
+            }
+        }
+
         function getFilteredEvents() {
             const searchQuery = parseSearchQuery(searchInput.value);
             const selectedDays = new Set(Array.from(document.querySelectorAll('.day-filter:checked')).map(cb => parseInt(cb.value)));
@@ -3595,10 +4463,8 @@
                 if (!showFriendSchedules && isApprovedByFriend && !isApprovedByMe) return false;
 
                 if (currentView === 'agenda') {
-                    const pacificDateKey = getPacificDateKey(startDateString);
-                    if (!pacificDateKey) return false;
-                    const pacificDate = new Date(pacificDateKey + 'T00:00:00Z');
-                    if (!selectedDays.has(pacificDate.getUTCDay())) return false;
+                    const weekday = getPacificWeekdayIndex(startDateString);
+                    if (weekday === null || !selectedDays.has(weekday)) return false;
                 }
 
                 if (hiddenKeywords.length > 0) {
@@ -3629,7 +4495,23 @@
 
             renderHiddenKeywordsUi();
 
-            if (filteredEvents.length === 0 && (currentView === 'card' || currentView === 'agenda')) { 
+            const filteredPrivateEvents = getFilteredPrivateEvents();
+            const hasVisiblePrivate = currentView === 'agenda' && filteredPrivateEvents.length > 0;
+            const hasOwnedPrivateOnCard = currentView === 'card' && getOwnedPrivateEvents().length > 0;
+            const urlSearchNoHit = isUrl && filteredEvents.length === 0;
+            const onBrowseView = currentView === 'card' || currentView === 'agenda';
+            const urlSearchSubmitHint = document.getElementById('urlSearchSubmitHint');
+            if (urlSearchSubmitHint) {
+                if (urlSearchNoHit && onBrowseView) {
+                    urlSearchSubmitHint.classList.remove('hidden');
+                } else {
+                    urlSearchSubmitHint.classList.add('hidden');
+                }
+            }
+            const showEmptyResults = filteredEvents.length === 0
+                && onBrowseView
+                && (urlSearchNoHit || (!hasVisiblePrivate && !hasOwnedPrivateOnCard));
+            if (showEmptyResults) {
                 noResults.classList.remove('hidden');
                 if (isUrl) {
                     noResultsStandard.classList.add('hidden');
@@ -3638,13 +4520,23 @@
                     noResultsStandard.classList.remove('hidden');
                     noResultsSubmit.classList.add('hidden');
                 }
+                if (urlSearchNoHit) {
+                    requestAnimationFrame(() => {
+                        const scrollTarget = urlSearchSubmitHint && !urlSearchSubmitHint.classList.contains('hidden')
+                            ? urlSearchSubmitHint
+                            : noResults;
+                        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
+                }
+                updatePrivateCardViewNotice();
                 updateUnseenCountUI();
-                return; 
+                return;
             }
             noResults.classList.add('hidden');
             const sortedEvents = filteredEvents.sort((a, b) => new Date(getStartDateString(a)) - new Date(getStartDateString(b)));
             if (currentView === 'card') { renderCardView(sortedEvents); } 
-            else if (currentView === 'agenda') { renderAgendaView(sortedEvents); }
+            else if (currentView === 'agenda') { renderAgendaView(sortedEvents, filteredPrivateEvents); }
+            updatePrivateCardViewNotice();
             updatePartyOMeter();
             updateUnseenCountUI();
         }
@@ -4039,7 +4931,7 @@
             }
         }
 
-        function renderAgendaView(events) {
+        function renderAgendaView(events, privateEvents = []) {
             const groupedEvents = events.reduce((acc, event) => {
                 const dateKey = getPacificDateKey(getStartDateString(event));
                 if (!dateKey) return acc;
@@ -4047,41 +4939,74 @@
                 acc[dateKey].push(event);
                 return acc;
             }, {});
-            agendaViewContainer.innerHTML = ''; 
-            Object.keys(groupedEvents).sort().forEach(dateKey => {
-                const dayEvents = groupedEvents[dateKey];
+            const groupedPrivate = (privateEvents || []).reduce((acc, item) => {
+                const dateKey = getPacificDateKey(item.start_at);
+                if (!dateKey) return acc;
+                if (!acc[dateKey]) acc[dateKey] = [];
+                acc[dateKey].push(item);
+                return acc;
+            }, {});
+            const allDateKeys = [...new Set([...Object.keys(groupedEvents), ...Object.keys(groupedPrivate)])].sort();
+            agendaViewContainer.innerHTML = '';
+            allDateKeys.forEach(dateKey => {
                 const dayHeader = document.createElement('div');
                 const eventDate = new Date(dateKey + 'T00:00:00Z');
                 dayHeader.className = 'agenda-day-header p-3 border-b border-t font-bold text-lg text-gray-700 bg-gray-50';
                 dayHeader.textContent = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
                 agendaViewContainer.appendChild(dayHeader);
-                dayEvents.forEach(event => {
-                    const eventRow = document.createElement('div');
-                    eventRow.className = 'agenda-event-row flex flex-col sm:flex-row sm:items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors gap-1 sm:gap-0';
-                    const highlightPreset = getMergedHighlight(event);
 
-                    applyApprovalStyles(eventRow, event.id);
-                    eventRow.dataset.eventId = event.id;
-                    attachLongPressShare(eventRow, event);
-                    eventRow.addEventListener('click', () => showModal(event));
-                    const startDateString = getStartDateString(event);
-                    const isAllDay = startDateString && !startDateString.includes('T');
-                    let timeRange = 'All-day';
-                    if (isAllDay) {
-                        const allDayDisplay = formatAllDayEventDisplay(event);
-                        if (allDayDisplay) timeRange = allDayDisplay.timeLabel;
-                    } else if (!isAllDay) {
-                        const startDate = new Date(startDateString);
-                        const endDateString = getEndDateString(event);
-                        timeRange = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
-                        if (endDateString) {
-                            const endDate = new Date(endDateString);
-                            timeRange += ` - ${endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}`;
+                const dayItems = [];
+                (groupedEvents[dateKey] || []).forEach((event) => {
+                    dayItems.push({ kind: 'party', event, sort: new Date(getStartDateString(event)).getTime() || 0 });
+                });
+                (groupedPrivate[dateKey] || []).forEach((item) => {
+                    dayItems.push({ kind: 'private', item, sort: new Date(item.start_at).getTime() || 0 });
+                });
+                dayItems.sort((a, b) => a.sort - b.sort);
+
+                dayItems.forEach((entry) => {
+                    if (entry.kind === 'party') {
+                        const event = entry.event;
+                        const eventRow = document.createElement('div');
+                        eventRow.className = 'agenda-event-row flex flex-col sm:flex-row sm:items-center p-3 border-b hover:bg-indigo-50 text-sm cursor-pointer transition-colors gap-1 sm:gap-0';
+                        const highlightPreset = getMergedHighlight(event);
+
+                        applyApprovalStyles(eventRow, event.id);
+                        eventRow.dataset.eventId = event.id;
+                        attachLongPressShare(eventRow, event);
+                        eventRow.addEventListener('click', () => showModal(event));
+                        const startDateString = getStartDateString(event);
+                        const isAllDay = startDateString && !startDateString.includes('T');
+                        let timeRange = 'All-day';
+                        if (isAllDay) {
+                            const allDayDisplay = formatAllDayEventDisplay(event);
+                            if (allDayDisplay) timeRange = allDayDisplay.timeLabel;
+                        } else if (!isAllDay) {
+                            const startDate = new Date(startDateString);
+                            const endDateString = getEndDateString(event);
+                            timeRange = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+                            if (endDateString) {
+                                const endDate = new Date(endDateString);
+                                timeRange += ` - ${endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })}`;
+                            }
                         }
+                        const changeBadge = getChangeBadgeHtml(event.id);
+                        const titleClass = (highlightPreset?.agendaClasses || []).join(' ');
+                        eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-indigo-600 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p><p class="text-gray-500 break-words">${escapeHtml(event.location || '')}</p></div>`;
+                        agendaViewContainer.appendChild(eventRow);
+                        return;
                     }
-                    const changeBadge = getChangeBadgeHtml(event.id);
-                    const titleClass = (highlightPreset?.agendaClasses || []).join(' ');
-                    eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-indigo-600 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p><p class="text-gray-500 break-words">${escapeHtml(event.location || '')}</p></div>`;
+
+                    const item = entry.item;
+                    const eventRow = document.createElement('div');
+                    eventRow.className = 'agenda-event-row private-commitment-event flex flex-col sm:flex-row sm:items-center p-3 border-b text-sm gap-1 sm:gap-0';
+                    if (item.imported || item.shared_by) eventRow.classList.add('private-shared-event');
+                    const timeRange = formatPrivateTimeRange(item.start_at, item.end_at);
+                    const badge = item.imported
+                        ? '<span class="text-xs font-semibold text-purple-700 dark:text-purple-300 mr-2">Busy (shared)</span>'
+                        : '<span class="text-xs font-semibold text-amber-800 dark:text-amber-300 mr-2">Private</span>';
+                    const notes = item.notes ? `<p class="text-gray-500 break-words">${escapeHtml(item.notes)}</p>` : '';
+                    eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-amber-700 dark:text-amber-300 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center">${badge}${escapeHtml(item.title)}</p>${notes}</div>`;
                     agendaViewContainer.appendChild(eventRow);
                 });
             });
@@ -4226,18 +5151,19 @@
             const myScheduleIds = schedules[MY_SCHEDULE_KEY] || [];
             const rejectedIds = Array.from(getRejectedEvents());
             const pendingIds = Array.from(getPendingEvents());
-            
             const exportData = {
                 approved: myScheduleIds,
                 rejected: rejectedIds,
-                pending: pendingIds
+                pending: pendingIds,
+                private: privateEventsForExport(),
+                privateDisplayName: getPrivateDisplayName(),
             };
-            shareCodeInput.value = btoa(JSON.stringify(exportData));
+            shareCodeInput.value = scheduleHasExportableData() ? btoa(JSON.stringify(exportData)) : '';
         }
         async function exportApproved() {
             updateExportField(); 
             if (!shareCodeInput.value) {
-                shareStatus.textContent = 'No approved events to export.';
+                shareStatus.textContent = 'Nothing to export yet — approve parties or add a private block.';
                 shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
                 return;
             }
@@ -4263,19 +5189,61 @@
             }
 
             try {
-                const decoded = atob(code);
-                const parsedData = JSON.parse(decoded);
+                const parsedData = decodeShareCode(code);
                 if (!parsedData || typeof parsedData !== 'object') {
                     throw new Error('Invalid import payload');
+                }
+                if (parsedData.v === PRIVATE_LIST_SHARE_VERSION && parsedData.kind === 'private_commitments') {
+                    const result = importPrivateCommitmentsShare(code, nickname);
+                    renderPrivateEventsList();
+                    refreshScheduleExportField();
+                    renderCurrentView();
+                    if (result.mode === 'friend') {
+                        shareStatus.textContent = `Imported ${result.count} private block${result.count === 1 ? '' : 's'} for ${result.nickname} (party picks unchanged).`;
+                    } else {
+                        shareStatus.textContent = `Imported ${result.count} private block${result.count === 1 ? '' : 's'} only — party picks unchanged.`;
+                    }
+                    shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+                    importCodeInput.value = '';
+                    importNicknameInput.value = '';
+                    setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+                    return;
+                }
+                if (isPrivateSingleSharePayload(parsedData)) {
+                    if (nickname) {
+                        shareStatus.textContent = 'That is a single busy block — use Import a Schedule without a nickname, or paste a full schedule code.';
+                        shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                        setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+                        return;
+                    }
+                    const singleResult = importPrivateFromShareCode(code);
+                    renderPrivateEventsList();
+                    refreshScheduleExportField();
+                    renderCurrentView();
+                    shareStatus.textContent = singleResult.duplicate
+                        ? 'That busy block is already on your Agenda (party picks unchanged).'
+                        : 'Imported one private busy block (party picks unchanged).';
+                    shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+                    importCodeInput.value = '';
+                    importNicknameInput.value = '';
+                    setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+                    return;
                 }
                 const approvedIds = sanitizeEventIds(parsedData.approved);
                 const rejectedIds = sanitizeEventIds(parsedData.rejected);
                 const pendingIds = sanitizeEventIds(parsedData.pending);
+                const privateEvents = sanitizePrivateEventsForImport(parsedData.private);
+                const friendDisplayName = typeof parsedData.privateDisplayName === 'string'
+                    ? parsedData.privateDisplayName.trim().slice(0, MAX_NICKNAME_LENGTH)
+                    : '';
 
                 if (nickname) {
                     const schedules = getSchedules();
                     schedules[nickname] = approvedIds;
                     saveSchedules(schedules);
+                    if (Object.prototype.hasOwnProperty.call(parsedData, 'private')) {
+                        importFriendPrivateEvents(nickname, privateEvents, friendDisplayName);
+                    }
                     shareStatus.textContent = `Successfully imported ${nickname}'s schedule!`;
                 } else {
                     const schedules = getSchedules();
@@ -4283,9 +5251,14 @@
                     saveSchedules(schedules);
                     saveRejectedEvents(new Set(rejectedIds));
                     savePendingEvents(new Set(pendingIds));
+                    if (Object.prototype.hasOwnProperty.call(parsedData, 'private')) {
+                        replaceOwnedPrivateEvents(privateEvents, parsedData.privateDisplayName || '');
+                    }
                     shareStatus.textContent = 'Successfully synced your schedule!';
                 }
-                
+
+                renderPrivateEventsList();
+                refreshScheduleExportField();
                 renderCurrentView();
                 shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
                 importCodeInput.value = '';
@@ -4293,6 +5266,28 @@
                 setTimeout(() => { shareStatus.textContent = ''; }, 3000);
 
             } catch (error) {
+                try {
+                    if (nickname) {
+                        shareStatus.textContent = 'That is a single busy block — use Import a Schedule without a nickname, or paste a full schedule code.';
+                        shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                        setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+                        return;
+                    }
+                    const singleResult = importPrivateFromShareCode(code);
+                    renderPrivateEventsList();
+                    refreshScheduleExportField();
+                    renderCurrentView();
+                    shareStatus.textContent = singleResult.duplicate
+                        ? 'That busy block is already on your Agenda (party picks unchanged).'
+                        : 'Imported one private busy block (party picks unchanged).';
+                    shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
+                    importCodeInput.value = '';
+                    importNicknameInput.value = '';
+                    setTimeout(() => { shareStatus.textContent = ''; }, 3000);
+                    return;
+                } catch (busyError) {
+                    // fall through to legacy party-id import
+                }
                 const ids = sanitizeEventIds(code.split(',').map((id) => id.trim()).filter(Boolean));
                 if (ids.length === 0) {
                     shareStatus.textContent = 'Invalid import code.';
@@ -4345,6 +5340,9 @@
                     const schedules = getSchedules();
                     delete schedules[friendNameToRemove];
                     saveSchedules(schedules);
+                    removeFriendPrivateEvents(friendNameToRemove);
+                    renderPrivateEventsList();
+                    refreshScheduleExportField();
                     renderFriendList(); 
                     renderCurrentView(); 
                 });
@@ -4612,6 +5610,7 @@
 
         // --- EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
+            initPrivateCommitments();
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             cardViewTab.addEventListener('click', () => switchView('card'));
             agendaViewTab.addEventListener('click', () => switchView('agenda'));
@@ -4629,6 +5628,7 @@
             });
             showNewOnlyCheckbox.addEventListener('change', renderCurrentView);
             showFriendSchedulesCheckbox.addEventListener('change', renderCurrentView);
+            if (showPrivateBlocksCheckbox) showPrivateBlocksCheckbox.addEventListener('change', renderCurrentView);
             hidePastEventsCheckbox.addEventListener('change', renderCurrentView);
             hideRejectedCheckbox.addEventListener('change', renderCurrentView);
             showPendingOnlyCheckbox.addEventListener('change', renderCurrentView);
@@ -4678,14 +5678,16 @@
                     if (event) showModal(event);
                 }
             });
-            shareDetails.addEventListener('toggle', (event) => {
-                if (event.target.open) {
-                    updateExportField();
-                    renderFriendList();
-                }
-            });
-            exportBtn.addEventListener('click', exportApproved);
-            importBtn.addEventListener('click', importApproved);
+            if (shareDetails) {
+                shareDetails.addEventListener('toggle', (event) => {
+                    if (event.target.open) {
+                        updateExportField();
+                        renderFriendList();
+                    }
+                });
+            }
+            if (exportBtn) exportBtn.addEventListener('click', exportApproved);
+            if (importBtn) importBtn.addEventListener('click', importApproved);
             refreshBtn.addEventListener('click', () => fetchAndCacheEvents(true));
             markAllSeenBtn.addEventListener('click', markAllEventsSeen);
             document.addEventListener('visibilitychange', () => {
@@ -4768,6 +5770,15 @@
             });
             submitPartyBtn.addEventListener('click', () => submitToGoogleForm(partyUrlInput.value.trim(), submitStatus, submitPartyBtn));
             submitSearchedUrlBtn.addEventListener('click', () => submitToGoogleForm(searchInput.value.trim(), submitSearchStatus, submitSearchedUrlBtn));
+            const urlSearchSubmitHintBtn = document.getElementById('urlSearchSubmitHintBtn');
+            const urlSearchSubmitHintStatus = document.getElementById('urlSearchSubmitHintStatus');
+            if (urlSearchSubmitHintBtn) {
+                urlSearchSubmitHintBtn.addEventListener('click', () => submitToGoogleForm(
+                    searchInput.value.trim(),
+                    urlSearchSubmitHintStatus || submitSearchStatus,
+                    urlSearchSubmitHintBtn
+                ));
+            }
             searchInput.addEventListener('keyup', handleSearchInput);
             clearSearchBtn.addEventListener('click', () => {
                 searchInput.value = '';
@@ -4941,7 +5952,10 @@
                 if (e.key === 'Escape') finishOnboarding(true);
             });
         });
-        
+        if (document.readyState !== 'loading') {
+            initPrivateCommitments();
+        }
+
     </script>
 </body>
 </html>
