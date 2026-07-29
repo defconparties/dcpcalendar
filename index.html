@@ -444,6 +444,33 @@
         .friend-approved-event:hover {
             background-color: #fed7aa !important; /* orange-200 */
         }
+        .friend-going-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-top: 0.35rem;
+        }
+        .friend-going-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            line-height: 1.2;
+            padding: 0.15rem 0.45rem;
+            border-radius: 9999px;
+            background-color: #ffedd5;
+            color: #9a3412;
+            border: 1px solid #fdba74;
+            max-width: 10rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .agenda-event-row .friend-going-tags {
+            margin-top: 0.25rem;
+        }
+        .event-card .friend-going-tags {
+            margin-bottom: 0.5rem;
+        }
         .rejected-event {
             background-color: #fee2e2 !important; /* red-100 */
             border-left: 4px solid #ef4444; /* red-500 */
@@ -1016,6 +1043,11 @@
         html.dark .friend-approved-event:hover {
             background-color: #9a3412 !important;
         }
+        html.dark .friend-going-tag {
+            background-color: #7c2d12;
+            color: #fed7aa;
+            border-color: #fb923c;
+        }
         html.dark .private-commitment-event {
             background-color: #422006 !important;
             border-left-color: #fbbf24 !important;
@@ -1445,59 +1477,113 @@
             <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h4 class="font-semibold text-gray-700 mb-2">Export My Schedule</h4>
-                    <p class="text-sm text-gray-600 mb-2">Copy this code to move your full schedule — party picks (Approved/Rejected/Pending) <strong>and</strong> private commitments — to another browser or share with a friend.</p>
+                    <p class="text-sm text-gray-600 mb-2">Copy this code to move your schedule to another browser or share party picks with a friend. By default the code includes private commitments; use the checkbox below when sharing only Approved/Rejected/Pending with someone.</p>
                     <div class="flex gap-2">
                         <input type="text" id="shareCodeInput" readonly class="flex-grow bg-gray-100 border border-gray-300 rounded-md p-2 text-sm text-gray-700">
                         <button id="exportBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 flex-shrink-0">Copy Code</button>
                     </div>
+                    <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 mt-2 cursor-pointer">
+                        <input type="checkbox" id="exportSkipPrivateCheckbox" class="h-4 w-4 mt-0.5 shrink-0">
+                        <span>Don&rsquo;t include private / busy blocks <span class="text-gray-500 dark:text-gray-400">(parties only — best when sharing picks with friends; leave unchecked to move everything to another of your browsers)</span></span>
+                    </label>
                 </div>
                  <div>
                     <h4 class="font-semibold text-gray-700 mb-2">Import a Schedule</h4>
-                    <p class="text-sm text-gray-600 mb-2">Paste a code to sync your schedule (parties + private blocks). Add a nickname to import a friend's schedule — their parties show in orange, their private blocks in amber.</p>
+                    <p class="text-sm text-gray-600 mb-2">Paste a code to sync your schedule (parties + private blocks). Add a nickname to import a friend's schedule — their parties show in orange with name tags, their private blocks in amber.</p>
                     <div class="flex flex-wrap gap-2">
                         <input type="text" id="importNicknameInput" placeholder="Friend's Nickname (optional)" class="flex-grow border border-gray-300 rounded-md p-2 text-sm min-w-[150px]">
                         <input type="text" id="importCodeInput" placeholder="Paste code here..." class="flex-grow border border-gray-300 rounded-md p-2 text-sm min-w-[150px]">
                         <button id="importBtn" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 flex-shrink-0">Import</button>
                     </div>
+                    <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 mt-2 cursor-pointer">
+                        <input type="checkbox" id="importSkipPrivateCheckbox" class="h-4 w-4 mt-0.5 shrink-0">
+                        <span>Don&rsquo;t import private / busy blocks <span class="text-gray-500 dark:text-gray-400">(parties only; default is off so existing behavior stays the same)</span></span>
+                    </label>
                 </div>
             </div>
             <div class="mt-4 pt-4 border-t">
                 <h4 class="font-semibold text-gray-700 mb-2">Manage Friend Schedules</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Use <strong>Remove</strong> to drop a friend&rsquo;s party overlay and any private blocks they brought in. Your own Approved/Rejected/Pending picks are never changed.</p>
                 <div id="friendListContainer"></div>
             </div>
              <p id="shareStatus" class="text-sm mt-2 font-medium h-4 text-center"></p>
+        </details>
+
+        <!-- Calendar import / export (.ics) -->
+        <details id="calendarIcsDetails" class="hacker-panel max-w-5xl mx-auto mb-6 bg-white dark:bg-gray-900 p-3 rounded-sm shadow-sm">
+            <summary class="font-medium text-indigo-600 dark:text-green-400 cursor-pointer font-mono text-sm">&gt; calendar_import_export</summary>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">
+                Export or import <strong>.ics</strong> calendar files — works with <strong>Google Calendar</strong>, <strong>Outlook</strong>, and Apple Calendar.
+                All times use <strong>Pacific (Vegas)</strong>, limited to the conference window <strong>Aug 1–11, 2026</strong> (same as Pipeline).
+            </p>
+            <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Export .ics</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Download a calendar file you can import into Google, Outlook, or any ICS app.</p>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        <input type="checkbox" id="icsExportApproved" class="h-4 w-4" checked>
+                        <span>Approved parties (your picks)</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-3">
+                        <input type="checkbox" id="icsExportPrivate" class="h-4 w-4" checked>
+                        <span>Private commitments (your busy blocks)</span>
+                    </label>
+                    <button type="button" id="icsExportBtn"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                        Download .ics
+                    </button>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Import .ics</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        Import events from Google/Outlook exports as <strong>private commitments</strong> (amber on Agenda).
+                        Events outside Aug 1–11 PT are skipped.
+                    </p>
+                    <input type="file" id="icsImportFile" accept=".ics,text/calendar,.ical"
+                           class="block w-full text-sm text-gray-700 dark:text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-950 dark:file:text-indigo-200">
+                </div>
+            </div>
+            <p id="calendarIcsStatus" class="text-sm mt-3 font-medium h-4 text-center"></p>
         </details>
 
         <!-- Private commitments (browser-only busy blocks) -->
         <details id="privateBlocksDetails" class="hacker-panel max-w-5xl mx-auto mb-6 bg-white dark:bg-gray-900 p-3 rounded-sm shadow-sm">
             <summary class="font-medium text-indigo-600 dark:text-green-400 cursor-pointer font-mono text-sm">&gt; private_commitments</summary>
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">
-                Block off dinners, flights, meetings, and other fixed plans. Enter times in <strong>Pacific (Vegas)</strong> — same as the party calendar. Saved blocks appear in <strong>Your private blocks</strong> (right) and on the <strong>Agenda</strong> timeline as amber rows — not in Card view. Use <strong>Share private blocks only</strong> below to send just these blocks (not party picks), or include them in <strong>Export My Schedule</strong> above. Stored in <strong>this browser only</strong> until you export.
+                Block off dinners, flights, meetings, and other fixed plans. Enter times in <strong>Pacific (Vegas)</strong> — same as Pipeline and the party calendar.
+                <strong>Dates limited to Aug 1–11, 2026</strong>; picking a start time auto-fills end <strong>+1 hour</strong> (edit end if you need longer).
+                Saved blocks appear under <strong>Your private blocks</strong> in this panel and on the <strong>Agenda</strong> timeline as amber rows — not in Card view.
+                Use <strong>calendar_import_export</strong> above for Google/Outlook .ics, or <strong>Share private blocks only</strong> below for DCP codes.
             </p>
             <div class="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="privateDisplayName" class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Your name on shared blocks</label>
-                    <input type="text" id="privateDisplayName" placeholder="Paul" class="w-full border border-gray-300 rounded-md p-2 text-sm mb-2">
+                    <input type="text" id="privateDisplayName" placeholder="Paul" class="w-full border border-gray-300 rounded-md p-2 text-base sm:text-sm mb-2">
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Teammates see &ldquo;<em>Your name — dinner</em>&rdquo; when they import your code.</p>
                     <form id="privateEventForm" class="space-y-2">
                         <input type="hidden" id="privateEventId" value="">
                         <label for="privateTitle" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Title</label>
-                        <input type="text" id="privateTitle" required placeholder="Vendor dinner, flight, meeting…" class="w-full border border-gray-300 rounded-md p-2 text-sm">
+                        <input type="text" id="privateTitle" required placeholder="Vendor dinner, flight, meeting…" class="w-full border border-gray-300 rounded-md p-2 text-base sm:text-sm">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div>
                                 <label for="privateStart" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Start <span class="font-normal text-gray-500">(Pacific / Vegas)</span></label>
-                                <input type="datetime-local" id="privateStart" required class="w-full border border-gray-300 rounded-md p-2 text-sm" title="Enter wall-clock time in Pacific (Las Vegas)">
+                                <input type="datetime-local" id="privateStart" required class="w-full border border-gray-300 rounded-md p-2 text-base sm:text-sm min-h-[2.75rem]"
+                                       min="2026-08-01T00:00" max="2026-08-11T23:59"
+                                       title="Aug 1–11, 2026 Pacific — end auto-fills +1 hour">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Aug 1–11 only · end +1h when start changes</p>
                             </div>
                             <div>
-                                <label for="privateEnd" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">End <span class="font-normal text-gray-500">(Pacific / Vegas, optional)</span></label>
-                                <input type="datetime-local" id="privateEnd" class="w-full border border-gray-300 rounded-md p-2 text-sm" title="Enter wall-clock time in Pacific (Las Vegas)">
+                                <label for="privateEnd" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">End <span class="font-normal text-gray-500">(Pacific / Vegas)</span></label>
+                                <input type="datetime-local" id="privateEnd" class="w-full border border-gray-300 rounded-md p-2 text-base sm:text-sm min-h-[2.75rem]"
+                                       min="2026-08-01T00:00" max="2026-08-12T23:59"
+                                       title="Aug 1–11, 2026 Pacific (may extend past midnight)">
                             </div>
                         </div>
                         <label for="privateNotes" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Notes (optional)</label>
-                        <textarea id="privateNotes" rows="2" placeholder="Location, vendor…" class="w-full border border-gray-300 rounded-md p-2 text-sm"></textarea>
+                        <textarea id="privateNotes" rows="2" placeholder="Location, vendor…" class="w-full border border-gray-300 rounded-md p-2 text-base sm:text-sm"></textarea>
                         <div class="flex flex-wrap gap-2 pt-1">
-                            <button type="button" id="privateSaveBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Save</button>
-                            <button type="button" id="privateCancelEditBtn" class="hidden px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm font-medium hover:bg-gray-300">Cancel edit</button>
+                            <button type="button" id="privateSaveBtn" class="px-4 py-2.5 sm:py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Save</button>
+                            <button type="button" id="privateCancelEditBtn" class="hidden px-4 py-2.5 sm:py-2 bg-gray-200 text-gray-800 rounded-md text-sm font-medium hover:bg-gray-300">Cancel edit</button>
                         </div>
                     </form>
                 </div>
@@ -1706,6 +1792,7 @@
                         <li><strong>Party reminders</strong> — in event details, pick 15 min, 30 min, or 1 hour before start, or Off. Personal alerts only; not the site-wide Subscribe push.</li>
                         <li><strong>Mark all seen</strong> — clears New/Updated when you are caught up.</li>
                         <li><strong>Smarter refresh</strong> — every 6 hours Aug 1–11; 48 hours off-season. <strong>Refresh Now</strong> forces a sync (5-minute cooldown).</li>
+                        <li><strong>Calendar import / export</strong> — <strong>calendar_import_export</strong> downloads or imports <strong>.ics</strong> for Google Calendar, Outlook, and Apple Calendar (approved parties and/or private blocks, Pacific times, Aug 1–11 window).</li>
                     </ul>
                 </section>
 
@@ -1725,8 +1812,19 @@
                         <li><strong>Approved</strong> (green) — plan to attend; counts toward Party-O-Meter™.</li>
                         <li><strong>Pending</strong> (blue) — applied, waiting to hear back.</li>
                         <li><strong>Rejected</strong> (red) — ruled out; hide with <strong>Hide Rejected</strong>.</li>
-                        <li><strong>Private commitments</strong> (amber in Agenda) — dinners, flights, and other fixed plans; included in Export My Schedule.</li>
                         <li>Saved automatically in this browser — no account required.</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>Private commitments</h3>
+                    <ul>
+                        <li><strong>&gt; private_commitments</strong> — block dinners, flights, meetings, and other fixed plans. Stored in <strong>this browser only</strong>.</li>
+                        <li><strong>Agenda view only</strong> — amber rows on your timeline (not Card view). Turn on <strong>Show Private</strong> in filters if needed.</li>
+                        <li><strong>Pacific (Vegas) time</strong> — enter and view times in PT, same as parties and Pipeline. Dates limited to <strong>Aug 1–11, 2026</strong>; start auto-fills end <strong>+1 hour</strong>.</li>
+                        <li><strong>Share private blocks only</strong> — DCP codes / links that share busy blocks without party picks. Per-row <strong>Share</strong> copies a one-block link.</li>
+                        <li><strong>calendar_import_export</strong> — download or import <strong>.ics</strong> files (Google, Outlook, Apple). Import adds private blocks; times in UTC or other U.S. zones are <strong>converted to Pacific</strong>. Events outside Aug 1–11 PT are skipped.</li>
+                        <li><strong>Export My Schedule</strong> (Share/Sync) also includes your private blocks when you export your full schedule.</li>
                     </ul>
                 </section>
 
@@ -1766,8 +1864,8 @@
                     <h3>Share &amp; tools</h3>
                     <ul>
                         <li><strong>Share a party</strong> — link icon in event details, or <strong>hold</strong> a card/agenda row (mobile) / right-click (desktop). Opens that party for anyone with the link, even if your filters would hide it.</li>
-                        <li><strong>Export / import</strong> — Share/Sync encodes Approved, Pending, Rejected, and your private commitments.</li>
-                        <li><strong>Friends</strong> — import a nickname + code; friend approvals show in orange.</li>
+                        <li><strong>Export / import</strong> — Share/Sync encodes Approved, Pending, Rejected, and (by default) your private commitments. Check <strong>Don&rsquo;t include private</strong> on export when sharing only party picks with friends. <strong>calendar_import_export</strong> downloads <strong>.ics</strong> for Google/Outlook.</li>
+                        <li><strong>Friends</strong> — import a nickname + code; friend approvals show in orange with name tags on cards/agenda. Use <strong>Remove</strong> under Manage Friend Schedules to drop an import. Optional import checkbox skips private/busy blocks. Friend private blocks that match something you already have (same time + title) are skipped so they do not double up.</li>
                         <li><strong>Flex on &apos;em</strong> — share your approved count from Party-O-Meter™.</li>
                         <li><strong>Cut &amp; Paste</strong> — store name, email, title, shirt size, etc. for fast signup forms.</li>
                         <li><strong>Submit a party</strong> — Submit tab or paste a URL in search.</li>
@@ -1777,10 +1875,12 @@
             </div>
 
             <section class="help-section">
-                <h3>Privacy</h3>
+                <h3>Privacy &amp; import safety</h3>
                 <ul>
                     <li>Schedules, private commitments, filters, profiles, and &quot;seen&quot; baselines stay in your browser only.</li>
                     <li>Share codes are encoded, not encrypted — share only with people you trust.</li>
+                    <li><strong>Imported data is display-only.</strong> Share codes and <strong>.ics</strong> files can only add or update schedule text (titles, notes, times) in your browser. They cannot run scripts, download files, redirect the page, or change party data from the live feed.</li>
+                    <li>Imported titles and notes are escaped when shown and stripped of control characters. Only import codes and calendar files from people you trust — same as any copy-paste from a friend.</li>
                     <li>Sign Up, Approved, and Rejected clicks are tracked anonymously for popularity stats.</li>
                 </ul>
             </section>
@@ -1938,7 +2038,7 @@
 
     <!-- Event Details Modal -->
     <div id="eventModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-        <div id="modalContent" class="bg-white rounded-sm shadow-xl w-full max-w-lg transform transition-all duration-300 scale-95 opacity-0">
+        <div id="modalContent" class="bg-white rounded-sm shadow-xl w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain transform transition-all duration-300 scale-95 opacity-0">
             <!-- Modal Header -->
             <div class="p-4 sm:p-5 border-b flex justify-between items-start gap-3">
                 <h3 id="modalTitle" class="text-lg sm:text-xl font-bold text-gray-800 dark:text-green-100 flex-1 min-w-0 font-mono"></h3>
@@ -2098,6 +2198,12 @@
         const privateImportBtn = document.getElementById('privateImportBtn');
         const privateStatus = document.getElementById('privateStatus');
         const privateCardViewNotice = document.getElementById('privateCardViewNotice');
+        const calendarIcsDetails = document.getElementById('calendarIcsDetails');
+        const icsExportBtn = document.getElementById('icsExportBtn');
+        const icsImportFile = document.getElementById('icsImportFile');
+        const icsExportApproved = document.getElementById('icsExportApproved');
+        const icsExportPrivate = document.getElementById('icsExportPrivate');
+        const calendarIcsStatus = document.getElementById('calendarIcsStatus');
         const hideRejectedCheckbox = document.getElementById('hideRejected');
         const hideApprovedCheckbox = document.getElementById('hideApproved');
         const showPendingOnlyCheckbox = document.getElementById('showPendingOnly');
@@ -2126,6 +2232,8 @@
         const exportBtn = document.getElementById('exportBtn');
         const importNicknameInput = document.getElementById('importNicknameInput');
         const importCodeInput = document.getElementById('importCodeInput');
+        const importSkipPrivateCheckbox = document.getElementById('importSkipPrivateCheckbox');
+        const exportSkipPrivateCheckbox = document.getElementById('exportSkipPrivateCheckbox');
         const importBtn = document.getElementById('importBtn');
         const shareStatus = document.getElementById('shareStatus');
         const friendListContainer = document.getElementById('friendListContainer');
@@ -2169,7 +2277,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.4.30-beta';
+        const APP_VERSION = '1.5.1-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -2292,8 +2400,30 @@
         const AUTO_REFRESH_INTERVAL_DEFAULT = 48 * 60 * 60 * 1000; // 48 hours off-season
         const HSC_SEASON_START = '2026-08-01';
         const HSC_SEASON_END = '2026-08-11';
+        const CONFERENCE_DATE_MIN = HSC_SEASON_START;
+        const CONFERENCE_DATE_MAX = HSC_SEASON_END;
+        const CONFERENCE_END_DATE_MAX = '2026-08-12';
+        const CONFERENCE_PICKER_DEFAULT_START = '2026-08-02T17:00';
+        const SWAG_AD_IDENTIFIER = 'DEFCON PARTIES 🥃 - SWAG';
         const EVENTS_API_URL = 'https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2d1197ea71b546d7a2ccf373e4a4b205/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aG0pyghxWH8Xq-w5Lt0ZOIO47aiy_MqIEq8R35WmeVA';
         const MAX_IMPORT_CODE_LENGTH = 100000;
+        const MAX_ICS_FILE_BYTES = 2 * 1024 * 1024;
+        const ICS_TZID_ALIASES = {
+            CST: 'America/Chicago',
+            CDT: 'America/Chicago',
+            'US/CENTRAL': 'America/Chicago',
+            EST: 'America/New_York',
+            EDT: 'America/New_York',
+            'US/EASTERN': 'America/New_York',
+            MST: 'America/Denver',
+            MDT: 'America/Denver',
+            'US/MOUNTAIN': 'America/Denver',
+            PST: 'America/Los_Angeles',
+            PDT: 'America/Los_Angeles',
+            'US/PACIFIC': 'America/Los_Angeles',
+            UTC: 'Etc/UTC',
+            GMT: 'Etc/GMT',
+        };
         const MAX_NICKNAME_LENGTH = 50;
         const MAX_EVENT_IDS = 500;
         const MAX_PROFILES = 20;
@@ -2314,6 +2444,17 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+        function sanitizePrivateTextField(value, maxLen) {
+            return String(value ?? '')
+                .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+                .trim()
+                .slice(0, maxLen);
+        }
+        function validatePrivateIsoDatetime(iso) {
+            const trimmed = String(iso || '').trim();
+            if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(trimmed)) return false;
+            return !Number.isNaN(new Date(trimmed).getTime());
         }
         function sanitizeUrl(url) {
             if (!url || typeof url !== 'string') return null;
@@ -2720,6 +2861,18 @@
             }
             return friends;
         }
+        /** Small name chips for card/agenda when friends imported that party. Display-only; no storage changes. */
+        function getFriendGoingTagsHtml(eventId) {
+            const friends = getFriendApprovals(eventId);
+            if (!friends.length) return '';
+            const chips = friends.map((name) =>
+                `<span class="friend-going-tag" title="${escapeHtml(name)} is going">${escapeHtml(name)}</span>`
+            ).join('');
+            return `<div class="friend-going-tags" aria-label="Friends going: ${escapeHtml(friends.join(', '))}">${chips}</div>`;
+        }
+        function isImportSkipPrivateChecked() {
+            return !!(importSkipPrivateCheckbox && importSkipPrivateCheckbox.checked);
+        }
         function getRejectedEvents() {
             const rejected = localStorage.getItem(REJECTED_EVENTS_KEY);
             return rejected ? new Set(JSON.parse(rejected)) : new Set();
@@ -2821,7 +2974,7 @@
         }
         function normalizeDescriptionForFingerprint(html) {
             const template = document.createElement('template');
-            template.innerHTML = html || '';
+            template.innerHTML = sanitizeDescriptionHtml(html || '');
             return (template.content.textContent || '').replace(/\s+/g, ' ').trim();
         }
         function eventChangeFingerprint(event) {
@@ -3766,7 +3919,7 @@
             return (localStorage.getItem(PRIVATE_DISPLAY_NAME_KEY) || '').trim();
         }
         function setPrivateDisplayName(name) {
-            const trimmed = (name || '').trim();
+            const trimmed = sanitizePrivateTextField(name, MAX_NICKNAME_LENGTH);
             if (trimmed) localStorage.setItem(PRIVATE_DISPLAY_NAME_KEY, trimmed);
             else localStorage.removeItem(PRIVATE_DISPLAY_NAME_KEY);
             return trimmed;
@@ -3784,7 +3937,11 @@
             let lastError = null;
             for (const candidate of attempts) {
                 try {
-                    return JSON.parse(decodeURIComponent(escape(atob(candidate))));
+                    const parsed = JSON.parse(decodeURIComponent(escape(atob(candidate))));
+                    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                        throw new Error('Invalid share code.');
+                    }
+                    return parsed;
                 } catch (error) {
                     lastError = error;
                 }
@@ -3886,8 +4043,13 @@
                 : '';
             const label = sanitizeNickname(nickname);
             if (label) {
-                importFriendPrivateEvents(label, privateEvents, friendDisplayName);
-                return { mode: 'friend', nickname: label, count: privateEvents.length };
+                const result = importFriendPrivateEvents(label, privateEvents, friendDisplayName) || {};
+                return {
+                    mode: 'friend',
+                    nickname: label,
+                    count: result.imported || 0,
+                    skipped: result.skipped || 0,
+                };
             }
             replaceOwnedPrivateEvents(privateEvents, friendDisplayName);
             return { mode: 'self', count: privateEvents.length };
@@ -3900,16 +4062,18 @@
             if (privateShareLinkBtn) privateShareLinkBtn.disabled = !code;
         }
         function normalizePrivateEvent(input, opts = {}) {
-            const title = (input.title || '').trim();
-            const startAt = (input.start_at || '').trim();
-            const endAt = (input.end_at || '').trim();
+            const title = sanitizePrivateTextField(input.title, 200);
+            const startAt = String(input.start_at || '').trim().slice(0, 40);
+            const endAt = String(input.end_at || '').trim().slice(0, 40);
             if (!title || !startAt) throw new Error('Title and start time are required.');
+            if (!validatePrivateIsoDatetime(startAt)) throw new Error('Invalid start time.');
+            if (endAt && !validatePrivateIsoDatetime(endAt)) throw new Error('Invalid end time.');
             return {
                 id: input.id || privateUuid(),
                 title,
                 start_at: startAt,
                 end_at: endAt,
-                notes: (input.notes || '').trim(),
+                notes: sanitizePrivateTextField(input.notes, 500),
                 fixed: input.fixed !== false,
                 shared_by: (input.shared_by || opts.shared_by || '').trim(),
                 imported: Boolean(opts.imported || input.imported),
@@ -3978,13 +4142,15 @@
             const payload = decodePrivateShare(code);
             const existing = findImportedPrivateSingleDuplicate(payload);
             if (existing) return { event: existing, duplicate: true };
-            const title = payload.shared_by ? `${payload.shared_by} — ${payload.title}` : payload.title;
+            const sharedBy = sanitizePrivateTextField(payload.shared_by, MAX_NICKNAME_LENGTH);
+            const blockTitle = sanitizePrivateTextField(payload.title, 200);
+            const title = sharedBy ? `${sharedBy} — ${blockTitle}` : blockTitle;
             const event = addPrivateEvent({
                 title,
                 start_at: payload.start_at,
                 end_at: payload.end_at,
                 notes: payload.notes,
-                shared_by: payload.shared_by || '',
+                shared_by: sharedBy,
                 fixed: true,
                 imported: true,
             });
@@ -4007,11 +4173,12 @@
             const sanitized = [];
             raw.forEach((item) => {
                 if (!item || typeof item !== 'object') return;
-                const title = String(item.title || '').trim().slice(0, 200);
+                const title = sanitizePrivateTextField(item.title, 200);
                 const startAt = String(item.start_at || '').trim().slice(0, 40);
                 const endAt = String(item.end_at || '').trim().slice(0, 40);
-                const notes = String(item.notes || '').trim().slice(0, 500);
-                if (!title || !startAt) return;
+                const notes = sanitizePrivateTextField(item.notes, 500);
+                if (!title || !startAt || !validatePrivateIsoDatetime(startAt)) return;
+                if (endAt && !validatePrivateIsoDatetime(endAt)) return;
                 sanitized.push({
                     title,
                     start_at: startAt,
@@ -4031,34 +4198,120 @@
                 if (privateDisplayNameInput) privateDisplayNameInput.value = displayName.trim();
             }
         }
+        /** Compare private blocks ignoring optional "Name — " friend prefix so your Dinner and "Alice — Dinner" match. */
+        function privateBlockContentKey(item) {
+            const rawTitle = String(item.title || '')
+                .replace(/^.*? — /, '')
+                .trim()
+                .toLowerCase();
+            return `${String(item.start_at || '').trim()}|${String(item.end_at || '').trim()}|${rawTitle}`;
+        }
         function importFriendPrivateEvents(nickname, rawEvents, friendDisplayName) {
-            if (!nickname) return;
+            if (!nickname) return { imported: 0, skipped: 0 };
             const label = (friendDisplayName || nickname).trim();
             const events = sanitizePrivateEventsForImport(rawEvents);
             const kept = loadPrivateEvents().filter((item) => !(item.imported && item.shared_by === nickname));
-            const imported = events.map((item) => {
+            const seenKeys = new Set(kept.map((item) => privateBlockContentKey(item)));
+            const imported = [];
+            let skipped = 0;
+            events.forEach((item) => {
                 const title = label ? `${label} — ${item.title}` : item.title;
-                return normalizePrivateEvent(Object.assign({}, item, { title }), {
+                const candidate = Object.assign({}, item, { title });
+                const key = privateBlockContentKey(candidate);
+                if (seenKeys.has(key)) {
+                    skipped += 1;
+                    return;
+                }
+                seenKeys.add(key);
+                imported.push(normalizePrivateEvent(candidate, {
                     imported: true,
                     shared_by: nickname,
-                });
+                }));
             });
             savePrivateEvents(kept.concat(imported));
+            return { imported: imported.length, skipped };
         }
         function removeFriendPrivateEvents(nickname) {
             savePrivateEvents(loadPrivateEvents().filter((item) => !(item.imported && item.shared_by === nickname)));
         }
+        function isExportSkipPrivateChecked() {
+            return !!(exportSkipPrivateCheckbox && exportSkipPrivateCheckbox.checked);
+        }
         function scheduleHasExportableData() {
             const schedules = getSchedules();
             const myScheduleIds = schedules[MY_SCHEDULE_KEY] || [];
-            return myScheduleIds.length > 0
+            const hasParties = myScheduleIds.length > 0
                 || getRejectedEvents().size > 0
-                || getPendingEvents().size > 0
-                || getOwnedPrivateEvents().length > 0;
+                || getPendingEvents().size > 0;
+            if (hasParties) return true;
+            if (isExportSkipPrivateChecked()) return false;
+            return getOwnedPrivateEvents().length > 0;
         }
         function refreshScheduleExportField() {
             if (shareCodeInput) updateExportField();
             refreshPrivateShareExportField();
+        }
+        function parseDatetimeLocalValue(value) {
+            const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec((value || '').trim());
+            if (!match) return null;
+            return {
+                year: Number(match[1]),
+                month: Number(match[2]),
+                day: Number(match[3]),
+                hour: Number(match[4]),
+                minute: Number(match[5]),
+            };
+        }
+        function formatDatetimeLocalValue(parts) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`;
+        }
+        function addOneHourToDatetimeLocalValue(value) {
+            const parts = parseDatetimeLocalValue(value);
+            if (!parts) return '';
+            const rolled = new Date(parts.year, parts.month - 1, parts.day, parts.hour + 1, parts.minute);
+            return formatDatetimeLocalValue({
+                year: rolled.getFullYear(),
+                month: rolled.getMonth() + 1,
+                day: rolled.getDate(),
+                hour: rolled.getHours(),
+                minute: rolled.getMinutes(),
+            });
+        }
+        function applyPrivateEndFromStart() {
+            if (!privateStartInput || !privateEndInput) return;
+            const startValue = privateStartInput.value;
+            if (!startValue) return;
+            privateEndInput.value = addOneHourToDatetimeLocalValue(startValue);
+        }
+        function ensurePrivateFormDefaults() {
+            if (!privateStartInput || !privateEndInput) return;
+            if (privateEventIdInput?.value) return;
+            if (!privateStartInput.value) {
+                privateStartInput.value = CONFERENCE_PICKER_DEFAULT_START;
+                applyPrivateEndFromStart();
+            }
+        }
+        function isPrivateStartInConferenceWindow(iso) {
+            const key = getPacificDateKey(iso);
+            return Boolean(key && key >= CONFERENCE_DATE_MIN && key <= CONFERENCE_DATE_MAX);
+        }
+        function isPrivateEndDateAllowed(iso) {
+            const key = getPacificDateKey(iso);
+            return Boolean(key && key >= CONFERENCE_DATE_MIN && key <= CONFERENCE_END_DATE_MAX);
+        }
+        function assertPrivateEventInConferenceWindow(startAt, endAt) {
+            if (!isPrivateStartInConferenceWindow(startAt)) {
+                throw new Error('Start must be between Aug 1 and Aug 11, 2026 (Pacific / Vegas).');
+            }
+            if (endAt) {
+                if (!isPrivateEndDateAllowed(endAt)) {
+                    throw new Error('End must be on or before Aug 12, 2026 (Pacific) for blocks that run past midnight.');
+                }
+                if (new Date(endAt) <= new Date(startAt)) {
+                    throw new Error('End time must be after start time.');
+                }
+            }
         }
         function toPacificDatetimeInputValue(iso) {
             if (!iso) return '';
@@ -4095,6 +4348,374 @@
                 ms += (d - p.day) * 86400000;
             }
             return '';
+        }
+        function isoToIcsPacificLocal(iso) {
+            if (!iso) return '';
+            const instant = new Date(iso);
+            if (Number.isNaN(instant.getTime())) return '';
+            const p = getPacificWallClockParts(instant);
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${p.year}${pad(p.month)}${pad(p.day)}T${pad(p.hour)}${pad(p.minute)}00`;
+        }
+        function formatIcsUtc(instant) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${instant.getUTCFullYear()}${pad(instant.getUTCMonth() + 1)}${pad(instant.getUTCDate())}T${pad(instant.getUTCHours())}${pad(instant.getUTCMinutes())}${pad(instant.getUTCSeconds())}Z`;
+        }
+        function escapeIcsText(text) {
+            return String(text || '')
+                .replace(/\\/g, '\\\\')
+                .replace(/;/g, '\\;')
+                .replace(/,/g, '\\,')
+                .replace(/\r\n/g, '\\n')
+                .replace(/\n/g, '\\n');
+        }
+        function plainTextFromHtml(html) {
+            const template = document.createElement('template');
+            template.innerHTML = sanitizeDescriptionHtml(html || '');
+            return (template.content.textContent || '').replace(/\s+/g, ' ').trim();
+        }
+        function buildIcsCalendar(entries) {
+            const lines = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//DEF CON Parties//Calendar//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+            ];
+            const stamp = formatIcsUtc(new Date());
+            entries.forEach((entry) => {
+                lines.push('BEGIN:VEVENT');
+                lines.push(`UID:${entry.uid}`);
+                lines.push(`DTSTAMP:${stamp}`);
+                if (entry.start) lines.push(`DTSTART;TZID=${PACIFIC_TZ}:${entry.start}`);
+                if (entry.end) lines.push(`DTEND;TZID=${PACIFIC_TZ}:${entry.end}`);
+                lines.push(`SUMMARY:${escapeIcsText(entry.summary)}`);
+                if (entry.location) lines.push(`LOCATION:${escapeIcsText(entry.location)}`);
+                if (entry.description) lines.push(`DESCRIPTION:${escapeIcsText(entry.description)}`);
+                lines.push('END:VEVENT');
+            });
+            lines.push('END:VCALENDAR');
+            return `${lines.join('\r\n')}\r\n`;
+        }
+        function unfoldIcsLines(text) {
+            return String(text || '')
+                .replace(/\r\n/g, '\n')
+                .replace(/\r/g, '\n')
+                .split('\n')
+                .reduce((acc, line) => {
+                    if ((line.startsWith(' ') || line.startsWith('\t')) && acc.length) {
+                        acc[acc.length - 1] += line.slice(1);
+                    } else {
+                        acc.push(line);
+                    }
+                    return acc;
+                }, []);
+        }
+        function parseIcsProperty(line) {
+            const idx = line.indexOf(':');
+            if (idx < 0) return null;
+            const left = line.slice(0, idx);
+            const value = line.slice(idx + 1);
+            const parts = left.split(';');
+            const name = parts[0].toUpperCase();
+            const params = {};
+            for (let i = 1; i < parts.length; i++) {
+                const eq = parts[i].indexOf('=');
+                if (eq > 0) params[parts[i].slice(0, eq).toUpperCase()] = parts[i].slice(eq + 1);
+            }
+            return { name, params, value };
+        }
+        function normalizeIcsTzid(tzid) {
+            const raw = String(tzid || '').trim();
+            if (!raw) return PACIFIC_TZ;
+            const mapped = ICS_TZID_ALIASES[raw] || ICS_TZID_ALIASES[raw.toUpperCase()];
+            return mapped || raw;
+        }
+        function getWallClockPartsInZone(instant, tz) {
+            const fmt = new Intl.DateTimeFormat('en-US', {
+                timeZone: tz,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+            });
+            const parts = fmt.formatToParts(instant);
+            const pick = (type) => parts.find((p) => p.type === type)?.value || '';
+            return {
+                year: Number(pick('year')),
+                month: Number(pick('month')),
+                day: Number(pick('day')),
+                hour: Number(pick('hour')),
+                minute: Number(pick('minute')),
+            };
+        }
+        function wallClockInZoneToInstant(y, mo, d, h, mi, tz) {
+            let ms = Date.UTC(y, mo - 1, d, h + 8, mi);
+            for (let i = 0; i < 12; i++) {
+                const instant = new Date(ms);
+                if (Number.isNaN(instant.getTime())) return null;
+                const p = getWallClockPartsInZone(instant, tz);
+                if (p.year === y && p.month === mo && p.day === d && p.hour === h && p.minute === mi) {
+                    return instant;
+                }
+                ms += ((h - p.hour) * 60 + (mi - p.minute)) * 60000;
+                ms += (d - p.day) * 86400000;
+            }
+            return null;
+        }
+        function wallClockInZoneToPacificIso(y, mo, d, h, mi, tzid) {
+            const tz = normalizeIcsTzid(tzid);
+            if (tz === PACIFIC_TZ) {
+                const pad = (n) => String(n).padStart(2, '0');
+                return fromPacificDatetimeInputValue(`${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}`);
+            }
+            const instant = wallClockInZoneToInstant(y, mo, d, h, mi, tz);
+            if (!instant) return '';
+            return fromPacificDatetimeInputValue(toPacificDatetimeInputValue(instant.toISOString()));
+        }
+        function icsPropToPacificIso(prop) {
+            if (!prop) return { iso: '', sourceTz: '' };
+            const raw = String(prop.value || '').trim();
+            if (!raw) return { iso: '', sourceTz: '' };
+            const tzid = prop.params.TZID || '';
+            if (prop.params.VALUE === 'DATE' || /^\d{8}$/.test(raw)) {
+                const m = /^(\d{4})(\d{2})(\d{2})$/.exec(raw);
+                if (!m) return { iso: '', sourceTz: '' };
+                return {
+                    iso: fromPacificDatetimeInputValue(`${m[1]}-${m[2]}-${m[3]}T00:00`),
+                    sourceTz: PACIFIC_TZ,
+                };
+            }
+            const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?Z?$/i.exec(raw);
+            if (!m) return { iso: '', sourceTz: '' };
+            if (raw.endsWith('Z')) {
+                const instant = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6] || '00'}Z`);
+                if (Number.isNaN(instant.getTime())) return { iso: '', sourceTz: 'UTC' };
+                return {
+                    iso: fromPacificDatetimeInputValue(toPacificDatetimeInputValue(instant.toISOString())),
+                    sourceTz: 'UTC',
+                };
+            }
+            const normalizedTz = normalizeIcsTzid(tzid);
+            const iso = wallClockInZoneToPacificIso(
+                Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]), Number(m[5]),
+                normalizedTz,
+            );
+            return { iso, sourceTz: normalizedTz };
+        }
+        function unescapeIcsText(value) {
+            return String(value || '')
+                .replace(/\\n/g, '\n')
+                .replace(/\\,/g, ',')
+                .replace(/\\;/g, ';')
+                .replace(/\\\\/g, '\\');
+        }
+        function parseIcs(content) {
+            const lines = unfoldIcsLines(content);
+            const events = [];
+            let current = null;
+            lines.forEach((line) => {
+                const trimmed = line.trim();
+                if (!trimmed) return;
+                if (trimmed === 'BEGIN:VEVENT') {
+                    current = {};
+                    return;
+                }
+                if (trimmed === 'END:VEVENT') {
+                    if (current?.summary && current.start_at) events.push(current);
+                    current = null;
+                    return;
+                }
+                if (!current) return;
+                const prop = parseIcsProperty(trimmed);
+                if (!prop) return;
+                if (prop.name === 'SUMMARY') current.summary = sanitizePrivateTextField(unescapeIcsText(prop.value), 200);
+                if (prop.name === 'DESCRIPTION') {
+                    const chunk = sanitizePrivateTextField(unescapeIcsText(prop.value), 500);
+                    current.description = current.description ? `${current.description}\n${chunk}` : chunk;
+                }
+                if (prop.name === 'LOCATION') current.location = sanitizePrivateTextField(unescapeIcsText(prop.value), 200);
+                if (prop.name === 'DTSTART') {
+                    const parsed = icsPropToPacificIso(prop);
+                    current.start_at = parsed.iso;
+                    if (parsed.sourceTz && parsed.sourceTz !== PACIFIC_TZ) current._sourceTz = parsed.sourceTz;
+                }
+                if (prop.name === 'DTEND') {
+                    const parsed = icsPropToPacificIso(prop);
+                    current.end_at = parsed.iso;
+                    if (parsed.sourceTz && parsed.sourceTz !== PACIFIC_TZ) current._sourceTz = parsed.sourceTz;
+                }
+            });
+            return events;
+        }
+        function defaultEndIsoFromStartIso(startIso) {
+            const inputVal = toPacificDatetimeInputValue(startIso);
+            if (!inputVal) return '';
+            return fromPacificDatetimeInputValue(addOneHourToDatetimeLocalValue(inputVal));
+        }
+        function getApprovedPartiesForIcsExport() {
+            const approvedIds = new Set(getSchedules()[MY_SCHEDULE_KEY] || []);
+            return allEvents.filter((event) => {
+                if (!approvedIds.has(event.id)) return false;
+                if ((event.summary || '').includes(SWAG_AD_IDENTIFIER)) return false;
+                return Boolean(getStartDateString(event));
+            });
+        }
+        function calendarEventToIcsEntry(event) {
+            const startIso = getStartDateString(event);
+            let endIso = getEndDateString(event);
+            if (!endIso && startIso) endIso = defaultEndIsoFromStartIso(startIso);
+            const description = plainTextFromHtml(event.description || '');
+            return {
+                uid: `party-${event.id}@defconparties.com`,
+                start: isoToIcsPacificLocal(startIso),
+                end: isoToIcsPacificLocal(endIso),
+                summary: (event.summary || 'Party').trim(),
+                location: (event.location || '').trim(),
+                description,
+            };
+        }
+        function privateEventToIcsEntry(item) {
+            let endIso = item.end_at;
+            if (!endIso && item.start_at) endIso = defaultEndIsoFromStartIso(item.start_at);
+            const notes = [];
+            if (item.notes) notes.push(item.notes);
+            return {
+                uid: `private-${item.id}@defconparties.com`,
+                start: isoToIcsPacificLocal(item.start_at),
+                end: isoToIcsPacificLocal(endIso),
+                summary: item.title,
+                description: notes.join('\n'),
+            };
+        }
+        function downloadIcsFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }
+        function setCalendarIcsStatus(message, isError) {
+            if (!calendarIcsStatus) return;
+            calendarIcsStatus.textContent = message || '';
+            calendarIcsStatus.className = isError
+                ? 'text-sm mt-3 font-medium h-4 text-center text-red-600'
+                : 'text-sm mt-3 font-medium h-4 text-center text-green-600';
+            if (message) setTimeout(() => { calendarIcsStatus.textContent = ''; }, 4200);
+        }
+        function handleIcsExport() {
+            const includeApproved = !icsExportApproved || icsExportApproved.checked;
+            const includePrivate = !icsExportPrivate || icsExportPrivate.checked;
+            if (!includeApproved && !includePrivate) {
+                setCalendarIcsStatus('Choose at least one export option.', true);
+                return;
+            }
+            const entries = [];
+            if (includeApproved) {
+                getApprovedPartiesForIcsExport().forEach((event) => {
+                    entries.push(calendarEventToIcsEntry(event));
+                });
+            }
+            if (includePrivate) {
+                getOwnedPrivateEvents().forEach((item) => {
+                    if (!item.start_at) return;
+                    entries.push(privateEventToIcsEntry(item));
+                });
+            }
+            if (!entries.length) {
+                setCalendarIcsStatus('Nothing to export — approve parties or add private blocks.', true);
+                return;
+            }
+            downloadIcsFile('defcon-parties-schedule.ics', buildIcsCalendar(entries));
+            setCalendarIcsStatus(`Downloaded ${entries.length} event${entries.length === 1 ? '' : 's'} (.ics).`);
+        }
+        function importIcsEvents(events) {
+            let imported = 0;
+            let skipped = 0;
+            let convertedFromOtherTz = 0;
+            events.forEach((ev) => {
+                if (!ev.start_at || !validatePrivateIsoDatetime(ev.start_at) || !isPrivateStartInConferenceWindow(ev.start_at)) {
+                    skipped += 1;
+                    return;
+                }
+                if (ev._sourceTz && ev._sourceTz !== PACIFIC_TZ) convertedFromOtherTz += 1;
+                let endAt = ev.end_at || '';
+                if (!endAt) endAt = defaultEndIsoFromStartIso(ev.start_at);
+                if (endAt && new Date(endAt) <= new Date(ev.start_at)) {
+                    endAt = defaultEndIsoFromStartIso(ev.start_at);
+                }
+                const notes = [];
+                if (ev.location) notes.push(ev.location);
+                if (ev.description) notes.push(ev.description);
+                addPrivateEvent({
+                    title: ev.summary,
+                    start_at: ev.start_at,
+                    end_at: endAt,
+                    notes: notes.join('\n'),
+                    fixed: true,
+                });
+                imported += 1;
+            });
+            return { imported, skipped, convertedFromOtherTz };
+        }
+        function handleIcsImportFile(file) {
+            if (!file) return;
+            if (file.size > MAX_ICS_FILE_BYTES) {
+                setCalendarIcsStatus('That file is too large (max 2 MB).', true);
+                if (icsImportFile) icsImportFile.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const parsed = parseIcs(String(reader.result || ''));
+                    if (!parsed.length) {
+                        setCalendarIcsStatus('No events found in that .ics file.', true);
+                        return;
+                    }
+                    const result = importIcsEvents(parsed);
+                    renderPrivateEventsList();
+                    refreshScheduleExportField();
+                    if (showPrivateBlocksCheckbox) showPrivateBlocksCheckbox.checked = true;
+                    renderCurrentView();
+                    if (privateBlocksDetails) privateBlocksDetails.open = true;
+                    if (calendarIcsDetails) calendarIcsDetails.open = true;
+                    switchView('agenda');
+                    const notes = [];
+                    if (result.convertedFromOtherTz) {
+                        notes.push(`converted ${result.convertedFromOtherTz} from other timezones to Pacific`);
+                    }
+                    if (result.skipped) notes.push(`skipped ${result.skipped} outside Aug 1–11 PT`);
+                    const suffix = notes.length ? ` (${notes.join('; ')}).` : '.';
+                    setCalendarIcsStatus(`Imported ${result.imported} private block${result.imported === 1 ? '' : 's'}${suffix}`);
+                } catch (error) {
+                    setCalendarIcsStatus(error.message || 'Could not import that .ics file.', true);
+                } finally {
+                    if (icsImportFile) icsImportFile.value = '';
+                }
+            };
+            reader.onerror = () => {
+                setCalendarIcsStatus('Could not read that file.', true);
+                if (icsImportFile) icsImportFile.value = '';
+            };
+            reader.readAsText(file);
+        }
+        function initCalendarIcs() {
+            if (initCalendarIcs._bound) return;
+            initCalendarIcs._bound = true;
+            if (icsExportBtn) icsExportBtn.addEventListener('click', handleIcsExport);
+            if (icsImportFile) {
+                icsImportFile.addEventListener('change', () => {
+                    const file = icsImportFile.files && icsImportFile.files[0];
+                    handleIcsImportFile(file);
+                });
+            }
         }
         function formatPrivateDateLabel(startAt) {
             const start = new Date(startAt);
@@ -4189,11 +4810,19 @@
             if (jumpBtn) jumpBtn.addEventListener('click', () => switchView('agenda'));
         }
         function savePrivateEventFromForm() {
+            if (!privateEndInput.value && privateStartInput.value) {
+                applyPrivateEndFromStart();
+            }
             const startAt = fromPacificDatetimeInputValue(privateStartInput.value);
-            const endAt = fromPacificDatetimeInputValue(privateEndInput.value);
+            let endAt = fromPacificDatetimeInputValue(privateEndInput.value);
             if (!startAt) {
                 throw new Error('Could not read the start time — pick the date and time again.');
             }
+            if (!endAt) {
+                applyPrivateEndFromStart();
+                endAt = fromPacificDatetimeInputValue(privateEndInput.value);
+            }
+            assertPrivateEventInConferenceWindow(startAt, endAt);
             const payload = {
                 title: privateTitleInput.value,
                 start_at: startAt,
@@ -4260,6 +4889,10 @@
             if (privateShareCopyBtn) privateShareCopyBtn.addEventListener('click', copyPrivateCommitmentsShareCode);
             if (privateShareLinkBtn) privateShareLinkBtn.addEventListener('click', copyPrivateCommitmentsShareLink);
             if (privateImportBtn) privateImportBtn.addEventListener('click', importPrivateCommitmentsFromPanel);
+            if (privateStartInput) {
+                privateStartInput.addEventListener('change', applyPrivateEndFromStart);
+            }
+            ensurePrivateFormDefaults();
             renderPrivateEventsList();
             refreshPrivateShareExportField();
             maybeImportBusyFromQuery();
@@ -4270,6 +4903,7 @@
             privateEventForm.reset();
             if (privateSaveBtn) privateSaveBtn.textContent = 'Save';
             if (privateCancelEditBtn) privateCancelEditBtn.classList.add('hidden');
+            ensurePrivateFormDefaults();
         }
         function startPrivateEventEdit(item) {
             privateEventIdInput.value = item.id;
@@ -4305,9 +4939,7 @@
             });
             privateEventsList.querySelectorAll('.private-delete-btn').forEach((btn) => {
                 btn.addEventListener('click', () => {
-                    const item = loadPrivateEvents().find((e) => e.id === btn.dataset.id);
-                    const label = item ? item.title : 'this block';
-                    if (!confirm(`Remove "${label}" from this browser?`)) return;
+                    if (!confirm('Remove this private block from this browser?')) return;
                     deletePrivateEvent(btn.dataset.id);
                     renderPrivateEventsList();
                     refreshScheduleExportField();
@@ -4479,11 +5111,10 @@
         }
         
         function renderCurrentView() {
-            const adIdentifier = 'DEFCON PARTIES 🥃 - SWAG';
-            const countableTotalEvents = allEvents.filter(event => !(event.summary || '').includes(adIdentifier));
+            const countableTotalEvents = allEvents.filter(event => !(event.summary || '').includes(SWAG_AD_IDENTIFIER));
             
             const filteredEvents = getFilteredEvents();
-            const countableVisibleEvents = filteredEvents.filter(event => !(event.summary || '').includes(adIdentifier));
+            const countableVisibleEvents = filteredEvents.filter(event => !(event.summary || '').includes(SWAG_AD_IDENTIFIER));
 
             visibleEventCount.textContent = countableVisibleEvents.length;
             totalEventCount.textContent = countableTotalEvents.length;
@@ -4800,7 +5431,7 @@
                 modalSponsorBanner.onclick = null;
                 return;
             }
-            modalSponsorBanner.href = sponsor.url;
+            modalSponsorBanner.href = sanitizeUrl(sponsor.url) || '#';
             modalSponsorLabel.textContent = sponsor.label;
             if (sponsor.image && modalSponsorImage) {
                 modalSponsorImage.src = sponsor.image;
@@ -4991,8 +5622,9 @@
                             }
                         }
                         const changeBadge = getChangeBadgeHtml(event.id);
+                        const friendTags = getFriendGoingTagsHtml(event.id);
                         const titleClass = (highlightPreset?.agendaClasses || []).join(' ');
-                        eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-indigo-600 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p><p class="text-gray-500 break-words">${escapeHtml(event.location || '')}</p></div>`;
+                        eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-indigo-600 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p>${friendTags}<p class="text-gray-500 break-words">${escapeHtml(event.location || '')}</p></div>`;
                         agendaViewContainer.appendChild(eventRow);
                         return;
                     }
@@ -5071,6 +5703,7 @@
             eventCard.addEventListener('click', () => showModal(event));
 
             const changeBadge = getChangeBadgeHtml(event.id);
+            const friendTags = getFriendGoingTagsHtml(event.id);
             let imageHTML = '';
             if (highlightPreset?.image) {
                 imageHTML = `<div class="h-32 mb-4 flex items-center justify-center"><img src="${escapeHtml(highlightPreset.image)}" alt="${escapeHtml(highlightPreset.imageAlt || 'Event highlight')}" class="max-h-full w-auto object-contain"></div>`;
@@ -5090,7 +5723,8 @@
                 ${eyesHTML}
                 ${imageHTML}
                 <div class="flex-grow">
-                    <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2 flex flex-wrap items-center gap-1">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</h3>
+                    ${friendTags}
                     <div class="event-card-meta event-card-date flex items-center text-gray-600 text-sm mb-4">
                         <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         <span>${escapeHtml(dateDisplay)}</span>
@@ -5155,20 +5789,29 @@
                 approved: myScheduleIds,
                 rejected: rejectedIds,
                 pending: pendingIds,
-                private: privateEventsForExport(),
-                privateDisplayName: getPrivateDisplayName(),
             };
+            // Omit private entirely when skipped so importers leave existing private alone
+            // (an empty private: [] would clear a friend's previously imported private blocks).
+            if (!isExportSkipPrivateChecked()) {
+                exportData.private = privateEventsForExport();
+                exportData.privateDisplayName = getPrivateDisplayName();
+            }
             shareCodeInput.value = scheduleHasExportableData() ? btoa(JSON.stringify(exportData)) : '';
         }
         async function exportApproved() {
             updateExportField(); 
             if (!shareCodeInput.value) {
-                shareStatus.textContent = 'Nothing to export yet — approve parties or add a private block.';
+                shareStatus.textContent = isExportSkipPrivateChecked()
+                    ? 'Nothing to export yet — approve parties (or uncheck “Don’t include private” if you only have busy blocks).'
+                    : 'Nothing to export yet — approve parties or add a private block.';
                 shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
                 return;
             }
             const copied = await copyToClipboard(shareCodeInput.value);
-            shareStatus.textContent = copied ? 'Copied to clipboard!' : 'Could not copy to clipboard.';
+            const partiesOnly = isExportSkipPrivateChecked();
+            shareStatus.textContent = copied
+                ? (partiesOnly ? 'Copied (parties only — no private blocks)!' : 'Copied to clipboard!')
+                : 'Could not copy to clipboard.';
             shareStatus.className = copied
                 ? 'text-sm text-green-600 mt-2 font-medium text-center'
                 : 'text-sm text-red-600 mt-2 font-medium text-center';
@@ -5177,6 +5820,7 @@
         function importApproved() {
             const nickname = sanitizeNickname(importNicknameInput.value);
             const code = importCodeInput.value.trim();
+            const skipPrivate = isImportSkipPrivateChecked();
             if (!code) {
                 shareStatus.textContent = 'Please paste a code to import.';
                 shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
@@ -5194,12 +5838,21 @@
                     throw new Error('Invalid import payload');
                 }
                 if (parsedData.v === PRIVATE_LIST_SHARE_VERSION && parsedData.kind === 'private_commitments') {
+                    if (skipPrivate) {
+                        shareStatus.textContent = 'Skipped — that code is private blocks only. Uncheck “Don’t import private” to import them.';
+                        shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                        setTimeout(() => { shareStatus.textContent = ''; }, 4000);
+                        return;
+                    }
                     const result = importPrivateCommitmentsShare(code, nickname);
                     renderPrivateEventsList();
                     refreshScheduleExportField();
                     renderCurrentView();
                     if (result.mode === 'friend') {
-                        shareStatus.textContent = `Imported ${result.count} private block${result.count === 1 ? '' : 's'} for ${result.nickname} (party picks unchanged).`;
+                        const skipNote = result.skipped
+                            ? ` (${result.skipped} already matched yours)`
+                            : '';
+                        shareStatus.textContent = `Imported ${result.count} private block${result.count === 1 ? '' : 's'} for ${result.nickname}${skipNote} (party picks unchanged).`;
                     } else {
                         shareStatus.textContent = `Imported ${result.count} private block${result.count === 1 ? '' : 's'} only — party picks unchanged.`;
                     }
@@ -5210,6 +5863,12 @@
                     return;
                 }
                 if (isPrivateSingleSharePayload(parsedData)) {
+                    if (skipPrivate) {
+                        shareStatus.textContent = 'Skipped — that code is a private busy block. Uncheck “Don’t import private” to import it.';
+                        shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                        setTimeout(() => { shareStatus.textContent = ''; }, 4000);
+                        return;
+                    }
                     if (nickname) {
                         shareStatus.textContent = 'That is a single busy block — use Import a Schedule without a nickname, or paste a full schedule code.';
                         shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
@@ -5236,29 +5895,46 @@
                 const friendDisplayName = typeof parsedData.privateDisplayName === 'string'
                     ? parsedData.privateDisplayName.trim().slice(0, MAX_NICKNAME_LENGTH)
                     : '';
+                const hasPrivatePayload = Object.prototype.hasOwnProperty.call(parsedData, 'private');
 
                 if (nickname) {
                     const schedules = getSchedules();
                     schedules[nickname] = approvedIds;
                     saveSchedules(schedules);
-                    if (Object.prototype.hasOwnProperty.call(parsedData, 'private')) {
-                        importFriendPrivateEvents(nickname, privateEvents, friendDisplayName);
+                    let privateImportNote = '';
+                    if (skipPrivate) {
+                        // Re-import parties only: drop any prior private blocks from this friend.
+                        removeFriendPrivateEvents(nickname);
+                        privateImportNote = ' (private blocks skipped by checkbox)';
+                    } else if (hasPrivatePayload) {
+                        const privResult = importFriendPrivateEvents(nickname, privateEvents, friendDisplayName) || {};
+                        if (privResult.skipped > 0 && privResult.imported > 0) {
+                            privateImportNote = ` (${privResult.imported} private new, ${privResult.skipped} already matched yours)`;
+                        } else if (privResult.skipped > 0 && !privResult.imported) {
+                            privateImportNote = ` (all ${privResult.skipped} private block${privResult.skipped === 1 ? '' : 's'} already matched yours — not duplicated)`;
+                        } else if (privResult.imported > 0) {
+                            privateImportNote = ` (${privResult.imported} private block${privResult.imported === 1 ? '' : 's'})`;
+                        }
                     }
-                    shareStatus.textContent = `Successfully imported ${nickname}'s schedule!`;
+                    shareStatus.textContent = `Successfully imported ${nickname}'s schedule!${privateImportNote}`;
                 } else {
                     const schedules = getSchedules();
                     schedules[MY_SCHEDULE_KEY] = approvedIds;
                     saveSchedules(schedules);
                     saveRejectedEvents(new Set(rejectedIds));
                     savePendingEvents(new Set(pendingIds));
-                    if (Object.prototype.hasOwnProperty.call(parsedData, 'private')) {
+                    // Self-sync with skip: leave existing private blocks alone (do not wipe).
+                    if (!skipPrivate && hasPrivatePayload) {
                         replaceOwnedPrivateEvents(privateEvents, parsedData.privateDisplayName || '');
                     }
-                    shareStatus.textContent = 'Successfully synced your schedule!';
+                    shareStatus.textContent = skipPrivate
+                        ? 'Successfully synced your schedule (private blocks left unchanged).'
+                        : 'Successfully synced your schedule!';
                 }
 
                 renderPrivateEventsList();
                 refreshScheduleExportField();
+                renderFriendList();
                 renderCurrentView();
                 shareStatus.className = 'text-sm text-green-600 mt-2 font-medium text-center';
                 importCodeInput.value = '';
@@ -5267,6 +5943,12 @@
 
             } catch (error) {
                 try {
+                    if (skipPrivate) {
+                        shareStatus.textContent = 'Skipped — that code looks like a private busy block. Uncheck “Don’t import private” to import it.';
+                        shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
+                        setTimeout(() => { shareStatus.textContent = ''; }, 4000);
+                        return;
+                    }
                     if (nickname) {
                         shareStatus.textContent = 'That is a single busy block — use Import a Schedule without a nickname, or paste a full schedule code.';
                         shareStatus.className = 'text-sm text-red-600 mt-2 font-medium text-center';
@@ -5298,6 +5980,7 @@
                 const importKey = nickname || MY_SCHEDULE_KEY;
                 schedules[importKey] = ids;
                 saveSchedules(schedules);
+                renderFriendList();
                 renderCurrentView();
                 shareStatus.textContent = nickname
                     ? `Successfully imported ${nickname}'s (legacy) schedule!`
@@ -5359,8 +6042,7 @@
             }
         }
         function updatePartyOMeter() {
-            const adIdentifier = 'DEFCON PARTIES 🥃 - SWAG';
-            const countableTotalEvents = allEvents.filter(event => !(event.summary || '').includes(adIdentifier)).length;
+            const countableTotalEvents = allEvents.filter(event => !(event.summary || '').includes(SWAG_AD_IDENTIFIER)).length;
             
             if (countableTotalEvents === 0) {
                 partyOMeterFill.style.width = '0%';
@@ -5611,6 +6293,7 @@
         // --- EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
             initPrivateCommitments();
+            initCalendarIcs();
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             cardViewTab.addEventListener('click', () => switchView('card'));
             agendaViewTab.addEventListener('click', () => switchView('agenda'));
@@ -5687,6 +6370,9 @@
                 });
             }
             if (exportBtn) exportBtn.addEventListener('click', exportApproved);
+            if (exportSkipPrivateCheckbox) {
+                exportSkipPrivateCheckbox.addEventListener('change', () => updateExportField());
+            }
             if (importBtn) importBtn.addEventListener('click', importApproved);
             refreshBtn.addEventListener('click', () => fetchAndCacheEvents(true));
             markAllSeenBtn.addEventListener('click', markAllEventsSeen);
