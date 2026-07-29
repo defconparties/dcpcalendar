@@ -2277,7 +2277,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.5.1-beta';
+        const APP_VERSION = '1.5.2-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -2629,10 +2629,21 @@
             const signupLinkMatch = cleaned.match(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"/i);
             return signupLinkMatch ? sanitizeUrl(signupLinkMatch[1]) : null;
         }
+        // Card description HTML is expensive (DOMPurify). Cache per event id until feed refresh.
+        const cardDescriptionHtmlCache = new Map();
+        function clearCardDescriptionHtmlCache() {
+            cardDescriptionHtmlCache.clear();
+        }
         function getCardDescriptionHtml(event) {
-            const stripped = getDescriptionWithoutSignup(event?.description || '');
-            if (!stripped) return '';
-            return sanitizeDescriptionHtml(stripped);
+            if (!event) return '';
+            const cacheKey = event.id || '';
+            if (cacheKey && cardDescriptionHtmlCache.has(cacheKey)) {
+                return cardDescriptionHtmlCache.get(cacheKey);
+            }
+            const stripped = getDescriptionWithoutSignup(event.description || '');
+            const html = stripped ? sanitizeDescriptionHtml(stripped) : '';
+            if (cacheKey) cardDescriptionHtmlCache.set(cacheKey, html);
+            return html;
         }
         function sanitizeDescriptionHtml(html) {
             html = stripCalendarMarkers(html);
@@ -2846,20 +2857,47 @@
         }
 
         // --- SCHEDULE & LOCAL STORAGE HELPERS ---
+        // Filter/render used to JSON.parse localStorage per event (hundreds of times) — cache lookups.
+        let scheduleLookupCache = null;
+        function invalidateScheduleLookupCache() {
+            scheduleLookupCache = null;
+        }
+        function getScheduleLookup() {
+            if (scheduleLookupCache) return scheduleLookupCache;
+            const schedules = getSchedules();
+            const myApproved = new Set(schedules[MY_SCHEDULE_KEY] || []);
+            const friendByEvent = new Map();
+            Object.keys(schedules).forEach((nickname) => {
+                if (nickname === MY_SCHEDULE_KEY) return;
+                const ids = schedules[nickname];
+                if (!Array.isArray(ids)) return;
+                ids.forEach((id) => {
+                    if (!friendByEvent.has(id)) friendByEvent.set(id, []);
+                    friendByEvent.get(id).push(nickname);
+                });
+            });
+            scheduleLookupCache = {
+                myApproved,
+                friendByEvent,
+                rejected: getRejectedEvents(),
+                pending: getPendingEvents(),
+            };
+            return scheduleLookupCache;
+        }
         function getSchedules() {
             const schedules = localStorage.getItem(SCHEDULES_KEY);
             const defaultSchedules = { [MY_SCHEDULE_KEY]: [] };
             try { return schedules ? JSON.parse(schedules) : defaultSchedules; } catch (e) { return defaultSchedules; }
         }
-        function saveSchedules(schedules) { localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules)); }
-        function isEventApprovedByMe(eventId) { const schedules = getSchedules(); return schedules[MY_SCHEDULE_KEY]?.includes(eventId); }
+        function saveSchedules(schedules) {
+            localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules));
+            invalidateScheduleLookupCache();
+        }
+        function isEventApprovedByMe(eventId) {
+            return getScheduleLookup().myApproved.has(eventId);
+        }
         function getFriendApprovals(eventId) {
-            const schedules = getSchedules();
-            const friends = [];
-            for (const nickname in schedules) {
-                if (nickname !== MY_SCHEDULE_KEY && schedules[nickname]?.includes(eventId)) { friends.push(nickname); }
-            }
-            return friends;
+            return getScheduleLookup().friendByEvent.get(eventId) || [];
         }
         /** Small name chips for card/agenda when friends imported that party. Display-only; no storage changes. */
         function getFriendGoingTagsHtml(eventId) {
@@ -2879,9 +2917,10 @@
         }
         function saveRejectedEvents(rejectedIdsSet) {
             localStorage.setItem(REJECTED_EVENTS_KEY, JSON.stringify(Array.from(rejectedIdsSet)));
+            invalidateScheduleLookupCache();
         }
         function isEventRejected(eventId) {
-            return getRejectedEvents().has(eventId);
+            return getScheduleLookup().rejected.has(eventId);
         }
         function getPendingEvents() {
             const pending = localStorage.getItem(PENDING_EVENTS_KEY);
@@ -2889,9 +2928,10 @@
         }
         function savePendingEvents(pendingIdsSet) {
             localStorage.setItem(PENDING_EVENTS_KEY, JSON.stringify(Array.from(pendingIdsSet)));
+            invalidateScheduleLookupCache();
         }
         function isEventPending(eventId) {
-            return getPendingEvents().has(eventId);
+            return getScheduleLookup().pending.has(eventId);
         }
         function toggleRejectedStatus(eventId) {
             const rejectedIds = getRejectedEvents();
@@ -2972,20 +3012,37 @@
         function getAutoRefreshInterval() {
             return isHscSeason() ? AUTO_REFRESH_INTERVAL_HSC : AUTO_REFRESH_INTERVAL_DEFAULT;
         }
+        // Fingerprint must stay cheap — used across the full feed. Avoid DOMPurify here.
         function normalizeDescriptionForFingerprint(html) {
-            const template = document.createElement('template');
-            template.innerHTML = sanitizeDescriptionHtml(html || '');
-            return (template.content.textContent || '').replace(/\s+/g, ' ').trim();
+            return String(html || '')
+                .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+                .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/&nbsp;/gi, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+        const eventFingerprintMemo = new Map();
+        function clearEventFingerprintMemo() {
+            eventFingerprintMemo.clear();
         }
         function eventChangeFingerprint(event) {
             if (!event || !event.id) return '';
-            return [
+            if (eventFingerprintMemo.has(event.id)) return eventFingerprintMemo.get(event.id);
+            const fp = [
                 (event.summary || '').trim(),
                 getStartDateString(event) || '',
                 getEndDateString(event) || '',
                 (event.location || '').trim(),
                 normalizeDescriptionForFingerprint(event.description || ''),
             ].join('\u001f');
+            eventFingerprintMemo.set(event.id, fp);
+            return fp;
         }
         function detectUpdatedEventIds(oldEvents, fetchedEvents) {
             const oldById = new Map();
@@ -3022,6 +3079,7 @@
             if (!Array.isArray(allEvents) || allEvents.length === 0) return;
             const ids = allEvents.map(event => event.id).filter(Boolean);
             localStorage.setItem(LAST_SESSION_EVENT_IDS_KEY, JSON.stringify(ids));
+            invalidateChangeIdsCache();
         }
         function saveSessionEventFingerprints() {
             if (!Array.isArray(allEvents) || allEvents.length === 0) return;
@@ -3030,6 +3088,7 @@
                 if (event && event.id) fingerprints[event.id] = eventChangeFingerprint(event);
             });
             localStorage.setItem(LAST_SESSION_EVENT_FINGERPRINTS_KEY, JSON.stringify(fingerprints));
+            invalidateChangeIdsCache();
         }
         function initializeSessionBaselineIfNeeded() {
             if (!allEvents.length) return;
@@ -3040,64 +3099,72 @@
                 saveSessionEventFingerprints();
             }
         }
-        function getUnseenSinceLastVisitIds() {
-            const lastSession = getLastSessionEventIds();
-            if (lastSession === null) return new Set();
-            const unseen = new Set();
-            allEvents.forEach(event => {
-                if (event.id && !lastSession.has(event.id)) {
-                    unseen.add(event.id);
-                }
-            });
-            return unseen;
+        // New/updated badges used to recompute full-feed sets per card (O(n²) hangs). Cache once.
+        let changeIdsCache = null;
+        function invalidateChangeIdsCache() {
+            changeIdsCache = null;
         }
-        function getUnseenUpdatedSinceLastVisitIds() {
-            const raw = localStorage.getItem(LAST_SESSION_EVENT_FINGERPRINTS_KEY);
-            if (!raw) return new Set();
-            let lastFingerprints;
-            try {
-                lastFingerprints = JSON.parse(raw);
-            } catch (error) {
-                return new Set();
+        function getChangeIdsBundle() {
+            if (changeIdsCache) return changeIdsCache;
+            const newIds = new Set();
+            const lastSession = getLastSessionEventIds();
+            if (lastSession) {
+                allEvents.forEach((event) => {
+                    if (event.id && !lastSession.has(event.id)) newIds.add(event.id);
+                });
             }
-            const updated = new Set();
-            allEvents.forEach((event) => {
-                if (!event || !event.id || !Object.prototype.hasOwnProperty.call(lastFingerprints, event.id)) return;
-                if (lastFingerprints[event.id] !== eventChangeFingerprint(event)) {
-                    updated.add(event.id);
+            getSyncNewEventIds().forEach((id) => newIds.add(id));
+
+            const updatedIds = new Set();
+            const rawFp = localStorage.getItem(LAST_SESSION_EVENT_FINGERPRINTS_KEY);
+            if (rawFp) {
+                let lastFingerprints;
+                try {
+                    lastFingerprints = JSON.parse(rawFp);
+                } catch (error) {
+                    lastFingerprints = null;
                 }
+                if (lastFingerprints && typeof lastFingerprints === 'object') {
+                    allEvents.forEach((event) => {
+                        if (!event || !event.id || !Object.prototype.hasOwnProperty.call(lastFingerprints, event.id)) return;
+                        if (lastFingerprints[event.id] !== eventChangeFingerprint(event)) {
+                            updatedIds.add(event.id);
+                        }
+                    });
+                }
+            }
+            getSyncUpdatedEventIds().forEach((id) => {
+                if (!newIds.has(id)) updatedIds.add(id);
             });
-            return updated;
+
+            const highlighted = new Set(newIds);
+            updatedIds.forEach((id) => highlighted.add(id));
+            changeIdsCache = { newIds, updatedIds, highlighted };
+            return changeIdsCache;
         }
         function getNewEventIds() {
-            const combined = getUnseenSinceLastVisitIds();
-            getSyncNewEventIds().forEach(id => combined.add(id));
-            return combined;
+            return getChangeIdsBundle().newIds;
         }
         function getUpdatedEventIds() {
-            const combined = getUnseenUpdatedSinceLastVisitIds();
-            getSyncUpdatedEventIds().forEach((id) => {
-                if (!getNewEventIds().has(id)) combined.add(id);
-            });
-            return combined;
+            return getChangeIdsBundle().updatedIds;
         }
         function getHighlightedEventIds() {
-            const combined = getNewEventIds();
-            getUpdatedEventIds().forEach((id) => combined.add(id));
-            return combined;
+            return getChangeIdsBundle().highlighted;
         }
         function getChangeBadgeHtml(eventId) {
-            if (getNewEventIds().has(eventId)) {
+            const { newIds, updatedIds } = getChangeIdsBundle();
+            if (newIds.has(eventId)) {
                 return '<span class="new-event-badge">New</span>';
             }
-            if (getUpdatedEventIds().has(eventId)) {
+            if (updatedIds.has(eventId)) {
                 return '<span class="updated-event-badge">Updated</span>';
             }
             return '';
         }
         function updateUnseenCountUI() {
-            const newCount = getNewEventIds().size;
-            const updatedCount = getUpdatedEventIds().size;
+            const { newIds, updatedIds } = getChangeIdsBundle();
+            const newCount = newIds.size;
+            const updatedCount = updatedIds.size;
             if (newCount > 0 || updatedCount > 0) {
                 const parts = [];
                 if (newCount > 0) parts.push(`${newCount} new`);
@@ -3116,6 +3183,7 @@
             saveSessionEventFingerprints();
             localStorage.setItem(NEW_EVENTS_KEY, JSON.stringify([]));
             localStorage.setItem(UPDATED_EVENTS_KEY, JSON.stringify([]));
+            invalidateChangeIdsCache();
             renderCurrentView();
         }
         function getHiddenKeywords() {
@@ -3316,6 +3384,9 @@
                 if (isManual) sessionStorage.setItem('lastManualRefresh', Date.now().toString());
 
                 allEvents = fetchedEvents;
+                clearEventFingerprintMemo();
+                clearCardDescriptionHtmlCache();
+                invalidateChangeIdsCache();
                 initializeSessionBaselineIfNeeded();
                 updateRefreshTimestamp();
                 renderCurrentView();
@@ -3542,6 +3613,9 @@
             if (cachedData && !needsAutoRefresh) {
                 try {
                     allEvents = normalizeEventsPayload(JSON.parse(cachedData));
+                    clearEventFingerprintMemo();
+                    clearCardDescriptionHtmlCache();
+                    invalidateChangeIdsCache();
                     initializeSessionBaselineIfNeeded();
                     updateRefreshTimestamp();
                     renderCurrentView();
@@ -5164,7 +5238,8 @@
                 return;
             }
             noResults.classList.add('hidden');
-            const sortedEvents = filteredEvents.sort((a, b) => new Date(getStartDateString(a)) - new Date(getStartDateString(b)));
+            // Copy before sort so we never mutate the filtered array in place.
+            const sortedEvents = filteredEvents.slice().sort((a, b) => new Date(getStartDateString(a)) - new Date(getStartDateString(b)));
             if (currentView === 'card') { renderCardView(sortedEvents); } 
             else if (currentView === 'agenda') { renderAgendaView(sortedEvents, filteredPrivateEvents); }
             updatePrivateCardViewNotice();
@@ -5579,12 +5654,13 @@
             }, {});
             const allDateKeys = [...new Set([...Object.keys(groupedEvents), ...Object.keys(groupedPrivate)])].sort();
             agendaViewContainer.innerHTML = '';
+            const frag = document.createDocumentFragment();
             allDateKeys.forEach(dateKey => {
                 const dayHeader = document.createElement('div');
                 const eventDate = new Date(dateKey + 'T00:00:00Z');
                 dayHeader.className = 'agenda-day-header p-3 border-b border-t font-bold text-lg text-gray-700 bg-gray-50';
                 dayHeader.textContent = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
-                agendaViewContainer.appendChild(dayHeader);
+                frag.appendChild(dayHeader);
 
                 const dayItems = [];
                 (groupedEvents[dateKey] || []).forEach((event) => {
@@ -5625,7 +5701,7 @@
                         const friendTags = getFriendGoingTagsHtml(event.id);
                         const titleClass = (highlightPreset?.agendaClasses || []).join(' ');
                         eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-indigo-600 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center ${titleClass}">${escapeHtml(event.summary || 'No Title')} ${changeBadge}</p>${friendTags}<p class="text-gray-500 break-words">${escapeHtml(event.location || '')}</p></div>`;
-                        agendaViewContainer.appendChild(eventRow);
+                        frag.appendChild(eventRow);
                         return;
                     }
 
@@ -5639,9 +5715,10 @@
                         : '<span class="text-xs font-semibold text-amber-800 dark:text-amber-300 mr-2">Private</span>';
                     const notes = item.notes ? `<p class="text-gray-500 break-words">${escapeHtml(item.notes)}</p>` : '';
                     eventRow.innerHTML = `<div class="w-full sm:w-48 sm:text-right sm:pr-4 text-amber-700 dark:text-amber-300 font-medium shrink-0">${escapeHtml(timeRange)}</div><div class="flex-grow min-w-0"><p class="font-semibold text-gray-800 flex flex-wrap items-center">${badge}${escapeHtml(item.title)}</p>${notes}</div>`;
-                    agendaViewContainer.appendChild(eventRow);
+                    frag.appendChild(eventRow);
                 });
             });
+            agendaViewContainer.appendChild(frag);
         }
         
         function formatCardDateDisplay(event) {
@@ -5751,6 +5828,7 @@
             const dateKeys = Object.keys(groupedEvents).sort();
             if (!dateKeys.length) return;
 
+            const frag = document.createDocumentFragment();
             dateKeys.forEach((dateKey) => {
                 const daySection = document.createElement('section');
                 daySection.className = 'card-day-section';
@@ -5775,8 +5853,9 @@
 
                 daySection.appendChild(dayHeader);
                 daySection.appendChild(dayGrid);
-                cardViewContainer.appendChild(daySection);
+                frag.appendChild(daySection);
             });
+            cardViewContainer.appendChild(frag);
         }
 
         // --- SHARE/SYNC LOGIC ---
@@ -6144,13 +6223,19 @@
             }
         }
 
+        let searchRenderTimer = null;
         function handleSearchInput() {
             if (searchInput.value.trim().length > 0) {
                 clearSearchBtn.classList.remove('hidden');
             } else {
                 clearSearchBtn.classList.add('hidden');
             }
-            renderCurrentView();
+            // Debounce full re-renders while typing (was re-building every keystroke).
+            clearTimeout(searchRenderTimer);
+            searchRenderTimer = setTimeout(() => {
+                searchRenderTimer = null;
+                renderCurrentView();
+            }, 160);
         }
 
         // --- CUT & PASTE LOGIC ---
