@@ -2336,7 +2336,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.5.13-beta';
+        const APP_VERSION = '1.5.15-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -2462,8 +2462,6 @@
             },
             /** Official DEF CON After Party (Sunday) — logo only, no loud theme */
             defcon_after: {
-                cardClass: '',
-                agendaClass: '',
                 image: 'icons/defcon-placeholder-logo.webp',
                 imageAlt: 'DEF CON',
             },
@@ -2545,7 +2543,9 @@
         const CONFERENCE_END_DATE_MAX = '2026-08-12';
         const CONFERENCE_PICKER_DEFAULT_START = '2026-08-02T17:00';
         const SWAG_AD_IDENTIFIER = 'DEFCON PARTIES 🥃 - SWAG';
-        const EVENTS_API_URL = 'https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2d1197ea71b546d7a2ccf373e4a4b205/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aG0pyghxWH8Xq-w5Lt0ZOIO47aiy_MqIEq8R35WmeVA';
+        // No explicit :443 — matches CSP connect-src host and avoids rare browser quirks
+        const EVENTS_API_URL = 'https://defaultb58eabac07dc4f849d1b5edee8555c.43.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/2d1197ea71b546d7a2ccf373e4a4b205/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aG0pyghxWH8Xq-w5Lt0ZOIO47aiy_MqIEq8R35WmeVA';
+        const EVENTS_FETCH_TIMEOUT_MS = 45000;
         const MAX_IMPORT_CODE_LENGTH = 100000;
         const MAX_ICS_FILE_BYTES = 2 * 1024 * 1024;
         const ICS_TZID_ALIASES = {
@@ -3551,6 +3551,32 @@
             };
         }
 
+        function formatRefreshError(error) {
+            if (!error) return 'unknown error';
+            if (error.name === 'AbortError') return 'request timed out';
+            const msg = String(error.message || error);
+            if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) {
+                return 'network blocked or offline (check ad blocker / VPN)';
+            }
+            if (/QuotaExceeded|QUOTA/i.test(msg)) return 'browser storage full';
+            if (/HTTP error/i.test(msg)) return msg.replace(/^HTTP error!\s*/i, '');
+            if (/Unexpected API/i.test(msg)) return 'unexpected API response';
+            return msg.slice(0, 80);
+        }
+        async function fetchEventsFromApi() {
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const timer = controller
+                ? setTimeout(() => controller.abort(), EVENTS_FETCH_TIMEOUT_MS)
+                : null;
+            try {
+                const response = await fetch(EVENTS_API_URL, controller ? { signal: controller.signal } : undefined);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                return normalizeEventsPayload(data);
+            } finally {
+                if (timer) clearTimeout(timer);
+            }
+        }
         async function fetchAndCacheEvents(isManual = false) {
             if (isManual) {
                 const lastManualRefresh = sessionStorage.getItem('lastManualRefresh');
@@ -3562,28 +3588,46 @@
             }
 
             lastRefreshedText.textContent = 'Refreshing...';
+            let fetchedEvents;
             try {
-                const response = await fetch(EVENTS_API_URL);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                const fetchedEvents = normalizeEventsPayload(data);
-                
+                fetchedEvents = await fetchEventsFromApi();
+            } catch (error) {
+                console.error('Could not fetch calendar feed:', error);
+                const detail = formatRefreshError(error);
+                const hasCache = Boolean(localStorage.getItem(CACHE_KEY)) || (allEvents && allEvents.length);
+                lastRefreshedText.textContent = hasCache
+                    ? `Refresh failed (${detail}). Using cached data.`
+                    : `Refresh failed (${detail}). Try again in a moment.`;
+                return;
+            }
+
+            try {
                 const oldDataRaw = localStorage.getItem(CACHE_KEY);
                 let newlyAddedIds = [];
                 let newlyUpdatedIds = [];
 
                 if (oldDataRaw) {
-                    const oldEvents = JSON.parse(oldDataRaw);
-                    const oldEventIds = new Set(oldEvents.map(e => e.id));
-                    const newEventIds = new Set(fetchedEvents.map(e => e.id));
-                    newlyAddedIds = [...newEventIds].filter(id => !oldEventIds.has(id));
-                    newlyUpdatedIds = detectUpdatedEventIds(oldEvents, fetchedEvents);
+                    try {
+                        const oldEvents = JSON.parse(oldDataRaw);
+                        const oldEventIds = new Set(oldEvents.map(e => e.id));
+                        const newEventIds = new Set(fetchedEvents.map(e => e.id));
+                        newlyAddedIds = [...newEventIds].filter(id => !oldEventIds.has(id));
+                        newlyUpdatedIds = detectUpdatedEventIds(oldEvents, fetchedEvents);
+                    } catch (cacheReadError) {
+                        console.warn('Prior cache unreadable; treating as full refresh.', cacheReadError);
+                    }
                 }
 
-                localStorage.setItem(CACHE_KEY, JSON.stringify(fetchedEvents));
-                localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString());
-                localStorage.setItem(NEW_EVENTS_KEY, JSON.stringify(newlyAddedIds));
-                localStorage.setItem(UPDATED_EVENTS_KEY, JSON.stringify(newlyUpdatedIds));
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(fetchedEvents));
+                    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString());
+                    localStorage.setItem(NEW_EVENTS_KEY, JSON.stringify(newlyAddedIds));
+                    localStorage.setItem(UPDATED_EVENTS_KEY, JSON.stringify(newlyUpdatedIds));
+                } catch (storageError) {
+                    console.warn('Could not write calendar cache (storage full?):', storageError);
+                    // Still apply in-memory so the page updates
+                    lastRefreshedText.textContent = `Loaded ${fetchedEvents.length} events (could not save offline cache: ${formatRefreshError(storageError)}).`;
+                }
                 if (isManual) sessionStorage.setItem('lastManualRefresh', Date.now().toString());
 
                 allEvents = fetchedEvents;
@@ -3595,8 +3639,12 @@
                 renderCurrentView();
                 handlePartyDeepLink();
             } catch (error) {
-                console.error("Could not fetch data from URL:", error);
-                lastRefreshedText.textContent = 'Refresh failed. Using cached data.';
+                console.error('Fetched feed but failed to apply it:', error);
+                // Keep fetched data in memory if we got that far
+                if (fetchedEvents && fetchedEvents.length) {
+                    allEvents = fetchedEvents;
+                }
+                lastRefreshedText.textContent = `Loaded feed, but display update failed (${formatRefreshError(error)}). Try a hard refresh.`;
             }
         }
 
@@ -5964,9 +6012,12 @@
             eventCard.className = 'event-card bg-white rounded-sm shadow-md overflow-hidden p-6 flex flex-col cursor-pointer';
             const highlightPreset = getMergedHighlight(event);
 
-            if (highlightPreset?.base) {
+            if (highlightPreset?.base?.preset?.cardClass) {
                 eventCard.classList.add(highlightPreset.base.preset.cardClass);
+            } else if (!highlightPreset?.base) {
+                applyApprovalStyles(eventCard, event.id);
             } else {
+                // Image-only highlights (e.g. defcon_after) keep approval colors
                 applyApprovalStyles(eventCard, event.id);
             }
             (highlightPreset?.fx || []).forEach((entry) => {
