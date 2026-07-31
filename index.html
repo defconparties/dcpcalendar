@@ -2336,7 +2336,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.5.15-beta';
+        const APP_VERSION = '1.5.16-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -2460,7 +2460,7 @@
                 image: 'icons/seckc-logo.jpg',
                 imageAlt: 'SecKC',
             },
-            /** Official DEF CON After Party (Sunday) — logo only, no loud theme */
+            /** Official DEF CON list parties — logo only, no loud theme */
             defcon_after: {
                 image: 'icons/defcon-placeholder-logo.webp',
                 imageAlt: 'DEF CON',
@@ -2772,8 +2772,13 @@
             if (title.includes('hacker jeopardy')) return ['hacker_jeopardy'];
             if (title.includes('floridaman')) return ['floridaman'];
             if (title.includes('seckc')) return ['seckc'];
-            // Official Sunday DEF CON After Party @ LIV (not other "after party" events)
-            if (title.includes('def con after party') || title.includes('defcon after party')) {
+            // Official DEF CON parties that show the placeholder logo (not every "after party")
+            if (
+                title.includes('def con after party')
+                || title.includes('defcon after party')
+                || (title.includes('welcome party') && title.includes('industrial'))
+                || title.includes('kevops')
+            ) {
                 return ['defcon_after'];
             }
             return [];
