@@ -2336,7 +2336,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.5.12-beta';
+        const APP_VERSION = '1.5.13-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -2459,6 +2459,13 @@
                 agendaClass: 'seckc-agenda-title',
                 image: 'icons/seckc-logo.jpg',
                 imageAlt: 'SecKC',
+            },
+            /** Official DEF CON After Party (Sunday) — logo only, no loud theme */
+            defcon_after: {
+                cardClass: '',
+                agendaClass: '',
+                image: 'icons/defcon-placeholder-logo.webp',
+                imageAlt: 'DEF CON',
             },
             gold: {
                 cardClass: 'highlight-gold-event',
@@ -2765,6 +2772,10 @@
             if (title.includes('hacker jeopardy')) return ['hacker_jeopardy'];
             if (title.includes('floridaman')) return ['floridaman'];
             if (title.includes('seckc')) return ['seckc'];
+            // Official Sunday DEF CON After Party @ LIV (not other "after party" events)
+            if (title.includes('def con after party') || title.includes('defcon after party')) {
+                return ['defcon_after'];
+            }
             return [];
         }
         function parseEventHighlightStyle(event) {
