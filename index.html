@@ -13,8 +13,8 @@
         (function () {
             const themeKey = 'calendarTheme_2026';
             const saved = localStorage.getItem(themeKey);
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (saved === 'dark' || (!saved && prefersDark)) {
+            // Default dark for everyone; only stay light if the user chose light.
+            if (saved !== 'light') {
                 document.documentElement.classList.add('dark');
             }
         })();
@@ -809,6 +809,14 @@
             letter-spacing: 0.02em;
             color: #374151;
         }
+        html.dark .dcp-card-ticker {
+            border-top-color: rgba(255, 255, 255, 0.18);
+            color: #e5e7eb;
+        }
+        html.dark body.hacker-theme .dcp-card-ticker {
+            border-top-color: rgba(110, 231, 183, 0.28);
+            color: #a7f3d0;
+        }
         .seckc-event .dcp-card-ticker {
             border-top-color: rgba(255, 255, 255, 0.2);
             color: #fca5a5;
@@ -818,6 +826,57 @@
         .floridaman-event .dcp-card-ticker {
             color: inherit;
             opacity: 0.92;
+        }
+        html.dark .dc801-event .dcp-card-ticker,
+        html.dark .hacker-jeopardy-event .dcp-card-ticker,
+        html.dark .floridaman-event .dcp-card-ticker {
+            opacity: 1;
+        }
+        /* Static footer for official DEF CON–tagged parties (not the scrolling ticker) */
+        .dcp-defcon-party-tag {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-top: 0.85rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid rgba(220, 38, 38, 0.25);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #dc2626;
+            line-height: 1.2;
+        }
+        .dcp-defcon-party-tag img {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+            border-radius: 4px;
+            object-fit: contain;
+        }
+        .dcp-card-ticker + .dcp-defcon-party-tag {
+            margin-top: 0.45rem;
+            padding-top: 0.4rem;
+            border-top: none;
+        }
+        html.dark .dcp-defcon-party-tag {
+            border-top-color: rgba(248, 113, 113, 0.3);
+            color: #f87171;
+        }
+        html.dark body.hacker-theme .dcp-defcon-party-tag {
+            color: #f87171;
+            border-top-color: rgba(248, 113, 113, 0.28);
+        }
+        .seckc-event .dcp-defcon-party-tag {
+            border-top-color: rgba(255, 255, 255, 0.18);
+            color: #fca5a5;
+        }
+        .dc801-event .dcp-defcon-party-tag,
+        .hacker-jeopardy-event .dcp-defcon-party-tag,
+        .floridaman-event .dcp-defcon-party-tag {
+            color: inherit;
+            opacity: 0.92;
+            border-top-color: currentColor;
         }
         .dcp-card-ticker-track {
             display: inline-flex;
@@ -2277,7 +2336,7 @@
 
         let allEvents = [];
         let currentView = 'card';
-        const APP_VERSION = '1.5.2-beta';
+        const APP_VERSION = '1.5.12-beta';
         const SECKC_MODE_SESSION_KEY = 'seckcModeActive';
         const SECKC_MOBILE_TAP_COUNT = 7;
         const SECKC_MOBILE_TAP_RESET_MS = 3500;
@@ -2291,6 +2350,80 @@
         const HIGHLIGHT_MARKER_PATTERN = /\[dcp-highlight:([a-z0-9_+,]+)\]/gi;
         const SPONSOR_MARKER_PATTERN = /\[dcp-sponsor:([^|\]]*)\|([^|\]]*)(?:\|([^|\]]*))?\]/i;
         const FEATURING_MARKER_PATTERN = /\[dcp-featuring:([^\]]+)\]/i;
+        const DEFCON_PARTY_MARKER_PATTERN = /\[dcp-defcon\]/i;
+        /** Temporary design preview: add ?previewDefconTag=1 to show the footer on every card. */
+        const PREVIEW_DEFCON_PARTY_TAG = (() => {
+            try {
+                return new URLSearchParams(window.location.search).get('previewDefconTag') === '1';
+            } catch (_) {
+                return false;
+            }
+        })();
+        /**
+         * Official DEF CON list / spreadsheet parties (own signup domains).
+         * Not every event with "DEF CON" in the title — vendor parties stay untagged.
+         */
+        const DEFCON_PARTY_SIGNUP_HOSTS = [
+            'defcon.org',
+            'dcshoot.org',
+            'toxicbbq.org',
+            'dc702.space',
+            'dcgne.org',
+            'queercon.org',
+            'arcadeparty.org',
+            'blacksincyberconf.com',
+            'slopcon.org',
+            'se.community',
+            'octopusgame.org',
+            'gothcon.com',
+            'illuminatiparty.org',
+            'vetconactual.com',
+            'digitalgangster.com',
+            'hackerjeopardy.com',
+            'callcentervillage.com',
+            'seckc.org',
+        ];
+        /** Same-origin badge (64px source for ~22px display / retina). Full 256 stays for favicon. */
+        const DEFCON_PARTY_ICON_URL = 'icons/dcp-badge-64.png';
+        const DEFCON_PARTY_TITLE_HINTS = [
+            /\bseckc\b/i,
+            /\bvetcon\b/i,
+            /\bgothcon\b/i,
+            /\bslopcon\b/i,
+            /\bqueercon\b/i,
+            /\btoxic\s*bbq\b/i,
+            /\bkayos\s*klub\b/i,
+            /\billuminati\s*party\b/i,
+            /\barcade\s*party\b/i,
+            /\bblanketfort\b/i,
+            /\boctopus\s*game\b/i,
+            /\bfront\s*man'?s\b/i,
+            /\bbic\s*r00t\b/i,
+            /\bdc702\b/i,
+            /\bdcg\s*new\s*england\b/i,
+            /\bunofficial\s*def\s*con\s*shoot\b/i,
+            /\bdigital\s*nomad\s*meetup\b/i,
+            /\bday\s*of\s*the\s*dead\s*hacker\b/i,
+            /\baustralian\s*embassy\b/i,
+            /\b\+61\b/,
+            /\boperator,?\s*please\s*hold\b/i,
+            /\bkevops\b/i,
+            /\bwelcome\s*party\b.*\bindustrial\b/i,
+            /\bindustrial\b.*\bwelcome\s*party\b/i,
+            /\bhacker\s*karaoke\b/i,
+            /\bhacker\s*jeopardy\b/i,
+            /\bdef\s*con\s*after\s*party\b/i,
+            /\bsocial\s*engineering\s*community\b/i,
+            /\bparty\s*line\b/i,
+            /\bpolicy\s*mixer\b/i,
+            /\bk-rad\b/i,
+            /\bhackers\.?town\b/i,
+            /\bspades\s*night\b/i,
+            /\buno\s*tournament\b/i,
+            /\bblue\s*team\s*village\s*movie\b/i,
+            /\bdcnextgen\b/i,
+            /\bdc\s*nextgen\b/i,
+        ];
         const DEFAULT_MODAL_SPONSORS = [
             {
                 url: 'https://swag.defconparties.com',
@@ -2522,8 +2655,13 @@
         function stripFeaturingMarker(text) {
             return String(text ?? '').replace(/\[dcp-featuring:[^\]]+\]/gi, '').trim();
         }
+        function stripDefconPartyMarker(text) {
+            return String(text ?? '').replace(/\[dcp-defcon\]/gi, '').trim();
+        }
         function stripCalendarMarkers(text) {
-            return stripFeaturingMarker(stripSponsorMarker(stripHighlightMarker(text)));
+            return stripDefconPartyMarker(
+                stripFeaturingMarker(stripSponsorMarker(stripHighlightMarker(text)))
+            );
         }
         function parseEventFeaturing(event) {
             if (!event) return null;
@@ -2531,6 +2669,60 @@
             if (!match) return null;
             const label = (match[1] || '').trim();
             return label || null;
+        }
+        function hostnameFromUrl(url) {
+            try {
+                const host = new URL(String(url || '').trim()).hostname.toLowerCase();
+                return host.replace(/^www\./, '');
+            } catch (_) {
+                return '';
+            }
+        }
+        function isDefconPartySignupHost(urlOrHost) {
+            const host = hostnameFromUrl(urlOrHost) || String(urlOrHost || '').toLowerCase().replace(/^www\./, '');
+            if (!host) return false;
+            return DEFCON_PARTY_SIGNUP_HOSTS.some((known) => host === known || host.endsWith(`.${known}`));
+        }
+        /** Collect http(s) hosts from description HTML/text without substring false positives. */
+        function hostsInDescription(description) {
+            const hosts = [];
+            const text = String(description || '');
+            const re = /https?:\/\/[^\s"'<>]+/gi;
+            let match;
+            while ((match = re.exec(text)) !== null) {
+                const host = hostnameFromUrl(match[0]);
+                if (host) hosts.push(host);
+            }
+            return hosts;
+        }
+        /**
+         * Official DEF CON list / spreadsheet parties.
+         * highlightSlugs: optional precomputed slugs from getMergedHighlight (avoids re-parse).
+         */
+        function isDefconPartyEvent(event, highlightSlugs) {
+            if (PREVIEW_DEFCON_PARTY_TAG) return true;
+            if (!event) return false;
+            const description = String(event.description || '');
+            if (DEFCON_PARTY_MARKER_PATTERN.test(description)) return true;
+            // Cheap checks first (title is short; avoid parsing every description HTML)
+            const summary = String(event.summary || '');
+            if (summary && DEFCON_PARTY_TITLE_HINTS.some((re) => re.test(summary))) return true;
+            if ((highlightSlugs || []).includes('seckc')) return true;
+            if (!description || (description.indexOf('http') === -1 && description.indexOf('href') === -1)) {
+                return false;
+            }
+            const signup = extractSignupUrl(description) || '';
+            if (signup && isDefconPartySignupHost(signup)) return true;
+            // Only match real URL hosts (not raw string includes — avoids "notdefcon.org" false hits)
+            return hostsInDescription(description).some((host) => isDefconPartySignupHost(host));
+        }
+        function buildDefconPartyTagHtml() {
+            return (
+                '<div class="dcp-defcon-party-tag" aria-label="DEF CON party">'
+                + `<img src="${DEFCON_PARTY_ICON_URL}" alt="" width="22" height="22" decoding="async" loading="lazy">`
+                + '<span>DEF CON PARTY</span>'
+                + '</div>'
+            );
         }
         function buildCardTickerHtml(text) {
             const label = String(text || '').trim();
@@ -5796,6 +5988,9 @@
                 : '';
             const featuringText = parseEventFeaturing(event);
             const tickerHTML = buildCardTickerHtml(featuringText);
+            const defconTagHTML = isDefconPartyEvent(event, highlightPreset?.slugs)
+                ? buildDefconPartyTagHtml()
+                : '';
             eventCard.innerHTML = `
                 ${eyesHTML}
                 ${imageHTML}
@@ -5812,7 +6007,8 @@
                     </div>
                     ${cardDescriptionBlock}
                 </div>
-                ${tickerHTML}`;
+                ${tickerHTML}
+                ${defconTagHTML}`;
             hideBrokenImages(eventCard);
             return eventCard;
         }
